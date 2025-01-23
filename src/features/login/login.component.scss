@@ -1,0 +1,90 @@
+/* login.component.scss */
+.login-page { // Contenedor principal de la página de login
+  display: flex;
+  justify-content: center; // Centrado horizontal
+  align-items: center;
+  min-height: calc(70vh - 64px);
+  margin: 0;
+}
+
+.login-card {
+  max-width: 400px;
+  width: 90%;
+  height: 450px;
+  padding: 24px;
+  box-sizing: border-box;
+
+  mat-form-field {
+    display: block;
+  }
+}
+
+.login-card .login-form .mat-form-field { // Selector más específico
+  width: 100%;
+}
+
+
+.vid-container{
+  position:relative;
+  height: calc(100vh - 64px);
+  overflow:hidden;
+}
+.inner {
+  position: absolute;
+}
+.inner-container{
+  width:400px;
+  height:400px;
+  position:absolute;
+  top:calc(30vh - 200px);
+  left:calc(50vw - 200px);
+  overflow:hidden;
+}
+.box{
+  position:absolute;
+  height:100%;
+  width:100%;
+  font-family:Helvetica;
+  color:#fff;
+  background:rgba(0,0,0,0.13);
+  padding:30px 0px;
+}
+.box h1{
+  text-align:center;
+  margin:30px 0;
+  font-size:30px;
+}
+.box input{
+  display:block;
+  width:300px;
+  margin:20px auto;
+  padding:15px;
+  background:rgba(0,0,0,0.2);
+  color:#fff;
+  border:0;
+}
+.box input:focus,.box input:active,.box button:focus,.box button:active{
+  outline:none;
+}
+.box button{
+  background:#742ECC;
+  border:0;
+  color:#fff;
+  padding:10px;
+  font-size:20px;
+  width:330px;
+  margin:20px auto;
+  display:block;
+  cursor:pointer;
+}
+.box button:active{
+  background:#27ae60;
+}
+.box p{
+  font-size:14px;
+  text-align:center;
+}
+.box p span{
+  cursor:pointer;
+  color:#666;
+}

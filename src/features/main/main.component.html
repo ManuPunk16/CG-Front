@@ -1,1 +1,82 @@
-<p>main works!</p>
+<div>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Registros de Entradas</mat-card-title>
+    </mat-card-header>
+    <!-- <mat-divider></mat-divider> -->
+    <br>
+    <div style="display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;">
+      <mat-form-field>
+          <input matInput type="text" (input)="applyFilter($event)" placeholder="Filtro avanzado en tiempo real">
+      </mat-form-field>
+
+      <!-- <mat-form-field>
+          <mat-label>Ingresa un rango de fechas</mat-label>
+          <mat-date-range-input [rangePicker]="picker">
+              <input matStartDate placeholder="Fecha Inicio" [(ngModel)]="startDate">
+              <input matEndDate placeholder="Fecha Fin" [(ngModel)]="endDate">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker></mat-date-range-picker>
+      </mat-form-field> -->
+    </div>
+
+    <mat-card-content>
+      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
+          class="mat-elevation-z8">
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>
+            Acciones
+          </th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-button>
+              <mat-icon> remove_red_eye </mat-icon>
+            </button>
+
+            <button mat-button>
+              <mat-icon> border_color </mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="folio">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by folio">
+            folio
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.folio}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="num_oficio">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by num_oficio">
+            num_oficio
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.num_oficio}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fecha_recepcion">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by fecha_recepcion">
+            fecha_recepcion
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.fecha_recepcion | date:'dd/MM/yyyy' }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="asunto">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asunto">
+            asunto
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.asunto}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+      <mat-paginator
+              [length]="100"
+              [pageSize]="15"
+              [pageSizeOptions]="[25, 50, 100, 500]"
+              aria-label="Select page">
+      </mat-paginator>
+    </mat-card-content>
+  </mat-card>
+</div>

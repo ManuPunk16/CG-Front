@@ -1,0 +1,46 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { catchError, Observable, throwError } from 'rxjs';
+import { Input } from '../models/input.model';
+
+interface InputsResponse {
+  status: string;
+  inputs: Input[];
+  totalInputs: number;
+  totalPages: number;
+  currentPage: number;
+  message?: string;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InputService {
+  private apiUrl = 'http://localhost:8082/api/';
+
+  constructor(private http: HttpClient) { }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'An unknown error occurred!';
+    if (error.error instanceof ErrorEvent) {
+        // Client-side errors
+        errorMessage = `Error: ${error.error.message}`;
+    } else if (error.status === 204) {
+        errorMessage = 'No existen registros'; // Mensaje más descriptivo
+        console.warn(errorMessage); // Usar warn para este caso
+    } else {
+        // Server-side errors
+        errorMessage = `Backend returned code ${error.status}, body was: ${JSON.stringify(error.error)}`; // Incluir el cuerpo del error para debugging
+    }
+    console.error(errorMessage);
+    return throwError(() => new Error(errorMessage)); // Lanza un nuevo error con el mensaje formateado
+}
+
+  getNoDeletedInputs(): Observable<InputsResponse> {
+    let params = new HttpParams();
+
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs`, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+}
