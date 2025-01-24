@@ -34,7 +34,7 @@
               <mat-icon> remove_red_eye </mat-icon>
             </button>
 
-            <button mat-button>
+            <button mat-button (click)="newSeguimiento(row)">
               <mat-icon> border_color </mat-icon>
             </button>
           </td>
@@ -42,30 +42,44 @@
 
         <ng-container matColumnDef="folio">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by folio">
-            folio
+            Folio
           </th>
           <td mat-cell *matCellDef="let element"> {{element.folio}} </td>
         </ng-container>
 
         <ng-container matColumnDef="num_oficio">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by num_oficio">
-            num_oficio
+            Num. Oficio
           </th>
           <td mat-cell *matCellDef="let element"> {{element.num_oficio}} </td>
         </ng-container>
 
         <ng-container matColumnDef="fecha_recepcion">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by fecha_recepcion">
-            fecha_recepcion
+            Fecha Recepcion
           </th>
           <td mat-cell *matCellDef="let element"> {{element.fecha_recepcion | date:'dd/MM/yyyy' }} </td>
         </ng-container>
 
+        <ng-container matColumnDef="asignado">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asignado">
+            Asignado
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.asignado}} </td>
+        </ng-container>
+
         <ng-container matColumnDef="asunto">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asunto">
-            asunto
+            Asunto
           </th>
           <td mat-cell *matCellDef="let element"> {{element.asunto}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="atencion_otorgada">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by atencion">
+            Atencion Otorgada
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.seguimientos?.atencion_otorgada ?? '-'}} </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

@@ -1,4 +1,5 @@
 export interface Input {
+  _id: string;
   anio: number;
   folio: number;
   num_oficio: string; // Uppercase enforced on backend
@@ -24,7 +25,7 @@ export interface Input {
   };
   edit_count: number;
   deleted: boolean;
-  seguimiento: Seguimiento;
+  seguimientos: Seguimiento;
   timestamps: Date;
 }
 
@@ -41,7 +42,7 @@ export interface Seguimiento {
   fecha_acuse_recibido?: Date;
   destinatario: string;
   cargo: string;
-  atencion_otorgada: string;
+  atencion_otorgada?: string;
   anexo?: string;
   estatus: string;
   firma_visado?: string;

@@ -12,8 +12,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter, MAT_DATE_LOCALE, DateAdapter } from '@angular/material/core';
+import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.component';
 
 @Component({
   selector: 'app-main',
@@ -48,7 +50,7 @@ export class MainComponent implements OnInit {
   @ViewChild(MatSort)
   sort!: MatSort;
 
-  displayedColumns: string[] = ['actions', 'folio', 'num_oficio', 'fecha_recepcion', 'asunto'];
+  displayedColumns: string[] = ['actions', 'folio', 'num_oficio', 'fecha_recepcion', 'asignado', 'asunto', 'atencion_otorgada'];
   dataSource!: MatTableDataSource<Input>;
   inputs: Input[] = [];
   totalInputs: number = 0;
@@ -62,7 +64,8 @@ export class MainComponent implements OnInit {
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private _matDialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -104,21 +107,26 @@ export class MainComponent implements OnInit {
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLocaleLowerCase();
+
     this.dataSource.filterPredicate = (data: Input, filter: string): boolean => {
-      // Intenta convertir el filtro a número
       const filterNumber = Number(filter);
 
       if (!isNaN(filterNumber)) {
-        // Si es un número, busca en fecha_recepcion (después de formatearla)
-        const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || ''; // Formatea la fecha
-        return formattedDate.includes(filter);
+        // Si el filtro es un número:
+        // 1. Busca coincidencia EXACTA en el folio.
+        // 2. Busca coincidencia (contiene) en fecha_recepcion (formateada).
+        const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
+        return data.folio === filterNumber || formattedDate.toLocaleLowerCase().includes(filter);
       } else {
-        // Si no es un número, busca en todas las columnas (comportamiento original)
+        // Si el filtro NO es un número:
         return this.displayedColumns.some(column => {
-          if (column === 'fecha_recepcion'){
+          if (column === 'fecha_recepcion') {
             const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
             return formattedDate.toLocaleLowerCase().includes(filter);
-          } else if(data[column as keyof Input]){
+          } else if (column === 'folio') {
+            // Busca coincidencia (contiene) en el folio (convertido a string).
+            return data.folio?.toString().toLocaleLowerCase().includes(filter);
+          } else if (data[column as keyof Input]) {
             return data[column as keyof Input]?.toString().toLocaleLowerCase().includes(filter);
           }
           return false;
@@ -145,5 +153,16 @@ export class MainComponent implements OnInit {
         this.dataSource.data = this.inputs; // Restablecer a los datos originales si no hay rango
         this.dataSource.paginator?.firstPage(); // Reiniciar paginador
     }
+  }
+
+  newSeguimiento(row: Input) {
+    const newSeguimiento = this._matDialog.open(NuevaEntradaComponent, {
+      width: '90%',
+      data: row._id
+    });
+
+    newSeguimiento.afterClosed().subscribe(res => {
+
+    });
   }
 }

@@ -1,0 +1,15 @@
+export class Users {
+  public Id: number;
+  public name: string;
+  public area: string;
+  public pwd: string;
+  public email: string;
+
+  constructor(Id:number, name:string, area: string, pwd:string, email:string){
+    this.Id = Id;
+    this.name = name;
+    this.area = area;
+    this.pwd = pwd;
+    this.email = email;
+  }
+}

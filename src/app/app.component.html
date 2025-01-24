@@ -3,10 +3,14 @@
     <button mat-icon-button (click)="snav.toggle()" [hidden]="!mobileQuery.matches"><mat-icon>menu</mat-icon></button>
     <h1 class="example-app-name">Gestion Documental</h1>
     <span class="spacer"></span>
-    <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['']">Inicio</a>
+    <!-- <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['']">Inicio</a> -->
     <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['Entradas']">Entradas</a>
-    <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['about']">Sobre mi</a>
-    <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['contact']">Contacto</a>
+    <!-- <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['about']">Sobre mi</a>
+    <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['contact']">Contacto</a> -->
+    <div *ngIf="isLoggedIn">
+      <a mat-button [routerLink]="['Perfil']">{{username}}</a>
+      <a mat-button (click)="logout()">Cerrar Sesión</a>
+    </div>
   </mat-toolbar>
 
   <mat-sidenav-container class="example-sidenav-container"
@@ -14,10 +18,14 @@
     <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'"
                 [fixedInViewport]="mobileQuery.matches" fixedTopGap="56">
       <mat-nav-list>
-        <a mat-list-item [routerLink]="['']">Inicio</a>
+        <!-- <a mat-list-item [routerLink]="['']">Inicio</a> -->
         <a mat-list-item [routerLink]="['Entradas']">Entradas</a>
-        <a mat-list-item [routerLink]="['about']">Sobre mi</a>
-        <a mat-list-item [routerLink]="['contact']">Contacto</a>
+        <!-- <a mat-list-item [routerLink]="['about']">Sobre mi</a>
+        <a mat-list-item [routerLink]="['contact']">Contacto</a> -->
+        <div *ngIf="isLoggedIn">
+          <a mat-button [routerLink]="['Perfil']">{{username}}</a>
+          <a mat-button (click)="logout()">Cerrar Sesión</a>
+        </div>
       </mat-nav-list>
     </mat-sidenav>
 

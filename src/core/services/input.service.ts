@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { catchError, Observable, throwError } from 'rxjs';
 import { Input } from '../models/input.model';
+import { Global } from '../models/global';
 
 interface InputsResponse {
   status: string;
@@ -16,7 +17,7 @@ interface InputsResponse {
   providedIn: 'root'
 })
 export class InputService {
-  private apiUrl = 'http://localhost:8082/api/';
+  private apiUrl = Global.url;
 
   constructor(private http: HttpClient) { }
 
@@ -41,6 +42,13 @@ export class InputService {
 
     return this.http.get<InputsResponse>(`${this.apiUrl}inputs`, { params }).pipe(
         catchError(this.handleError)
+    );
+  }
+
+  getInputById(id: string): Observable<InputsResponse> {
+    const url = `${this.apiUrl}inputById/${id}`;
+    return this.http.get<InputsResponse>(url).pipe(
+      catchError(this.handleError)
     );
   }
 }
