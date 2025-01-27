@@ -2,9 +2,9 @@ import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { Input } from '../../../core/models/input.model';
 import { InputService } from '../../../core/services/input.service';
-import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { NgIf, NgFor, formatDate } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { map, Observable, startWith, Subscription } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -15,6 +15,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { Area } from '../../../core/models/area.model';
 import { AreaService } from '../../../core/services/areas.service';
+import { Institution } from '../../../core/models/institution.model';
+import { InstitutionsService } from '../../../core/services/institutions.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+
+function normalizeString(str: string): string {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
 
 @Component({
   selector: 'app-editar-entrada',
@@ -29,7 +36,8 @@ import { AreaService } from '../../../core/services/areas.service';
     MatIconModule,
     NgFor,
     MatButtonModule,
-    MatSelectModule
+    MatSelectModule,
+    MatAutocompleteModule
   ],
   providers: [
     provideNativeDateAdapter(),
@@ -46,13 +54,15 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
   inputForm!: FormGroup;
   private inputSubscription?: Subscription;
   areas: Area[] = [];
+  institutions: Institution[] = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     private _inputService: InputService,
     public dialogRef: MatDialogRef<EditarEntradaComponent>,
     private fb: FormBuilder,
-    private _area: AreaService
+    private _area: AreaService,
+    private _institution: InstitutionsService
   ) {
     this.inputData = data;
   }
@@ -64,6 +74,15 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('Error al obtener las áreas:', error);
+      }
+    });
+
+    this._institution.getAllNoDeletedInstitutions().subscribe({
+      next: (res) => {
+        this.institutions = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
       }
     });
 

@@ -15,6 +15,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { AreaService } from '../../../core/services/areas.service';
 import { Area } from '../../../core/models/area.model';
 import { MatSelectModule } from '@angular/material/select';
+import { Institution } from '../../../core/models/institution.model';
+import { InstitutionsService } from '../../../core/services/institutions.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-nueva-entrada',
@@ -30,7 +33,8 @@ import { MatSelectModule } from '@angular/material/select';
     NgxMatTimepickerModule,
     MatDialogModule,
     MatButtonModule,
-    MatSelectModule
+    MatSelectModule,
+    MatAutocompleteModule
   ],
   providers: [
     provideNativeDateAdapter(),
@@ -47,12 +51,14 @@ export class NuevaEntradaComponent implements OnInit {
   currentUser: any;
   currentYear: number = new Date().getFullYear();
   areas: Area[] = [];
+  institutions: Institution[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<NuevaEntradaComponent>,
     private fb: FormBuilder,
     private _tokenStorageService: TokenStorageService,
-    private _area: AreaService
+    private _area: AreaService,
+    private _institution: InstitutionsService
   ){
     this.currentUser = this._tokenStorageService.getUser();
   }
@@ -64,6 +70,15 @@ export class NuevaEntradaComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al obtener las áreas:', error);
+      }
+    });
+
+    this._institution.getAllNoDeletedInstitutions().subscribe({
+      next: (res) => {
+        this.institutions = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
       }
     });
 
