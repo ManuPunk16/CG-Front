@@ -55,8 +55,12 @@
           <ngx-mat-timepicker #pickerA></ngx-mat-timepicker>
 
           <mat-form-field appearance="fill">
-              <mat-label>Instrumento Juridico</mat-label>
-              <input matInput formControlName="instrumento_juridico">
+            <mat-label>Instrumento Juridico</mat-label>
+             <mat-select formControlName="instrumento_juridico">
+              <mat-option *ngFor="let item of instruments" [value]="item.name" name="instrumento_juridico">
+                {{item.name}}
+              </mat-option>
+             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="fill">
@@ -89,8 +93,13 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-              <mat-label>Estatus</mat-label>
-              <input matInput formControlName="estatus">
+            <mat-label>Estatus</mat-label>
+            <mat-select formControlName="estatus">
+              <mat-option *ngFor="let estatus of estatusOptions" [value]="estatus">
+                {{ estatus }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="inputForm.get('estatus')?.hasError('required')">El estatus es requerido</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="fill">

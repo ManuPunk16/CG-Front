@@ -4,7 +4,7 @@ import { Input } from '../../../core/models/input.model';
 import { InputService } from '../../../core/services/input.service';
 import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
 import { NgIf, NgFor, formatDate } from '@angular/common';
-import { map, Observable, startWith, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -18,10 +18,9 @@ import { AreaService } from '../../../core/services/areas.service';
 import { Institution } from '../../../core/models/institution.model';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-
-function normalizeString(str: string): string {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-}
+import { InstrumentsService } from '../../../core/services/instruments.service';
+import { Instrument } from '../../../core/models/instrument.model';
+import { EstatusEntrada } from '../../../core/models/estatus.model';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -55,6 +54,8 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
   private inputSubscription?: Subscription;
   areas: Area[] = [];
   institutions: Institution[] = [];
+  instruments: Instrument[] = [];
+  estatusOptions = Object.values(EstatusEntrada);
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -62,7 +63,8 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
     public dialogRef: MatDialogRef<EditarEntradaComponent>,
     private fb: FormBuilder,
     private _area: AreaService,
-    private _institution: InstitutionsService
+    private _institution: InstitutionsService,
+    private _instrument: InstrumentsService
   ) {
     this.inputData = data;
   }
@@ -80,6 +82,15 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
     this._institution.getAllNoDeletedInstitutions().subscribe({
       next: (res) => {
         this.institutions = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
+
+    this._instrument.getAllNoDeletedInstruments().subscribe({
+      next: (res) => {
+        this.instruments = res;
       },
       error: (error) => {
         console.error('Error al obtener las instituciones:', error);

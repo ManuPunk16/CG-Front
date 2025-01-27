@@ -18,6 +18,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { Institution } from '../../../core/models/institution.model';
 import { InstitutionsService } from '../../../core/services/institutions.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { InstrumentsService } from '../../../core/services/instruments.service';
+import { Instrument } from '../../../core/models/instrument.model';
+import { EstatusEntrada } from '../../../core/models/estatus.model';
 
 @Component({
   selector: 'app-nueva-entrada',
@@ -52,13 +55,16 @@ export class NuevaEntradaComponent implements OnInit {
   currentYear: number = new Date().getFullYear();
   areas: Area[] = [];
   institutions: Institution[] = [];
+  instruments: Instrument[] = [];
+  estatusOptions = Object.values(EstatusEntrada);
 
   constructor(
     public dialogRef: MatDialogRef<NuevaEntradaComponent>,
     private fb: FormBuilder,
     private _tokenStorageService: TokenStorageService,
     private _area: AreaService,
-    private _institution: InstitutionsService
+    private _institution: InstitutionsService,
+    private _instrument: InstrumentsService
   ){
     this.currentUser = this._tokenStorageService.getUser();
   }
@@ -76,6 +82,15 @@ export class NuevaEntradaComponent implements OnInit {
     this._institution.getAllNoDeletedInstitutions().subscribe({
       next: (res) => {
         this.institutions = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
+
+    this._instrument.getAllNoDeletedInstruments().subscribe({
+      next: (res) => {
+        this.instruments = res;
       },
       error: (error) => {
         console.error('Error al obtener las instituciones:', error);
