@@ -75,8 +75,12 @@
           </mat-form-field>
 
           <mat-form-field appearance="fill">
-              <mat-label>Asignado</mat-label>
-              <input matInput formControlName="asignado">
+            <mat-label>Asignado</mat-label>
+             <mat-select formControlName="asignado">
+              <mat-option *ngFor="let item of areas" [value]="item.area" name="asignado">
+                {{item.area}}
+              </mat-option>
+             </mat-select>
           </mat-form-field>
 
           <mat-form-field appearance="fill">

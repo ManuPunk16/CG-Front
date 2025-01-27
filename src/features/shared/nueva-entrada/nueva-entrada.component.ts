@@ -12,6 +12,9 @@ import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatButtonModule } from '@angular/material/button';
+import { AreaService } from '../../../core/services/areas.service';
+import { Area } from '../../../core/models/area.model';
+import { MatSelectModule } from '@angular/material/select';
 
 @Component({
   selector: 'app-nueva-entrada',
@@ -26,7 +29,8 @@ import { MatButtonModule } from '@angular/material/button';
     MatDatepickerModule,
     NgxMatTimepickerModule,
     MatDialogModule,
-    MatButtonModule
+    MatButtonModule,
+    MatSelectModule
   ],
   providers: [
     provideNativeDateAdapter(),
@@ -42,16 +46,27 @@ export class NuevaEntradaComponent implements OnInit {
   inputForm!: FormGroup;
   currentUser: any;
   currentYear: number = new Date().getFullYear();
+  areas: Area[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<NuevaEntradaComponent>,
     private fb: FormBuilder,
-    private _tokenStorageService: TokenStorageService
+    private _tokenStorageService: TokenStorageService,
+    private _area: AreaService
   ){
     this.currentUser = this._tokenStorageService.getUser();
   }
 
   ngOnInit(): void {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
+    });
+
     this.inputForm = new FormGroup({
       anio: new FormControl({value: this.currentYear, disabled: false}, Validators.required),
       folio: new FormControl('', Validators.required),

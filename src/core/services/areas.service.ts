@@ -1,23 +1,22 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { catchError, Observable, throwError } from 'rxjs';
-import { Input } from '../models/input.model';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { Global } from '../models/global';
+import { Area } from '../models/area.model';
 
-interface InputsResponse {
+// Define una interfaz para el formato de la respuesta del backend
+interface ApiResponse {
   status: string;
-  inputs: Input[];
-  totalInputs: number;
-  totalPages: number;
-  currentPage: number;
+  areas: Area[];
   message?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
-export class InputService {
-  private apiUrl = Global.url;
+export class AreaService {
+  private apiUrl = Global.url + 'areas'; // URL del backend
 
   constructor(private http: HttpClient) { }
 
@@ -37,18 +36,17 @@ export class InputService {
     return throwError(() => new Error(errorMessage)); // Lanza un nuevo error con el mensaje formateado
   }
 
-  getNoDeletedInputs(): Observable<InputsResponse> {
-    let params = new HttpParams();
-
-    return this.http.get<InputsResponse>(`${this.apiUrl}inputs`, { params }).pipe(
-        catchError(this.handleError)
-    );
-  }
-
-  getInputById(id: string): Observable<InputsResponse> {
-    const url = `${this.apiUrl}inputById/${id}`;
-    return this.http.get<InputsResponse>(url).pipe(
-      catchError(this.handleError)
+  getAllAreas(): Observable<Area[]> {
+    return this.http.get<ApiResponse>(this.apiUrl).pipe(
+      map((response: ApiResponse) => {
+        if (response.status === 'success') {
+          return response.areas;
+        } else {
+          // Si el backend devuelve un error con status 'error', lanzamos un error manejable
+          throw new Error(response.message || 'Error al obtener las áreas');
+        }
+      }),
+      catchError(this.handleError) // Manejo de errores
     );
   }
 }

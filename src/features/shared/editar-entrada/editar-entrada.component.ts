@@ -12,6 +12,9 @@ import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { Area } from '../../../core/models/area.model';
+import { AreaService } from '../../../core/services/areas.service';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -25,7 +28,8 @@ import { MatButtonModule } from '@angular/material/button';
     NgxMatTimepickerModule,
     MatIconModule,
     NgFor,
-    MatButtonModule
+    MatButtonModule,
+    MatSelectModule
   ],
   providers: [
     provideNativeDateAdapter(),
@@ -41,17 +45,28 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
   public inputDetails?: Input;
   inputForm!: FormGroup;
   private inputSubscription?: Subscription;
+  areas: Area[] = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     private _inputService: InputService,
     public dialogRef: MatDialogRef<EditarEntradaComponent>,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private _area: AreaService
   ) {
     this.inputData = data;
   }
 
   ngOnInit(): void {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
+    });
+
     // console.log(this.inputData);
     if (this.inputData) {
       this.inputSubscription = this._inputService.getInputById(this.inputData).subscribe({
