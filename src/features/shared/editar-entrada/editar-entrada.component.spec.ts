@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { NuevoSeguimientoComponent } from './nueva-entrada.component';
+import { NuevoSeguimientoComponent } from './editar-entrada.component';
 
 describe('NuevoSeguimientoComponent', () => {
   let component: NuevoSeguimientoComponent;

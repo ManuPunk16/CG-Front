@@ -4,7 +4,7 @@ import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
 import { ChangeDetectionStrategy, Component, OnInit, ViewChild } from '@angular/core';
 import { InputService } from '../../core/services/input.service';
 import { Input } from '../../core/models/input.model';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, NgIf } from '@angular/common';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +15,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.component';
+import { EditarEntradaComponent } from '../shared/editar-entrada/editar-entrada.component';
+import { TokenStorageService } from '../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-main',
@@ -31,7 +32,8 @@ import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.com
     MatInputModule,
     MatFormFieldModule,
     MatDatepickerModule,
-    FormsModule
+    FormsModule,
+    NgIf
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -43,6 +45,13 @@ import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.com
   styleUrl: './main.component.scss'
 })
 export class MainComponent implements OnInit {
+
+  isLoggedIn = false;
+  private roles: string[] = [];
+  username?: string;
+  showAdmin = false;
+  showLinker = false;
+  showModerator = false;
 
   @ViewChild(MatPaginator)
   paginator!: MatPaginator;
@@ -65,11 +74,23 @@ export class MainComponent implements OnInit {
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
-    private _matDialog: MatDialog
+    private _matDialog: MatDialog,
+    private _tokenStorage: TokenStorageService
   ) {}
 
   ngOnInit(): void {
     this.loadInputs();
+
+    this.isLoggedIn = !!this._tokenStorage.getToken();
+    if (this.isLoggedIn) {
+      const user = this._tokenStorage.getUser();
+      this.roles = user.roles;
+      // console.log(this.roles);
+      this.showAdmin = this.roles.includes('ROLE_ADMIN');
+      this.showLinker = this.roles.includes('ROLE_LINKER');
+      this.showModerator = this.roles.includes('ROLE_MODERATOR');
+      this.username = user.username;
+    }
   }
 
   loadInputs() {
@@ -155,14 +176,18 @@ export class MainComponent implements OnInit {
     }
   }
 
-  newSeguimiento(row: Input) {
-    const newSeguimiento = this._matDialog.open(NuevaEntradaComponent, {
+  newInput(row: Input) {
+    const newInput = this._matDialog.open(EditarEntradaComponent, {
       width: '90%',
       data: row._id
     });
 
-    newSeguimiento.afterClosed().subscribe(res => {
+    newInput.afterClosed().subscribe(res => {
 
     });
+  }
+
+  editSeguimiento(row: Input) {
+    console.log("Seguimiento: " + row._id);
   }
 }

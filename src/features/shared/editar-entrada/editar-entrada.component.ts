@@ -12,7 +12,7 @@ import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-nueva-entrada',
+  selector: 'app-editar-entrada',
   imports: [
     MatFormFieldModule,
     MatInputModule,
@@ -25,10 +25,10 @@ import { MatIconModule } from '@angular/material/icon';
     NgFor
   ],
   standalone: true,
-  templateUrl: './nueva-entrada.component.html',
-  styleUrl: './nueva-entrada.component.scss'
+  templateUrl: './editar-entrada.component.html',
+  styleUrl: './editar-entrada.component.scss'
 })
-export class NuevaEntradaComponent implements OnInit, OnDestroy {
+export class EditarEntradaComponent implements OnInit, OnDestroy {
 
   public inputData: string;
   public inputDetails?: Input;
@@ -38,7 +38,7 @@ export class NuevaEntradaComponent implements OnInit, OnDestroy {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
     private _inputService: InputService,
-    public dialogRef: MatDialogRef<NuevaEntradaComponent>,
+    public dialogRef: MatDialogRef<EditarEntradaComponent>,
     private fb: FormBuilder
   ) {
     this.inputData = data;

@@ -21,6 +21,10 @@
       </mat-form-field> -->
     </div>
 
+    <div>
+      <button mat-raised-button *ngIf="showModerator || showAdmin">Nuevo Registro</button>
+    </div>
+
     <mat-card-content>
       <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
           class="mat-elevation-z8">
@@ -34,7 +38,11 @@
               <mat-icon> remove_red_eye </mat-icon>
             </button>
 
-            <button mat-button (click)="newSeguimiento(row)">
+            <button mat-button *ngIf="showModerator || showAdmin" (click)="newInput(row)">
+              <mat-icon> border_color </mat-icon>
+            </button>
+
+            <button mat-button *ngIf="showLinker || showAdmin" (click)="editSeguimiento(row)">
               <mat-icon> border_color </mat-icon>
             </button>
           </td>
