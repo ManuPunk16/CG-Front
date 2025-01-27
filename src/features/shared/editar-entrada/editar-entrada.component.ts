@@ -10,6 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatIconModule } from '@angular/material/icon';
+import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -22,7 +24,12 @@ import { MatIconModule } from '@angular/material/icon';
     MatDialogModule,
     NgxMatTimepickerModule,
     MatIconModule,
-    NgFor
+    NgFor,
+    MatButtonModule
+  ],
+  providers: [
+    provideNativeDateAdapter(),
+    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
   ],
   standalone: true,
   templateUrl: './editar-entrada.component.html',
@@ -100,9 +107,9 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
     });
   }
 
-    cerrarDialogo(){
-        this.dialogRef.close();
-    }
+  cerrarDialogo(){
+      this.dialogRef.close();
+  }
 
   ngOnDestroy(): void {
     if (this.inputSubscription) {

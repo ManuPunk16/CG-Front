@@ -17,6 +17,9 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { EditarEntradaComponent } from '../shared/editar-entrada/editar-entrada.component';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
+import { EditarSeguimientoComponent } from '../shared/editar-seguimiento/editar-seguimiento.component';
+import { MatButtonModule } from '@angular/material/button';
+import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.component';
 
 @Component({
   selector: 'app-main',
@@ -33,7 +36,8 @@ import { TokenStorageService } from '../../core/auth/token-storage.service';
     MatFormFieldModule,
     MatDatepickerModule,
     FormsModule,
-    NgIf
+    NgIf,
+    MatButtonModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -176,18 +180,35 @@ export class MainComponent implements OnInit {
     }
   }
 
-  newInput(row: Input) {
-    const newInput = this._matDialog.open(EditarEntradaComponent, {
+  editInput(row: Input) {
+    const editInput = this._matDialog.open(EditarEntradaComponent, {
       width: '90%',
       data: row._id
     });
 
-    newInput.afterClosed().subscribe(res => {
+    editInput.afterClosed().subscribe(res => {
 
     });
   }
 
   editSeguimiento(row: Input) {
-    console.log("Seguimiento: " + row._id);
+    const editSeguimiento = this._matDialog.open(EditarSeguimientoComponent, {
+      width: '90%',
+      data: row._id
+    });
+
+    editSeguimiento.afterClosed().subscribe( res => {
+
+    });
+  }
+
+  newInput() {
+    const newInput = this._matDialog.open(NuevaEntradaComponent, {
+      width: '90%'
+    });
+
+    newInput.afterClosed().subscribe( res => {
+
+    });
   }
 }
