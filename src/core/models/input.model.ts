@@ -31,12 +31,7 @@ export interface Input {
 
 export interface Seguimiento {
   fecha_respuesta: Date;
-  usuario: {
-    id: string;
-    username: string;
-  };
-  comentarios: string;
-  archivosPdf_seguimiento: string[];
+  oficio_salida: string;
   num_expediente: string;
   fecha_oficio_salida?: Date;
   fecha_acuse_recibido?: Date;
@@ -45,6 +40,12 @@ export interface Seguimiento {
   atencion_otorgada?: string;
   anexo?: string;
   estatus: string;
+  comentarios: string;
   firma_visado?: string;
+  archivosPdf_seguimiento: string[];
+  usuario: {
+    id: string;
+    username: string;
+  };
   timestamps: Date;
 }

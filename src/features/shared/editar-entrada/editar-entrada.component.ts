@@ -170,7 +170,7 @@ export class EditarEntradaComponent implements OnInit {
       asignado: new FormControl(this.inputDetails?.asignado || '', Validators.required),
       estatus: new FormControl(this.inputDetails?.estatus || '', Validators.required),
       observacion: new FormControl(this.inputDetails?.observacion || ''),
-      archivosPdf: this.fb.array(this.inputDetails?.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
+      archivosPdf: this.fb.array(this.inputDetails?.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
     });
   }
 

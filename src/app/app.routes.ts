@@ -22,6 +22,11 @@ export const routes: Routes = [
 
   },
   {
+    path: 'editar-seguimiento/:id',
+    loadComponent: () => import('../features/shared/editar-seguimiento/editar-seguimiento.component').then(c => c.EditarSeguimientoComponent),
+
+  },
+  {
     path: '',
     redirectTo: 'login', // Redirige a /login por defecto
     pathMatch: 'full'

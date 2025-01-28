@@ -191,14 +191,11 @@ export class MainComponent implements OnInit {
   }
 
   editSeguimiento(row: Input) {
-    const editSeguimiento = this._matDialog.open(EditarSeguimientoComponent, {
-      width: '90%',
-      data: row._id
-    });
-
-    editSeguimiento.afterClosed().subscribe( res => {
-
-    });
+    if (row._id) {
+      this.router.navigate(['/editar-seguimiento', row._id]);
+    } else {
+      console.error('El ID del registro es inválido');
+    }
   }
 
   newInput() {
