@@ -11,16 +11,16 @@ export const routes: Routes = [
     loadComponent: () => import('../features/main/main.component').then(c => c.MainComponent),
     //canActivate:[AuthGuard] //Guarda para proteger la ruta
   },
-  // {
-  //   path: 'inputs',
-  //   loadChildren: () => import('../features/inputs/inputs.module').then(m => m.InputsModule),
-  //   //canActivate:[AuthGuard] //Guarda para proteger la ruta
-  // },
-  //   {
-  //   path: 'admin',
-  //   loadChildren: () => import('../features/admin/admin.module').then(m => m.AdminModule),
-  //       //canActivate:[AuthGuard] //Guarda para proteger la ruta
-  // },
+  {
+    path: 'editar-entrada/:id',
+    loadComponent: () => import('../features/shared/editar-entrada/editar-entrada.component').then(c => c.EditarEntradaComponent),
+
+  },
+  {
+    path: 'nueva-entrada',
+    loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
+
+  },
   {
     path: '',
     redirectTo: 'login', // Redirige a /login por defecto

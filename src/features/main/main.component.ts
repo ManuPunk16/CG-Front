@@ -20,6 +20,7 @@ import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { EditarSeguimientoComponent } from '../shared/editar-seguimiento/editar-seguimiento.component';
 import { MatButtonModule } from '@angular/material/button';
 import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-main',
@@ -79,7 +80,8 @@ export class MainComponent implements OnInit {
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
     private _matDialog: MatDialog,
-    private _tokenStorage: TokenStorageService
+    private _tokenStorage: TokenStorageService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -181,14 +183,11 @@ export class MainComponent implements OnInit {
   }
 
   editInput(row: Input) {
-    const editInput = this._matDialog.open(EditarEntradaComponent, {
-      width: '90%',
-      data: row._id
-    });
-
-    editInput.afterClosed().subscribe(res => {
-
-    });
+    if (row._id) {
+      this.router.navigate(['/editar-entrada', row._id]);
+    } else {
+      console.error('El ID del registro es inválido');
+    }
   }
 
   editSeguimiento(row: Input) {
@@ -203,12 +202,6 @@ export class MainComponent implements OnInit {
   }
 
   newInput() {
-    const newInput = this._matDialog.open(NuevaEntradaComponent, {
-      width: '90%'
-    });
-
-    newInput.afterClosed().subscribe( res => {
-
-    });
+    this.router.navigate(['/nueva-entrada']);
   }
 }

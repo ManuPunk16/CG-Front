@@ -1,10 +1,8 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Input } from '../../../core/models/input.model';
 import { InputService } from '../../../core/services/input.service';
-import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormBuilder, Validators, FormArray, FormControl, AbstractControl } from '@angular/forms';
 import { NgIf, NgFor, formatDate } from '@angular/common';
-import { Subscription } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -21,6 +19,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InstrumentsService } from '../../../core/services/instruments.service';
 import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
+import { ActivatedRoute } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -30,13 +30,13 @@ import { EstatusEntrada } from '../../../core/models/estatus.model';
     MatDatepickerModule,
     NgIf,
     ReactiveFormsModule,
-    MatDialogModule,
     NgxMatTimepickerModule,
     MatIconModule,
     NgFor,
     MatButtonModule,
     MatSelectModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    MatCardModule
   ],
   providers: [
     provideNativeDateAdapter(),
@@ -46,79 +46,66 @@ import { EstatusEntrada } from '../../../core/models/estatus.model';
   templateUrl: './editar-entrada.component.html',
   styleUrl: './editar-entrada.component.scss'
 })
-export class EditarEntradaComponent implements OnInit, OnDestroy {
+export class EditarEntradaComponent implements OnInit {
 
-  public inputData: string;
+  public id: any;
   public inputDetails?: Input;
   inputForm!: FormGroup;
-  private inputSubscription?: Subscription;
   areas: Area[] = [];
   institutions: Institution[] = [];
   instruments: Instrument[] = [];
   estatusOptions = Object.values(EstatusEntrada);
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: any,
     private _inputService: InputService,
-    public dialogRef: MatDialogRef<EditarEntradaComponent>,
     private fb: FormBuilder,
     private _area: AreaService,
     private _institution: InstitutionsService,
-    private _instrument: InstrumentsService
+    private _instrument: InstrumentsService,
+    private route: ActivatedRoute,
+    private changeDetectorRef: ChangeDetectorRef
   ) {
-    this.inputData = data;
+    this.inputForm = new FormGroup({
+      anio: new FormControl(),
+      folio: new FormControl(),
+      num_oficio: new FormControl(),
+      fecha_oficio: new FormControl(),
+      fecha_vencimiento: new FormControl(),
+      fecha_recepcion: new FormControl(),
+      hora_recepcion: new FormControl(),
+      instrumento_juridico: new FormControl(),
+      remitente: new FormControl(),
+      institucion_origen: new FormControl(),
+      asunto: new FormControl(),
+      asignado: new FormControl(),
+      estatus: new FormControl(),
+      observacion: new FormControl(),
+      archivosPdf: this.fb.array([]),
+    });
   }
 
   ngOnInit(): void {
-    this._area.getAllAreas().subscribe({
-      next: (areas) => {
-        this.areas = areas;
-      },
-      error: (error) => {
-        console.error('Error al obtener las áreas:', error);
-      }
-    });
-
-    this._institution.getAllNoDeletedInstitutions().subscribe({
-      next: (res) => {
-        this.institutions = res;
-      },
-      error: (error) => {
-        console.error('Error al obtener las instituciones:', error);
-      }
-    });
-
-    this._instrument.getAllNoDeletedInstruments().subscribe({
-      next: (res) => {
-        this.instruments = res;
-      },
-      error: (error) => {
-        console.error('Error al obtener las instituciones:', error);
-      }
-    });
-
-    // console.log(this.inputData);
-    if (this.inputData) {
-      this.inputSubscription = this._inputService.getInputById(this.inputData).subscribe({
-        next: (res: any) => {
-          if (res.input) {
-            this.inputDetails = res.input;
-            console.log(this.inputDetails);
-            this.initForm();
-          } else {
-            console.error("No se encontraron datos del input.");
-            // Manejar el caso donde no hay datos, por ejemplo, mostrar un mensaje al usuario
-            this.dialogRef.close(); //Cerrar el dialogo si no hay datos.
+    this.route.paramMap.subscribe(params => {
+      this.id = params.get('id');
+      if (this.id) {
+        this._inputService.getInputById(this.id).subscribe({
+          next: (res: any) => {
+            if (res.input) {
+              this.inputDetails = res.input;
+              this.getInstitutions();
+              this.getAreas();
+              this.getInstruments();
+              this.initForm();
+            } else {
+              console.error("No se encontraron datos del input.");
+            }
+          },
+          error: err => {
+            console.log(err);
           }
-
-        },
-        error: err => {
-          console.log(err);
-        }
-      });
-    } else {
-        this.initForm();
-    }
+        });
+      }
+    });
   }
 
   onSubmit() {
@@ -129,37 +116,70 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
 
       const valoresDelFormulario = this.inputForm.value;
       console.log(valoresDelFormulario);
+    } else {
+      console.log("Hola");
     }
   }
 
-  initForm() {
-    this.inputForm = this.fb.group({
-      anio: [this.inputDetails?.anio || null, Validators.required],
-      folio: [this.inputDetails?.folio || null, Validators.required],
-      num_oficio: [this.inputDetails?.num_oficio || '', Validators.required],
-      fecha_oficio: [this.inputDetails?.fecha_oficio || null, Validators.required],
-      fecha_vencimiento: [this.inputDetails?.fecha_vencimiento || null],
-      fecha_recepcion: [this.inputDetails?.fecha_recepcion || null, Validators.required],
-      hora_recepcion: [this.inputDetails?.hora_recepcion || ''],
-      instrumento_juridico: [this.inputDetails?.instrumento_juridico || '', Validators.required],
-      remitente: [this.inputDetails?.remitente || '', Validators.required],
-      institucion_origen: [this.inputDetails?.institucion_origen || '', Validators.required],
-      asunto: [this.inputDetails?.asunto || '', Validators.required],
-      asignado: [this.inputDetails?.asignado || '', Validators.required],
-      estatus: [this.inputDetails?.estatus || '', Validators.required],
-      observacion: [this.inputDetails?.observacion || ''],
-      archivosPdf: this.fb.array(this.inputDetails?.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : []), // Inicializa el FormArray
+  getAreas() {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
     });
   }
 
-  cerrarDialogo(){
-      this.dialogRef.close();
+  getInstitutions() {
+    this._institution.getAllNoDeletedInstitutions().subscribe({
+      next: (res) => {
+        this.institutions = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
   }
 
-  ngOnDestroy(): void {
-    if (this.inputSubscription) {
-      this.inputSubscription.unsubscribe();
+  getInstruments() {
+    this._instrument.getAllNoDeletedInstruments().subscribe({
+      next: (res) => {
+        this.instruments = res;
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
+  }
+
+  initForm() {
+    this.inputForm = new FormGroup({
+      anio: new FormControl(this.inputDetails?.anio || null, Validators.required),
+      folio: new FormControl(this.inputDetails?.folio || null, Validators.required),
+      num_oficio: new FormControl(this.inputDetails?.num_oficio || '', Validators.required),
+      fecha_oficio: new FormControl(this.inputDetails?.fecha_oficio || null, Validators.required),
+      fecha_vencimiento: new FormControl(this.inputDetails?.fecha_vencimiento || null),
+      fecha_recepcion: new FormControl(this.inputDetails?.fecha_recepcion || null, Validators.required),
+      hora_recepcion: new FormControl(this.inputDetails?.hora_recepcion || ''),
+      instrumento_juridico: new FormControl(this.inputDetails?.instrumento_juridico || '', Validators.required),
+      remitente: new FormControl(this.inputDetails?.remitente || '', Validators.required),
+      institucion_origen: new FormControl(this.inputDetails?.institucion_origen || '', Validators.required),
+      asunto: new FormControl(this.inputDetails?.asunto || '', Validators.required),
+      asignado: new FormControl(this.inputDetails?.asignado || '', Validators.required),
+      estatus: new FormControl(this.inputDetails?.estatus || '', Validators.required),
+      observacion: new FormControl(this.inputDetails?.observacion || ''),
+      archivosPdf: this.fb.array(this.inputDetails?.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
+    });
+  }
+
+  archivosPdfValidator(control: AbstractControl): { requerido: boolean; } | null {
+    const formArray = control as FormArray; // Hacemos un cast seguro
+    if (formArray.length === 0) {
+      return { requerido: true };
     }
+    return null;
   }
 
   get archivosPdfFormArray() {
@@ -172,5 +192,7 @@ export class EditarEntradaComponent implements OnInit, OnDestroy {
 
   eliminarPdf(index: number){
       this.archivosPdfFormArray.removeAt(index);
+      this.inputForm.markAllAsTouched();
+      this.changeDetectorRef.detectChanges();
   }
 }

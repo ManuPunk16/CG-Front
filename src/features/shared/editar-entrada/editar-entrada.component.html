@@ -1,134 +1,145 @@
-<h1 mat-dialog-title>Editar Registro</h1>
-<div *ngIf="inputDetails">
-  <form [formGroup]="inputForm" autocomplete="off" (ngSubmit)="onSubmit()">
-    <mat-dialog-content>
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <h1>Editar Registro</h1>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="inputForm" class="form-container" *ngIf="inputForm" (ngSubmit)="onSubmit()">
+      <div class="container">
+        <mat-form-field  appearance="fill">
+          <mat-label>Año</mat-label>
+          <input matInput type="number" formControlName="anio">
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Año</mat-label>
-            <input matInput type="number" formControlName="anio">
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Folio</mat-label>
+          <input matInput type="number" formControlName="folio">
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Folio</mat-label>
-            <input matInput type="number" formControlName="folio">
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Número de Oficio</mat-label>
+          <input matInput formControlName="num_oficio" type="text">
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Número de Oficio</mat-label>
-            <input matInput formControlName="num_oficio" type="text" name="numeroOficioInput" aria-label="Ingrese el número de oficio del documento">
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Fecha Oficio</mat-label>
+          <input matInput [matDatepicker]="fechaOficio" formControlName="fecha_oficio">
+          <mat-datepicker-toggle matSuffix [for]="fechaOficio"></mat-datepicker-toggle>
+          <mat-datepicker #fechaOficio></mat-datepicker>
+        </mat-form-field>
+      </div>
 
-          <mat-form-field appearance="fill">
-              <mat-label>Fecha Oficio</mat-label>
-              <input matInput [matDatepicker]="fechaOficio" formControlName="fecha_oficio">
-              <mat-datepicker-toggle matSuffix [for]="fechaOficio"></mat-datepicker-toggle>
-              <mat-datepicker #fechaOficio></mat-datepicker>
-          </mat-form-field>
+      <div class="container">
+        <mat-form-field appearance="fill">
+          <mat-label>Fecha Vencimiento</mat-label>
+          <input matInput [matDatepicker]="fechaVencimiento" formControlName="fecha_vencimiento">
+          <mat-datepicker-toggle matSuffix [for]="fechaVencimiento"></mat-datepicker-toggle>
+          <mat-datepicker #fechaVencimiento></mat-datepicker>
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-              <mat-label>Fecha Vencimiento</mat-label>
-              <input matInput [matDatepicker]="fechaVencimiento" formControlName="fecha_vencimiento">
-              <mat-datepicker-toggle matSuffix [for]="fechaVencimiento"></mat-datepicker-toggle>
-              <mat-datepicker #fechaVencimiento></mat-datepicker>
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Fecha Recepcion</mat-label>
+          <input matInput [matDatepicker]="fechaRecepcion" formControlName="fecha_recepcion">
+          <mat-datepicker-toggle matSuffix [for]="fechaRecepcion"></mat-datepicker-toggle>
+          <mat-datepicker #fechaRecepcion></mat-datepicker>
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-              <mat-label>Fecha Recepcion</mat-label>
-              <input matInput [matDatepicker]="fechaRecepcion" formControlName="fecha_recepcion">
-              <mat-datepicker-toggle matSuffix [for]="fechaRecepcion"></mat-datepicker-toggle>
-              <mat-datepicker #fechaRecepcion></mat-datepicker>
-          </mat-form-field>
+        <mat-form-field appearance="fill" class="form-element">
+          <mat-label>Hora Recepcion</mat-label>
+          <input matInput
+                name="selected_time_A"
+                formControlName="hora_recepcion"
+                [ngxMatTimepicker]="pickerA"
+                placeholder="4:00 PM"
+                readonly />
+          <mat-icon matSuffix
+                    (click)="pickerA.open()">
+              watch_later
+          </mat-icon>
+        </mat-form-field>
+        <ngx-mat-timepicker #pickerA></ngx-mat-timepicker>
 
-          <mat-form-field appearance="fill" class="form-element">
-            <mat-label>Hora Recepcion</mat-label>
-            <input matInput
-                  name="selected_time_A"
-                  formControlName="hora_recepcion"
-                  [ngxMatTimepicker]="pickerA"
-                  placeholder="4:00 PM"
-                  readonly />
-            <mat-icon matSuffix
-                      (click)="pickerA.open()">
-                watch_later
-            </mat-icon>
-          </mat-form-field>
-          <ngx-mat-timepicker #pickerA></ngx-mat-timepicker>
+        <mat-form-field appearance="fill">
+          <mat-label>Instrumento Juridico</mat-label>
+           <mat-select formControlName="instrumento_juridico">
+            <mat-option *ngFor="let item of instruments" [value]="item.name" name="instrumento_juridico">
+              {{item.name}}
+            </mat-option>
+           </mat-select>
+        </mat-form-field>
+      </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Instrumento Juridico</mat-label>
-             <mat-select formControlName="instrumento_juridico">
-              <mat-option *ngFor="let item of instruments" [value]="item.name" name="instrumento_juridico">
+      <div class="container">
+        <mat-form-field appearance="fill">
+          <mat-label>Remitente</mat-label>
+          <input matInput formControlName="remitente">
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Institucion Origen</mat-label>
+           <input type="text" matInput formControlName="institucion_origen" [matAutocomplete]="auto">
+            <mat-autocomplete #auto="matAutocomplete">
+              <mat-option *ngFor="let item of institutions" [value]="item.name" name="institucion_origen">
                 {{item.name}}
               </mat-option>
-             </mat-select>
-          </mat-form-field>
+            </mat-autocomplete>
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-              <mat-label>Remitente</mat-label>
-              <input matInput formControlName="remitente">
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Asignado</mat-label>
+           <mat-select formControlName="asignado">
+            <mat-option *ngFor="let item of areas" [value]="item.area" name="asignado">
+              {{item.area}}
+            </mat-option>
+           </mat-select>
+        </mat-form-field>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Institucion Origen</mat-label>
-             <input type="text" matInput formControlName="institucion_origen" [matAutocomplete]="auto">
-              <mat-autocomplete #auto="matAutocomplete">
-                <mat-option *ngFor="let item of institutions" [value]="item.name" name="institucion_origen">
-                  {{item.name}}
-                </mat-option>
-              </mat-autocomplete>
-          </mat-form-field>
+        <mat-form-field appearance="fill">
+          <mat-label>Estatus</mat-label>
+          <mat-select formControlName="estatus">
+            <mat-option *ngFor="let estatus of estatusOptions" [value]="estatus">
+              {{ estatus }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="inputForm.get('estatus')?.hasError('required')">El estatus es requerido</mat-error>
+        </mat-form-field>
+      </div>
 
-          <mat-form-field appearance="fill">
-              <mat-label>Asunto</mat-label>
-              <input matInput formControlName="asunto">
-          </mat-form-field>
+      <div class="container">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Asunto</mat-label>
+          <textarea matInput formControlName="asunto"></textarea>
+        </mat-form-field>
+      </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Asignado</mat-label>
-             <mat-select formControlName="asignado">
-              <mat-option *ngFor="let item of areas" [value]="item.area" name="asignado">
-                {{item.area}}
-              </mat-option>
-             </mat-select>
-          </mat-form-field>
+      <div class="container">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Observaciones</mat-label>
+          <textarea matInput formControlName="observacion"></textarea>
+        </mat-form-field>
+      </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Estatus</mat-label>
-            <mat-select formControlName="estatus">
-              <mat-option *ngFor="let estatus of estatusOptions" [value]="estatus">
-                {{ estatus }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="inputForm.get('estatus')?.hasError('required')">El estatus es requerido</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-              <mat-label>Observacion</mat-label>
-              <input matInput formControlName="observacion">
-          </mat-form-field>
-
-          <div>
-            <label>Archivos PDF:</label>
-            <div formArrayName="archivosPdf">
-                <div *ngFor="let pdfControl of archivosPdfFormArray.controls; let i = index">
-                    <mat-form-field appearance="fill">
-                        <input matInput type="text" [formControlName]="i">
-                    </mat-form-field>
-                    <button mat-icon-button color="warn" (click)="eliminarPdf(i)">
-                        <mat-icon>delete</mat-icon>
-                    </button>
-                </div>
-                <button mat-raised-button color="primary" type="button" (click)="agregarPdf()">Agregar PDF</button>
+      <div>
+        <label>Archivos PDF:</label>
+        <div formArrayName="archivosPdf">
+            <div class="container-pdf" *ngFor="let pdfControl of archivosPdfFormArray.controls; let i = index">
+                <mat-form-field appearance="fill">
+                    <input matInput type="text" [formControlName]="i">
+                </mat-form-field>
+                <button mat-icon-button color="warn" (click)="eliminarPdf(i)">
+                    <mat-icon>delete</mat-icon>
+                </button>
             </div>
-          </div>
-          <div *ngIf="!inputDetails">
-            <p>Cargando información...</p>
-          </div>
-    </mat-dialog-content>
+            <button mat-raised-button color="primary" type="button" (click)="agregarPdf()">Agregar PDF</button>
+        </div>
+      </div>
+      <div *ngIf="!inputDetails">
+        <p>Cargando información...</p>
+      </div>
 
-    <mat-dialog-actions>
-      <button mat-button (click)="cerrarDialogo()">Cerrar</button>
-      <button mat-button [mat-dialog-close]="true" cdkFocusInitial type="submit">Guardar</button>
-    </mat-dialog-actions>
-  </form>
-</div>
+      <button mat-button>Cerrar</button>
+      <button mat-button cdkFocusInitial type="submit">Guardar</button>
+    </form>
+  </mat-card-content>
+</mat-card>

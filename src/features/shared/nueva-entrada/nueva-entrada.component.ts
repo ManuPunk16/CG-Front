@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormBuilder, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormBuilder, FormArray, AbstractControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { formatDate, NgFor, NgIf } from '@angular/common';
@@ -8,7 +8,6 @@ import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import { Input } from '../../../core/models/input.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
 import { NgxMatTimepickerModule } from 'ngx-mat-timepicker';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,7 +33,6 @@ import { EstatusEntrada } from '../../../core/models/estatus.model';
     MatIconModule,
     MatDatepickerModule,
     NgxMatTimepickerModule,
-    MatDialogModule,
     MatButtonModule,
     MatSelectModule,
     MatAutocompleteModule
@@ -59,12 +57,12 @@ export class NuevaEntradaComponent implements OnInit {
   estatusOptions = Object.values(EstatusEntrada);
 
   constructor(
-    public dialogRef: MatDialogRef<NuevaEntradaComponent>,
     private fb: FormBuilder,
     private _tokenStorageService: TokenStorageService,
     private _area: AreaService,
     private _institution: InstitutionsService,
-    private _instrument: InstrumentsService
+    private _instrument: InstrumentsService,
+    private changeDetectorRef: ChangeDetectorRef
   ){
     this.currentUser = this._tokenStorageService.getUser();
   }
@@ -112,7 +110,7 @@ export class NuevaEntradaComponent implements OnInit {
       asignado: new FormControl(''),
       estatus: new FormControl(''),
       observacion: new FormControl(''),
-      archivosPdf: this.fb.array([]),
+      archivosPdf: this.fb.array([], [Validators.required, this.archivosPdfValidator]),
       create_user: this.fb.group({
         id: [this.currentUser.id],
         username: [this.currentUser.username]
@@ -131,10 +129,16 @@ export class NuevaEntradaComponent implements OnInit {
 
   removeArchivoPdf(index: number) {
     this.archivosPdfForms.removeAt(index);
+    this.inputForm.markAllAsTouched();
+    this.changeDetectorRef.detectChanges();
   }
 
-  cerrarDialogo(){
-    this.dialogRef.close();
+  archivosPdfValidator(control: AbstractControl): { requerido: boolean; } | null {
+    const formArray = control as FormArray; // Hacemos un cast seguro
+    if (formArray.length === 0) {
+      return { requerido: true };
+    }
+    return null;
   }
 
   onSubmit() {
@@ -146,6 +150,8 @@ export class NuevaEntradaComponent implements OnInit {
       this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
 
       console.log(inputData); // Aquí envías los datos al backend
+    } else {
+      console.log("Hola");
     }
   }
 
