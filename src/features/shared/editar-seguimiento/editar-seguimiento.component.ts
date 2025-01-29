@@ -91,11 +91,12 @@ export class EditarSeguimientoComponent implements OnInit {
           next: (res: any) => {
             if (res.input) {
               this.inputDetails = res.input;
-              console.log(this.inputDetails);
+              // console.log(this.inputDetails);
               this.getInstitutions();
               this.getAreas();
               this.getInstruments();
               this.initForm();
+              this.changeDetectorRef.detectChanges();
             } else {
               console.error("No se encontraron datos del input.");
             }
@@ -124,7 +125,7 @@ export class EditarSeguimientoComponent implements OnInit {
   initForm() {
     this.seguimientoForm = new FormGroup({
       oficio_salida: new FormControl(this.inputDetails?.seguimientos?.oficio_salida || null, Validators.required),
-      num_expediente: new FormControl(this.inputDetails?.seguimientos?.num_expediente || null, Validators.required),
+      num_expediente: new FormControl(this.inputDetails?.seguimientos?.num_expediente || null),
       fecha_oficio_salida: new FormControl(this.inputDetails?.seguimientos?.fecha_oficio_salida || null),
       fecha_acuse_recibido: new FormControl(this.inputDetails?.seguimientos?.fecha_acuse_recibido || null, Validators.required),
       destinatario: new FormControl(this.inputDetails?.seguimientos?.destinatario || null, Validators.required),

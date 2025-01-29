@@ -27,6 +27,11 @@ export const routes: Routes = [
 
   },
   {
+    path: 'ficha_tecnica/:id',
+    loadComponent: () => import('../features/shared/ficha-tecnica/ficha-tecnica.component').then(c => c.FichaTecnicaComponent),
+
+  },
+  {
     path: '',
     redirectTo: 'login', // Redirige a /login por defecto
     pathMatch: 'full'

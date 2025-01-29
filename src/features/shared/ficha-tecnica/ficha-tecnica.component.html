@@ -1,0 +1,32 @@
+<p>ficha-tecnica works!</p>
+
+<div *ngIf="inputDetails">
+{{inputDetails._id}}
+{{inputDetails.folio}}
+{{inputDetails.num_oficio}}
+{{inputDetails.fecha_oficio}}
+{{inputDetails.fecha_recepcion}}
+{{inputDetails.fecha_recepcion}}
+{{inputDetails.hora_recepcion}}
+{{inputDetails.instrumento_juridico}}
+{{inputDetails.remitente}}
+{{inputDetails.institucion_origen}}
+{{inputDetails.asunto}}
+{{inputDetails.asignado}}
+{{inputDetails.estatus}}
+{{inputDetails.asignado}}
+{{inputDetails.observacion}}
+<br><br>
+</div>
+
+<div *ngIf="inputDetails">
+  <h2>Archivos PDF</h2>
+  <ul *ngIf="pdfUrls.length > 0; else noPdfs">
+    <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+      <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+    </li>
+  </ul>
+  <ng-template #noPdfs>
+    <p>No hay archivos PDF disponibles.</p>
+  </ng-template>
+</div>

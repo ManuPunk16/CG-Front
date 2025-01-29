@@ -45,9 +45,24 @@ export class InputService {
     );
   }
 
+  getNoDeletedInputsByNormalUsers(asignado: string): Observable<InputsResponse> {
+    let params = new HttpParams();
+
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs_area/` + asignado, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+
   getInputById(id: string): Observable<InputsResponse> {
     const url = `${this.apiUrl}inputById/${id}`;
     return this.http.get<InputsResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getPdfByIdInput(id: string, filename: string): Observable<Blob> {
+    const url = `${this.apiUrl}pdfs/${id}/download?filename=${filename}`;
+    return this.http.get(url, { responseType: 'blob' }).pipe(
       catchError(this.handleError)
     );
   }

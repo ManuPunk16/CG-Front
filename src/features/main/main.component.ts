@@ -14,12 +14,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { EditarEntradaComponent } from '../shared/editar-entrada/editar-entrada.component';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
-import { EditarSeguimientoComponent } from '../shared/editar-seguimiento/editar-seguimiento.component';
 import { MatButtonModule } from '@angular/material/button';
-import { NuevaEntradaComponent } from '../shared/nueva-entrada/nueva-entrada.component';
 import { Router } from '@angular/router';
 
 @Component({
@@ -79,7 +75,6 @@ export class MainComponent implements OnInit {
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
-    private _matDialog: MatDialog,
     private _tokenStorage: TokenStorageService,
     private router: Router
   ) {}
@@ -91,7 +86,6 @@ export class MainComponent implements OnInit {
     if (this.isLoggedIn) {
       const user = this._tokenStorage.getUser();
       this.roles = user.roles;
-      // console.log(this.roles);
       this.showAdmin = this.roles.includes('ROLE_ADMIN');
       this.showLinker = this.roles.includes('ROLE_LINKER');
       this.showModerator = this.roles.includes('ROLE_MODERATOR');
@@ -100,7 +94,9 @@ export class MainComponent implements OnInit {
   }
 
   loadInputs() {
-    this.inputService.getNoDeletedInputs().subscribe({
+    const user = this._tokenStorage.getUser();
+    if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
+      this.inputService.getNoDeletedInputs().subscribe({
         next: (response) => {
             this.inputs = response.inputs;
             this.totalInputs = response.totalInputs;
@@ -108,12 +104,27 @@ export class MainComponent implements OnInit {
             this.dataSource = new MatTableDataSource(this.inputs);
             this.dataSource.paginator = this.paginator;
             this.dataSource.sort = this.sort;
-            // console.log(this.inputs);
+        },
+        error: (err) => {
+            console.error(err);
+        }
+      });
+    } else {
+      const areaUser = user.area;
+      this.inputService.getNoDeletedInputsByNormalUsers(areaUser).subscribe({
+        next: (response) => {
+            this.inputs = response.inputs;
+            this.totalInputs = response.totalInputs;
+            this.totalPages = response.totalPages;
+            this.dataSource = new MatTableDataSource(this.inputs);
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
         },
         error: (err) => {
             console.error(err);
         }
     });
+    }
   }
 
   announceSortChange(sortState: Sort) {
@@ -200,5 +211,13 @@ export class MainComponent implements OnInit {
 
   newInput() {
     this.router.navigate(['/nueva-entrada']);
+  }
+
+  tecnicalView(row: Input) {
+    if (row._id) {
+      window.open(`/ficha_tecnica/${row._id}`, '_blank');
+    } else {
+      console.error('El ID del registro es inválido');
+    }
   }
 }
