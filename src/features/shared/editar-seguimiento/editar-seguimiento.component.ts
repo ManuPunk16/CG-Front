@@ -19,7 +19,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InstrumentsService } from '../../../core/services/instruments.service';
 import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 
 @Component({
@@ -64,7 +64,8 @@ export class EditarSeguimientoComponent implements OnInit {
     private _institution: InstitutionsService,
     private _instrument: InstrumentsService,
     private route: ActivatedRoute,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private router: Router
   ) {
     this.seguimientoForm = new FormGroup({
       oficio_salida: new FormControl(),
@@ -135,7 +136,7 @@ export class EditarSeguimientoComponent implements OnInit {
       estatus: new FormControl(this.inputDetails?.seguimientos?.anexo || null, Validators.required),
       comentarios: new FormControl(this.inputDetails?.seguimientos?.comentarios || null),
       firma_visado: new FormControl(this.inputDetails?.seguimientos?.firma_visado || null),
-      archivosPdf_seguimiento: this.fb.array(this.inputDetails?.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
+      archivosPdf_seguimiento: this.fb.array(this.inputDetails?.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
       fecha_respuesta: new FormControl(this.inputDetails?.seguimientos?.fecha_respuesta || null)
     });
   }
@@ -195,4 +196,14 @@ export class EditarSeguimientoComponent implements OnInit {
       this.changeDetectorRef.detectChanges();
   }
 
+  salirSinGuardar() {
+    if (!this.seguimientoForm.dirty) { // Verifica si el formulario ha sido modificado
+      const confirmacion = window.confirm('¿Estás seguro de que quieres salir sin guardar los cambios?');
+      if (confirmacion) {
+        this.router.navigate(['/Entradas']);
+      }
+    } else {
+      this.router.navigate(['/Entradas']); // Navega directamente si no hay cambios
+    }
+  }
 }

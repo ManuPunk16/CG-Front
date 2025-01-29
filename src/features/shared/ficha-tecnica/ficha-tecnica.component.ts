@@ -22,6 +22,7 @@ export class FichaTecnicaComponent implements OnInit {
   inputDetails!: Input;
 
   pdfUrls: SafeUrl[] = [];
+  pdfUrlsSeguimiento: SafeUrl[] = [];
 
   constructor(
     private _input: InputService,
@@ -40,6 +41,7 @@ export class FichaTecnicaComponent implements OnInit {
           next: (res: any) => {
             if (res.input) {
               this.inputDetails = res.input;
+              console.log(this.inputDetails);
               this.loadPdfs();
             } else {
               console.error("No se encontraron datos del input.");
@@ -63,6 +65,24 @@ export class FichaTecnicaComponent implements OnInit {
             const blobUrl = urlCreator.createObjectURL(blob);
             const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
             this.pdfUrls.push(safeUrl);
+            this.cdr.detectChanges();
+          },
+          error: (error) => {
+            console.error('Error obteniendo PDF:', error);
+          }
+        });
+      });
+    }
+
+    if (this.inputDetails && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
+      this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach(pdfPathSeguimiento => {
+        const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
+        this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).subscribe({
+          next: (blob: Blob) => {
+            const urlCreator = window.URL || window.webkitURL;
+            const blobUrl = urlCreator.createObjectURL(blob);
+            const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+            this.pdfUrlsSeguimiento.push(safeUrl);
             this.cdr.detectChanges();
           },
           error: (error) => {

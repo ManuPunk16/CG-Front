@@ -66,4 +66,11 @@ export class InputService {
       catchError(this.handleError)
     );
   }
+
+  getPdfByIdSeguimiento(id: string, filename: string): Observable<Blob> {
+    const url = `${this.apiUrl}pdfs_seguimiento/${id}/download?filename=${filename}`;
+    return this.http.get(url, { responseType: 'blob' }).pipe(
+      catchError(this.handleError)
+    );
+  }
 }

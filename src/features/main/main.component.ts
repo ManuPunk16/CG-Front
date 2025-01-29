@@ -98,6 +98,7 @@ export class MainComponent implements OnInit {
     if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
       this.inputService.getNoDeletedInputs().subscribe({
         next: (response) => {
+          console.log(response);
             this.inputs = response.inputs;
             this.totalInputs = response.totalInputs;
             this.totalPages = response.totalPages;
@@ -162,7 +163,6 @@ export class MainComponent implements OnInit {
             const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
             return formattedDate.toLocaleLowerCase().includes(filter);
           } else if (column === 'folio') {
-            // Busca coincidencia (contiene) en el folio (convertido a string).
             return data.folio?.toString().toLocaleLowerCase().includes(filter);
           } else if (data[column as keyof Input]) {
             return data[column as keyof Input]?.toString().toLocaleLowerCase().includes(filter);

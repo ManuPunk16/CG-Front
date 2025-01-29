@@ -20,9 +20,19 @@
 </div>
 
 <div *ngIf="inputDetails">
-  <h2>Archivos PDF</h2>
+  <h2>Archivos PDF Entrada</h2>
   <ul *ngIf="pdfUrls.length > 0; else noPdfs">
     <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+      <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+    </li>
+  </ul>
+  <ng-template #noPdfs>
+    <p>No hay archivos PDF disponibles.</p>
+  </ng-template>
+
+  <h2>Archivos PDF Seguimiento</h2>
+  <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfs">
+    <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
       <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
     </li>
   </ul>
