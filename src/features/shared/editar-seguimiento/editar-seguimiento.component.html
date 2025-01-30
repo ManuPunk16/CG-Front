@@ -58,9 +58,14 @@
       </div>
 
       <div class="container">
-        <mat-form-field  appearance="fill">
+        <mat-form-field appearance="fill">
           <mat-label>Estatus</mat-label>
-          <input matInput type="text" formControlName="estatus">
+          <mat-select formControlName="estatus">
+            <mat-option *ngFor="let estatus of estatusOptions" [value]="estatus">
+              {{ estatus }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="seguimientoForm.get('estatus')?.hasError('required')">El estatus es requerido</mat-error>
         </mat-form-field>
 
         <mat-form-field  appearance="fill">

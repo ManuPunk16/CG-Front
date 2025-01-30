@@ -133,7 +133,7 @@ export class EditarSeguimientoComponent implements OnInit {
       cargo: new FormControl(this.inputDetails?.seguimientos?.cargo || null, Validators.required),
       atencion_otorgada: new FormControl(this.inputDetails?.seguimientos?.atencion_otorgada || null, Validators.required),
       anexo: new FormControl(this.inputDetails?.seguimientos?.anexo || null),
-      estatus: new FormControl(this.inputDetails?.seguimientos?.anexo || null, Validators.required),
+      estatus: new FormControl(this.inputDetails?.estatus || null, Validators.required),
       comentarios: new FormControl(this.inputDetails?.seguimientos?.comentarios || null),
       firma_visado: new FormControl(this.inputDetails?.seguimientos?.firma_visado || null),
       archivosPdf_seguimiento: this.fb.array(this.inputDetails?.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
