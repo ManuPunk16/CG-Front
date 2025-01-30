@@ -86,7 +86,8 @@
         <div formArrayName="archivosPdf_seguimiento">
             <div class="container-pdf" *ngFor="let pdfControl of archivosPdf_seguimientoFromArray.controls; let i = index">
                 <mat-form-field appearance="fill">
-                    <input matInput type="text" [formControlName]="i">
+                  <input matInput type="text" [formControlName]="i"
+                    (paste)="cleanPastedText($event, i)">
                 </mat-form-field>
                 <button mat-icon-button color="warn" (click)="eliminarPdf(i)">
                     <mat-icon>delete</mat-icon>

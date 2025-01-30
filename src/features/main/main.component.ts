@@ -98,13 +98,12 @@ export class MainComponent implements OnInit {
     if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
       this.inputService.getNoDeletedInputs().subscribe({
         next: (response) => {
-          console.log(response);
-            this.inputs = response.inputs;
-            this.totalInputs = response.totalInputs;
-            this.totalPages = response.totalPages;
-            this.dataSource = new MatTableDataSource(this.inputs);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
+          this.inputs = response.inputs;
+          this.totalInputs = response.totalInputs;
+          this.totalPages = response.totalPages;
+          this.dataSource = new MatTableDataSource(this.inputs);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         },
         error: (err) => {
             console.error(err);
@@ -114,12 +113,12 @@ export class MainComponent implements OnInit {
       const areaUser = user.area;
       this.inputService.getNoDeletedInputsByNormalUsers(areaUser).subscribe({
         next: (response) => {
-            this.inputs = response.inputs;
-            this.totalInputs = response.totalInputs;
-            this.totalPages = response.totalPages;
-            this.dataSource = new MatTableDataSource(this.inputs);
-            this.dataSource.paginator = this.paginator;
-            this.dataSource.sort = this.sort;
+          this.inputs = response.inputs;
+          this.totalInputs = response.totalInputs;
+          this.totalPages = response.totalPages;
+          this.dataSource = new MatTableDataSource(this.inputs);
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
         },
         error: (err) => {
             console.error(err);

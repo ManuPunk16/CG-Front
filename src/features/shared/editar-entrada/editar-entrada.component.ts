@@ -21,6 +21,7 @@ import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -55,6 +56,13 @@ export class EditarEntradaComponent implements OnInit {
   institutions: Institution[] = [];
   instruments: Instrument[] = [];
   estatusOptions = Object.values(EstatusEntrada);
+  currentUser: any;
+  isLoggedIn = false;
+  private roles: string[] = [];
+  username?: string;
+  showAdmin = false;
+  showLinker = false;
+  showModerator = false;
 
   constructor(
     private _inputService: InputService,
@@ -64,8 +72,10 @@ export class EditarEntradaComponent implements OnInit {
     private _instrument: InstrumentsService,
     private route: ActivatedRoute,
     private changeDetectorRef: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private _tokenStorageService: TokenStorageService
   ) {
+    this.currentUser = this._tokenStorageService.getUser();
     this.inputForm = new FormGroup({
       anio: new FormControl(),
       folio: new FormControl(),
@@ -82,10 +92,24 @@ export class EditarEntradaComponent implements OnInit {
       estatus: new FormControl(),
       observacion: new FormControl(),
       archivosPdf: this.fb.array([]),
+      editor_user: this.fb.group({ // Agrupa create_user con fb.group
+        id: [this.currentUser.id], // Asigna el ID del usuario actual
+        username: [this.currentUser.username] // Asigna el username del usuario actual
+      }),
     });
   }
 
   ngOnInit(): void {
+    this.isLoggedIn = !!this._tokenStorageService.getToken();
+    if (this.isLoggedIn) {
+      const user = this._tokenStorageService.getUser();
+      this.roles = user.roles;
+      this.showAdmin = this.roles.includes('ROLE_ADMIN');
+      this.showLinker = this.roles.includes('ROLE_LINKER');
+      this.showModerator = this.roles.includes('ROLE_MODERATOR');
+      this.username = user.username;
+    }
+
     this.route.paramMap.subscribe(params => {
       this.id = params.get('id');
       if (this.id) {
@@ -117,7 +141,18 @@ export class EditarEntradaComponent implements OnInit {
       this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
 
       const valoresDelFormulario = this.inputForm.value;
-      console.log(valoresDelFormulario);
+      // console.log(valoresDelFormulario);
+
+      this._inputService.updateInput(this.id, valoresDelFormulario).subscribe({ // Usa el servicio updateInput
+        next: (res) => {
+          console.log('Respuesta:', res);
+          this.router.navigate(['/Entradas']); // Redirige a la lista de inputs o muestra un mensaje de éxito
+        },
+        error: (err) => {
+          console.error('Error:', err);
+          // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
+        }
+      });
     } else {
       console.log("Hola");
     }
@@ -160,23 +195,29 @@ export class EditarEntradaComponent implements OnInit {
   }
 
   initForm() {
-    this.inputForm = new FormGroup({
-      anio: new FormControl(this.inputDetails?.anio || null, Validators.required),
-      folio: new FormControl(this.inputDetails?.folio || null, Validators.required),
-      num_oficio: new FormControl(this.inputDetails?.num_oficio || '', Validators.required),
-      fecha_oficio: new FormControl(this.inputDetails?.fecha_oficio || null, Validators.required),
-      fecha_vencimiento: new FormControl(this.inputDetails?.fecha_vencimiento || null),
-      fecha_recepcion: new FormControl(this.inputDetails?.fecha_recepcion || null, Validators.required),
-      hora_recepcion: new FormControl(this.inputDetails?.hora_recepcion || ''),
-      instrumento_juridico: new FormControl(this.inputDetails?.instrumento_juridico || '', Validators.required),
-      remitente: new FormControl(this.inputDetails?.remitente || '', Validators.required),
-      institucion_origen: new FormControl(this.inputDetails?.institucion_origen || '', Validators.required),
-      asunto: new FormControl(this.inputDetails?.asunto || '', Validators.required),
-      asignado: new FormControl(this.inputDetails?.asignado || '', Validators.required),
-      estatus: new FormControl(this.inputDetails?.estatus || '', Validators.required),
-      observacion: new FormControl(this.inputDetails?.observacion || ''),
-      archivosPdf: this.fb.array(this.inputDetails?.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
-    });
+    if (this.inputDetails) { // Verifica que inputDetails esté definido
+      this.inputForm = this.fb.group({
+        anio: [this.inputDetails.anio, Validators.required],
+        folio: [this.inputDetails.folio, Validators.required],
+        num_oficio: [this.inputDetails.num_oficio || '', Validators.required],
+        fecha_oficio: [this.inputDetails.fecha_oficio || null, Validators.required],
+        fecha_vencimiento: [this.inputDetails.fecha_vencimiento || null],
+        fecha_recepcion: [this.inputDetails.fecha_recepcion || null, Validators.required],
+        hora_recepcion: [this.inputDetails.hora_recepcion || ''],
+        instrumento_juridico: [this.inputDetails.instrumento_juridico || '', Validators.required],
+        remitente: [this.inputDetails.remitente || '', Validators.required],
+        institucion_origen: [this.inputDetails.institucion_origen || '', Validators.required],
+        asunto: [this.inputDetails.asunto || '', Validators.required],
+        asignado: [this.inputDetails.asignado || '', Validators.required],
+        estatus: [this.inputDetails.estatus || '', Validators.required],
+        observacion: [this.inputDetails.observacion || ''],
+        archivosPdf: this.fb.array(this.inputDetails.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
+        editor_user: this.fb.group({
+          id: [this.currentUser.id],
+          username: [this.currentUser.username]
+        })
+      });
+    }
   }
 
   archivosPdfValidator(control: AbstractControl): { requerido: boolean; } | null {
@@ -209,6 +250,19 @@ export class EditarEntradaComponent implements OnInit {
       }
     } else {
       this.router.navigate(['/Entradas']); // Navega directamente si no hay cambios
+    }
+  }
+
+  // Función para limpiar el texto pegado
+  cleanPastedText(event: ClipboardEvent, index: number) { // Recibe el índice del control
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text');
+
+    if (pastedText) {
+      const cleanedText = pastedText.replace(/["']/g, '');
+      const control = this.archivosPdfFormArray.controls[index] as FormControl; // Obtén el control específico
+      control.setValue(cleanedText);
     }
   }
 }

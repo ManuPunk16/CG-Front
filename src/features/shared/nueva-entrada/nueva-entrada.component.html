@@ -129,8 +129,8 @@
         <label>Archivos PDF:</label>
         <div class="container-pdf" *ngFor="let archivo of archivosPdfForms.controls; let i = index">
           <mat-form-field appearance="fill">
-            <input matInput type="text" [formControlName]="i">
-          </mat-form-field>
+            <input matInput type="text" [formControlName]="i"
+                   (paste)="cleanPastedText($event, i)">  </mat-form-field>
           <button mat-icon-button type="button" (click)="removeArchivoPdf(i)">
             <mat-icon>delete</mat-icon>
           </button>

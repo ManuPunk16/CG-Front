@@ -41,7 +41,7 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div *ngIf="inputDetails && inputDetails.seguimientos.fecha_acuse_recibido" class="info-grid">
+        <div *ngIf="inputDetails && inputDetails.seguimientos" class="info-grid">
           <div class="info-column">
             <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida}}</p>
             <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente}}</p>
@@ -60,7 +60,7 @@
             <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios}}</p>
           </div>
         </div>
-        <div *ngIf="!inputDetails.seguimientos.fecha_acuse_recibido">
+        <div *ngIf="!inputDetails.seguimientos">
           <p><strong>Sin Respuesta</strong></p>
         </div>
       </mat-card-content>
@@ -73,14 +73,14 @@
         <div class="pdf-list"> <h2>Archivos PDF Entrada</h2>
           <ul *ngIf="pdfUrls.length > 0; else noPdfs">
             <li *ngFor="let pdfUrl of pdfUrls; let i = index">
-                <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+                <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
             </li>
           </ul>
 
           <h2>Archivos PDF Seguimiento</h2>
           <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfs">
             <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
-                <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+                <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
             </li>
           </ul>
           <ng-template #noPdfs>
@@ -90,11 +90,11 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card *ngIf="!duplicados" class="card-three">
+    <!-- <mat-card *ngIf="!duplicados" class="card-three">
       <mat-card-content>
         Cargando archivos relacionados o duplicados...
       </mat-card-content>
-    </mat-card>
+    </mat-card> -->
 
     <mat-card *ngIf="duplicados" class="card-three">
       <mat-card-header>

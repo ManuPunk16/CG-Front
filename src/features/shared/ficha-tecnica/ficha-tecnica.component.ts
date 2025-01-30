@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 
 interface Duplicado {
   _id: string;
@@ -27,7 +28,8 @@ interface DuplicadosResponse {
     NgIf,
     NgFor,
     MatCardModule,
-    DatePipe
+    DatePipe,
+    MatButtonModule
   ],
   standalone: true,
   templateUrl: './ficha-tecnica.component.html',
@@ -43,6 +45,8 @@ export class FichaTecnicaComponent implements OnInit {
 
   pdfUrls: SafeUrl[] = [];
   pdfUrlsSeguimiento: SafeUrl[] = [];
+  pdfFilenames: string[] = [];
+  pdfFilenamesSeguimiento: string[] = [];
 
   constructor(
     private _input: InputService,
@@ -104,6 +108,7 @@ export class FichaTecnicaComponent implements OnInit {
     if (this.inputDetails && this.inputDetails.archivosPdf) {
       this.inputDetails.archivosPdf.forEach(pdfPath => {
         const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
+        this.pdfFilenames.push(filename);
         this._input.getPdfByIdInput(this.inputDetails._id, filename).subscribe({
           next: (blob: Blob) => {
             const urlCreator = window.URL || window.webkitURL;
@@ -122,6 +127,7 @@ export class FichaTecnicaComponent implements OnInit {
     if (this.inputDetails && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
       this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach(pdfPathSeguimiento => {
         const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
+        this.pdfFilenamesSeguimiento.push(filename);
         this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).subscribe({
           next: (blob: Blob) => {
             const urlCreator = window.URL || window.webkitURL;

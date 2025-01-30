@@ -21,6 +21,7 @@ import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
 
 @Component({
   selector: 'app-editar-seguimiento',
@@ -57,6 +58,14 @@ export class EditarSeguimientoComponent implements OnInit {
   instruments: Instrument[] = [];
   estatusOptions = Object.values(EstatusEntrada);
 
+  currentUser: any;
+  isLoggedIn = false;
+  private roles: string[] = [];
+  username?: string;
+  showAdmin = false;
+  showLinker = false;
+  showModerator = false;
+
   constructor(
     private _inputService: InputService,
     private fb: FormBuilder,
@@ -65,8 +74,10 @@ export class EditarSeguimientoComponent implements OnInit {
     private _instrument: InstrumentsService,
     private route: ActivatedRoute,
     private changeDetectorRef: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private _tokenStorageService: TokenStorageService
   ) {
+    this.currentUser = this._tokenStorageService.getUser();
     this.seguimientoForm = new FormGroup({
       oficio_salida: new FormControl(),
       num_expediente: new FormControl(),
@@ -80,11 +91,25 @@ export class EditarSeguimientoComponent implements OnInit {
       comentarios: new FormControl(),
       firma_visado: new FormControl(),
       archivosPdf_seguimiento: this.fb.array([]),
-      fecha_respuesta: new FormControl()
+      fecha_respuesta: new FormControl(),
+      usuario: this.fb.group({
+        id: [this.currentUser.id],
+        username: [this.currentUser.username]
+      })
     });
   }
 
   ngOnInit(): void {
+    this.isLoggedIn = !!this._tokenStorageService.getToken();
+    if (this.isLoggedIn) {
+      const user = this._tokenStorageService.getUser();
+      this.roles = user.roles;
+      this.showAdmin = this.roles.includes('ROLE_ADMIN');
+      this.showLinker = this.roles.includes('ROLE_LINKER');
+      this.showModerator = this.roles.includes('ROLE_MODERATOR');
+      this.username = user.username;
+    }
+
     this.route.paramMap.subscribe(params => {
       this.id = params.get('id');
       if (this.id) {
@@ -111,34 +136,62 @@ export class EditarSeguimientoComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.seguimientoForm.valid) {
-      this.seguimientoForm.value.fecha_oficio = this.seguimientoForm.value.fecha_oficio ? formatDate(this.seguimientoForm.value.fecha_oficio, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
-      this.seguimientoForm.value.fecha_vencimiento = this.seguimientoForm.value.fecha_vencimiento ? formatDate(this.seguimientoForm.value.fecha_vencimiento, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
-      this.seguimientoForm.value.fecha_recepcion = this.seguimientoForm.value.fecha_recepcion ? formatDate(this.seguimientoForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
+    if (this.seguimientoForm.valid && this.inputDetails) {
+      // 1. Formatear fechas
+      const formattedValues = { ...this.seguimientoForm.value }; // Crear copia para no modificar el original directamente.
+      for (const key in formattedValues) {
+        if (formattedValues.hasOwnProperty(key) && (key.startsWith('fecha_') || key.endsWith('_fecha'))) {
+          formattedValues[key] = formattedValues[key] ? formatDate(formattedValues[key], 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
+        }
+      }
 
-      const valoresDelFormulario = this.seguimientoForm.value;
-      console.log(valoresDelFormulario);
+      // 2. Crear objeto seguimientoData
+      const seguimientoData = { ...this.inputDetails.seguimientos, ...formattedValues };
+
+      // 3. Crear objeto inputData
+      const inputData: Input = {
+        ...this.inputDetails,
+        seguimientos: seguimientoData
+      };
+
+      // 4. Llamar al servicio
+      this._inputService.updateInput(this.id, inputData).subscribe({
+        next: (res) => {
+          console.log('Respuesta:', res);
+          this.router.navigate(['/Entradas']); // Redirige o muestra mensaje de éxito
+        },
+        error: (err) => {
+          console.error('Error:', err);
+          // Muestra mensaje de error al usuario
+        }
+      });
     } else {
-      console.log("Hola");
+      console.log("Formulario no válido");
     }
   }
 
   initForm() {
-    this.seguimientoForm = new FormGroup({
-      oficio_salida: new FormControl(this.inputDetails?.seguimientos?.oficio_salida || null, Validators.required),
-      num_expediente: new FormControl(this.inputDetails?.seguimientos?.num_expediente || null),
-      fecha_oficio_salida: new FormControl(this.inputDetails?.seguimientos?.fecha_oficio_salida || null),
-      fecha_acuse_recibido: new FormControl(this.inputDetails?.seguimientos?.fecha_acuse_recibido || null, Validators.required),
-      destinatario: new FormControl(this.inputDetails?.seguimientos?.destinatario || null, Validators.required),
-      cargo: new FormControl(this.inputDetails?.seguimientos?.cargo || null, Validators.required),
-      atencion_otorgada: new FormControl(this.inputDetails?.seguimientos?.atencion_otorgada || null, Validators.required),
-      anexo: new FormControl(this.inputDetails?.seguimientos?.anexo || null),
-      estatus: new FormControl(this.inputDetails?.estatus || null, Validators.required),
-      comentarios: new FormControl(this.inputDetails?.seguimientos?.comentarios || null),
-      firma_visado: new FormControl(this.inputDetails?.seguimientos?.firma_visado || null),
-      archivosPdf_seguimiento: this.fb.array(this.inputDetails?.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : [], [Validators.required, this.archivosPdfValidator]),
-      fecha_respuesta: new FormControl(this.inputDetails?.seguimientos?.fecha_respuesta || null)
-    });
+    if (this.inputDetails && this.currentUser) {
+      this.seguimientoForm = this.fb.group({
+        oficio_salida: [this.inputDetails.seguimientos?.oficio_salida || null, Validators.required],
+        num_expediente: [this.inputDetails.seguimientos?.num_expediente || null],
+        fecha_oficio_salida: [this.inputDetails.seguimientos?.fecha_oficio_salida || null],
+        fecha_acuse_recibido: [this.inputDetails.seguimientos?.fecha_acuse_recibido || null, Validators.required],
+        destinatario: [this.inputDetails.seguimientos?.destinatario || null, Validators.required],
+        cargo: [this.inputDetails.seguimientos?.cargo || null, Validators.required],
+        atencion_otorgada: [this.inputDetails.seguimientos?.atencion_otorgada || null, Validators.required],
+        anexo: [this.inputDetails.seguimientos?.anexo || null],
+        estatus: [this.inputDetails.estatus || null, Validators.required],
+        comentarios: [this.inputDetails.seguimientos?.comentarios || null],
+        firma_visado: [this.inputDetails.seguimientos?.firma_visado || null],
+        archivosPdf_seguimiento: this.fb.array(this.inputDetails.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
+        fecha_respuesta: [this.inputDetails.seguimientos?.fecha_respuesta || null],
+        usuario: this.fb.group({
+          id: [this.currentUser.id],
+          username: [this.currentUser.username]
+        })
+      });
+    }
   }
 
   getAreas() {
@@ -204,6 +257,18 @@ export class EditarSeguimientoComponent implements OnInit {
       }
     } else {
       this.router.navigate(['/Entradas']); // Navega directamente si no hay cambios
+    }
+  }
+
+  cleanPastedText(event: ClipboardEvent, index: number) { // Recibe el índice del control
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text');
+
+    if (pastedText) {
+      const cleanedText = pastedText.replace(/["']/g, '');
+      const control = this.archivosPdf_seguimientoFromArray.controls[index] as FormControl; // Obtén el control específico
+      control.setValue(cleanedText);
     }
   }
 }

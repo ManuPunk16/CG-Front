@@ -52,7 +52,11 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by folio">
             Folio
           </th>
-          <td mat-cell *matCellDef="let element"> {{element.folio}} </td>
+          <td mat-cell *matCellDef="let element"
+            [ngClass]="element.estatus === 'NO ATENDIDO' ? 'badge badge-warning' :
+            element.estatus === 'ATENDIDO' ? 'badge badge-success' : 'badge badge-secondary'">
+            {{element.folio}}
+          </td>
         </ng-container>
 
         <ng-container matColumnDef="num_oficio">

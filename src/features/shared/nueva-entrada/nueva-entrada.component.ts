@@ -20,6 +20,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InstrumentsService } from '../../../core/services/instruments.service';
 import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
+import { InputService } from '../../../core/services/input.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-nueva-entrada',
@@ -56,18 +58,74 @@ export class NuevaEntradaComponent implements OnInit {
   instruments: Instrument[] = [];
   estatusOptions = Object.values(EstatusEntrada);
 
+  isLoggedIn = false;
+  private roles: string[] = [];
+  username?: string;
+  showAdmin = false;
+  showLinker = false;
+  showModerator = false;
+
   constructor(
     private fb: FormBuilder,
     private _tokenStorageService: TokenStorageService,
     private _area: AreaService,
     private _institution: InstitutionsService,
     private _instrument: InstrumentsService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
+    private _inputService: InputService,
+    private router: Router,
   ){
     this.currentUser = this._tokenStorageService.getUser();
   }
 
   ngOnInit(): void {
+    this.isLoggedIn = !!this._tokenStorageService.getToken();
+    if (this.isLoggedIn) {
+      const user = this._tokenStorageService.getUser();
+      this.roles = user.roles;
+      this.showAdmin = this.roles.includes('ROLE_ADMIN');
+      this.showLinker = this.roles.includes('ROLE_LINKER');
+      this.showModerator = this.roles.includes('ROLE_MODERATOR');
+      this.username = user.username;
+    }
+
+    this.getAreas();
+    this.getInstitutions();
+    this.getInstruments();
+    this.newForm();
+
+    this.changeDetectorRef.detectChanges();
+  }
+
+  newForm() {
+    this.inputForm = this.fb.group({ // Usa fb.group para consistencia
+      anio: [this.currentYear, Validators.required], // Usa array para definir valor inicial y validadores
+      folio: ['', Validators.required],
+      num_oficio: ['', Validators.required],
+      fecha_oficio: ['', Validators.required],
+      fecha_vencimiento: [''],
+      fecha_recepcion: ['', Validators.required],
+      hora_recepcion: [''],
+      instrumento_juridico: ['', Validators.required],
+      remitente: ['', Validators.required],
+      institucion_origen: ['', Validators.required],
+      asunto: ['', Validators.required],
+      asignado: ['', Validators.required],
+      estatus: ['', Validators.required],
+      observacion: [''],
+      archivosPdf: this.fb.array([], [Validators.required, this.archivosPdfValidator]),
+      create_user: this.fb.group({ // Agrupa create_user con fb.group
+        id: [this.currentUser.id], // Asigna el ID del usuario actual
+        username: [this.currentUser.username] // Asigna el username del usuario actual
+      }),
+      edit_count: [0], // Usa array para definir valor inicial
+      deleted: [false], // Valor por defecto
+      seguimientos: this.fb.array([]), // Inicializa el array de seguimientos
+      timestamps: new FormControl(new Date()),
+    });
+  }
+
+  getAreas() {
     this._area.getAllAreas().subscribe({
       next: (areas) => {
         this.areas = areas;
@@ -76,7 +134,9 @@ export class NuevaEntradaComponent implements OnInit {
         console.error('Error al obtener las áreas:', error);
       }
     });
+  }
 
+  getInstitutions() {
     this._institution.getAllNoDeletedInstitutions().subscribe({
       next: (res) => {
         this.institutions = res;
@@ -85,7 +145,9 @@ export class NuevaEntradaComponent implements OnInit {
         console.error('Error al obtener las instituciones:', error);
       }
     });
+  }
 
+  getInstruments() {
     this._instrument.getAllNoDeletedInstruments().subscribe({
       next: (res) => {
         this.instruments = res;
@@ -93,29 +155,6 @@ export class NuevaEntradaComponent implements OnInit {
       error: (error) => {
         console.error('Error al obtener las instituciones:', error);
       }
-    });
-
-    this.inputForm = new FormGroup({
-      anio: new FormControl({value: this.currentYear, disabled: false}, Validators.required),
-      folio: new FormControl('', Validators.required),
-      num_oficio: new FormControl('', Validators.required),
-      fecha_oficio: new FormControl('', Validators.required),
-      fecha_vencimiento: new FormControl(''),
-      fecha_recepcion: new FormControl('', Validators.required),
-      hora_recepcion: new FormControl(''),
-      instrumento_juridico: new FormControl(''),
-      remitente: new FormControl(''),
-      institucion_origen: new FormControl(''),
-      asunto: new FormControl(''),
-      asignado: new FormControl(''),
-      estatus: new FormControl(''),
-      observacion: new FormControl(''),
-      archivosPdf: this.fb.array([], [Validators.required, this.archivosPdfValidator]),
-      create_user: this.fb.group({
-        id: [this.currentUser.id],
-        username: [this.currentUser.username]
-      }),
-      edit_count: new FormControl(0)
     });
   }
 
@@ -149,9 +188,33 @@ export class NuevaEntradaComponent implements OnInit {
       this.inputForm.value.fecha_vencimiento = this.inputForm.value.fecha_vencimiento ? formatDate(this.inputForm.value.fecha_vencimiento, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
       this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
 
-      console.log(inputData); // Aquí envías los datos al backend
+      this._inputService.createInput(inputData).subscribe({ // Llama al servicio
+        next: (res) => {
+          console.log('Respuesta del servidor:', res);
+          // Restablece el formulario o muestra un mensaje de éxito
+          this.inputForm.reset();
+          this.router.navigate(['/Entradas']);// Puedes navegar a otra página o mostrar un mensaje de éxito
+        },
+        error: (err) => {
+          console.error('Error al crear el registro:', err);
+          // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
+        }
+      });
     } else {
-      console.log("Hola");
+      console.log("Formulario no válido");
+    }
+  }
+
+  // Función para limpiar el texto pegado
+  cleanPastedText(event: ClipboardEvent, index: number) { // Recibe el índice del control
+    event.preventDefault();
+
+    const pastedText = event.clipboardData?.getData('text');
+
+    if (pastedText) {
+      const cleanedText = pastedText.replace(/["']/g, '');
+      const control = this.archivosPdfForms.controls[index] as FormControl; // Obtén el control específico
+      control.setValue(cleanedText);
     }
   }
 

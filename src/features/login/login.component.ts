@@ -62,7 +62,6 @@ export class LoginComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(this.loginForm.value);
     if (this.loginForm.valid) {
       // const { usuario, contrasena } = this.loginForm.value;
       const usuario = this.loginForm.value.usuario!;

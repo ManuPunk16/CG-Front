@@ -30,6 +30,17 @@ interface DuplicadosResponse {
   }[];
 }
 
+interface CreateInputResponse {
+  status: string;
+  input: Input;
+  message: string;
+}
+
+interface UpdateInputResponse {
+  status: string;
+  input: Input;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -52,6 +63,20 @@ export class InputService {
     }
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage)); // Lanza un nuevo error con el mensaje formateado
+  }
+
+  createInput(inputData: Input): Observable<CreateInputResponse> {
+    return this.http.post<CreateInputResponse>(`${this.apiUrl}create_inputs`, inputData)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  updateInput(id: string, inputData: Input): Observable<UpdateInputResponse> {
+    const url = `${this.apiUrl}updateInputById/${id}`;
+    return this.http.patch<UpdateInputResponse>(url, inputData).pipe(
+      catchError(this.handleError)
+    );
   }
 
   getNoDeletedInputs(): Observable<InputsResponse> {
