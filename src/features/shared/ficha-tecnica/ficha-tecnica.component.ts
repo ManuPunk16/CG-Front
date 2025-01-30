@@ -3,13 +3,31 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Input } from '../../../core/models/input.model';
 import { ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, DatePipe } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+
+interface Duplicado {
+  _id: string;
+  num_oficio: string;
+  folio: number;
+  asignado: string;
+}
+
+interface DuplicadosResponse {
+  status: string;
+  duplicados: {
+    num_oficio: string;
+    duplicados: Duplicado[];
+  }[];
+}
 
 @Component({
   selector: 'app-ficha-tecnica',
   imports: [
     NgIf,
-    NgFor
+    NgFor,
+    MatCardModule,
+    DatePipe
   ],
   standalone: true,
   templateUrl: './ficha-tecnica.component.html',
@@ -19,6 +37,8 @@ export class FichaTecnicaComponent implements OnInit {
 
   // input!: Input;
   public id!: any;
+  duplicados: { num_oficio: string; duplicados: Duplicado[] }[] | null = null;
+  loading: boolean = true;
   inputDetails!: Input;
 
   pdfUrls: SafeUrl[] = [];
@@ -41,14 +61,39 @@ export class FichaTecnicaComponent implements OnInit {
           next: (res: any) => {
             if (res.input) {
               this.inputDetails = res.input;
-              console.log(this.inputDetails);
               this.loadPdfs();
+              this.loadDuplicated();
             } else {
               console.error("No se encontraron datos del input.");
             }
           },
           error: err => {
             console.log(err);
+          }
+        });
+      }
+    });
+  }
+
+  loadDuplicated() {
+    this.route.paramMap.subscribe(params => {
+      this.id = params.get('id');
+      if (this.id) {
+        this._input.getDuplicatedOficios(this.id).subscribe({
+          next: (res: DuplicadosResponse) => {
+            this.loading = false;
+            if (res && res.duplicados && res.duplicados.length > 0) {
+              this.duplicados = res.duplicados;
+              this.cdr.detectChanges();
+            } else {
+              this.duplicados = null;
+              console.log("No hay nada");
+            }
+          },
+          error: err => {
+            this.loading = false;
+            console.error(err);
+            this.duplicados = null;
           }
         });
       }

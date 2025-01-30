@@ -13,6 +13,23 @@ interface InputsResponse {
   message?: string;
 }
 
+// 1. Define la interfaz para los datos de "duplicados"
+interface Duplicado {
+  _id: string;
+  num_oficio: string;
+  folio: number;
+  asignado: string;
+}
+
+// 2. Define la interfaz principal para la respuesta de la API
+interface DuplicadosResponse {
+  status: string;
+  duplicados: {
+    num_oficio: string;
+    duplicados: Duplicado[];
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -70,6 +87,13 @@ export class InputService {
   getPdfByIdSeguimiento(id: string, filename: string): Observable<Blob> {
     const url = `${this.apiUrl}pdfs_seguimiento/${id}/download?filename=${filename}`;
     return this.http.get(url, { responseType: 'blob' }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getDuplicatedOficios(id: string): Observable<DuplicadosResponse> {
+    const url = `${this.apiUrl}inputs_oficio/${id}/duplicados`;
+    return this.http.get<DuplicadosResponse>(url).pipe(
       catchError(this.handleError)
     );
   }

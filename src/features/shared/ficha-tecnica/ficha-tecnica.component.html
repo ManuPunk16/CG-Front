@@ -1,42 +1,130 @@
-<p>ficha-tecnica works!</p>
+<header>
+  <h1>Ficha Tecnica</h1>
+</header>
+<main class="container">
+  <section class="principal">
+    <mat-card class="card-one">
+      <mat-card-header>
+        <mat-card-title>
+          <h1>Registro de Entrada</h1>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="inputDetails" class="info-grid">
+          <div class="info-column">
+            <p><strong>ID:</strong> {{inputDetails._id}}</p>
+            <p><strong>Folio:</strong> {{inputDetails.folio}}</p>
+            <p><strong>Num. Oficio:</strong> {{inputDetails.num_oficio}}</p>
+            <p><strong>Fecha Oficio:</strong> {{inputDetails.fecha_oficio | date:'dd/MM/yyyy'}}</p>
+            <p><strong>Fecha Recepción:</strong> {{inputDetails.fecha_recepcion | date:'dd/MM/yyyy'}}</p>
+          </div>
+          <div class="info-column">
+            <p><strong>Hora Recepción:</strong> {{inputDetails.hora_recepcion}}</p>
+            <p><strong>Instrumento Jurídico:</strong> {{inputDetails.instrumento_juridico}}</p>
+            <p><strong>Remitente:</strong> {{inputDetails.remitente}}</p>
+            <p><strong>Institución Origen:</strong> {{inputDetails.institucion_origen}}</p>
+            <p><strong>Asunto:</strong> {{inputDetails.asunto}}</p>
+          </div>
+          <div class="info-column">
+            <p><strong>Asignado:</strong> {{inputDetails.asignado}}</p>
+            <p><strong>Estatus:</strong> {{inputDetails.estatus}}</p>
+            <p><strong>Observación:</strong> {{inputDetails.observacion}}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
-<div *ngIf="inputDetails">
-{{inputDetails._id}}
-{{inputDetails.folio}}
-{{inputDetails.num_oficio}}
-{{inputDetails.fecha_oficio}}
-{{inputDetails.fecha_recepcion}}
-{{inputDetails.fecha_recepcion}}
-{{inputDetails.hora_recepcion}}
-{{inputDetails.instrumento_juridico}}
-{{inputDetails.remitente}}
-{{inputDetails.institucion_origen}}
-{{inputDetails.asunto}}
-{{inputDetails.asignado}}
-{{inputDetails.estatus}}
-{{inputDetails.asignado}}
-{{inputDetails.observacion}}
-<br><br>
-</div>
+    <mat-card *ngIf="inputDetails">
+      <mat-card-header>
+        <mat-card-title>
+          <h1>Registro de Respuesta</h1>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="inputDetails && inputDetails.seguimientos.fecha_acuse_recibido" class="info-grid">
+          <div class="info-column">
+            <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida}}</p>
+            <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente}}</p>
+            <p><strong>Fecha Acuse Recibido:</strong> {{inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy'}}</p>
+            <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy'}}</p>
+          </div>
+          <div class="info-column">
+            <p><strong>Destinatario:</strong> {{inputDetails.seguimientos.destinatario}}</p>
+            <p><strong>Cargo:</strong> {{inputDetails.seguimientos.cargo}}</p>
+            <p><strong>Firma:</strong> {{inputDetails.seguimientos.firma_visado}}</p>
+            <p><strong>Atencion Otorgada:</strong> {{inputDetails.seguimientos.atencion_otorgada}}</p>
+          </div>
+          <div class="info-column">
+            <p><strong>Estatus:</strong> {{inputDetails.seguimientos.estatus}}</p>
+            <p><strong>Anexo:</strong> {{inputDetails.seguimientos.anexo}}</p>
+            <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios}}</p>
+          </div>
+        </div>
+        <div *ngIf="!inputDetails.seguimientos.fecha_acuse_recibido">
+          <p><strong>Sin Respuesta</strong></p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
 
-<div *ngIf="inputDetails">
-  <h2>Archivos PDF Entrada</h2>
-  <ul *ngIf="pdfUrls.length > 0; else noPdfs">
-    <li *ngFor="let pdfUrl of pdfUrls; let i = index">
-      <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
-    </li>
-  </ul>
-  <ng-template #noPdfs>
-    <p>No hay archivos PDF disponibles.</p>
-  </ng-template>
+  <aside class="lateral">
+    <mat-card class="card-two">
+      <mat-card-content>
+        <div class="pdf-list"> <h2>Archivos PDF Entrada</h2>
+          <ul *ngIf="pdfUrls.length > 0; else noPdfs">
+            <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+                <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+            </li>
+          </ul>
 
-  <h2>Archivos PDF Seguimiento</h2>
-  <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfs">
-    <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
-      <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
-    </li>
-  </ul>
-  <ng-template #noPdfs>
-    <p>No hay archivos PDF disponibles.</p>
-  </ng-template>
-</div>
+          <h2>Archivos PDF Seguimiento</h2>
+          <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfs">
+            <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
+                <a [href]="pdfUrl" target="_blank">PDF {{ i + 1 }}</a>
+            </li>
+          </ul>
+          <ng-template #noPdfs>
+              <p>No hay archivos PDF disponibles.</p>
+          </ng-template>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card *ngIf="!duplicados" class="card-three">
+      <mat-card-content>
+        Cargando archivos relacionados o duplicados...
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card *ngIf="duplicados" class="card-three">
+      <mat-card-header>
+        <mat-card-title>
+          <h2>Oficios relacionados o duplicados por el num. de oficio</h2>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngFor="let item of duplicados">
+          <h4>Num. de Oficio consultado: {{ item.num_oficio }}</h4>
+          <ul>
+            <li *ngFor="let duplicado of item.duplicados">
+              ID: {{ duplicado._id }}<br>
+              Folio: {{ duplicado.folio }}<br>
+              Asignado: {{ duplicado.asignado }} <br><br>
+            </li>
+          </ul>
+
+        </div>
+      </mat-card-content>
+      <mat-card-content>
+        <div *ngIf="!duplicados && !loading">
+          <p>No se encontraron duplicados.</p>
+        </div>
+      </mat-card-content>
+      <mat-card-content>
+        <div *ngIf="loading">
+          <p>Cargando...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </aside>
+</main>
