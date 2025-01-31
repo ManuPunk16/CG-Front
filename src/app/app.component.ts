@@ -1,8 +1,7 @@
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
-import { RouterOutlet, RouterModule } from '@angular/router';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { MediaMatcher } from '@angular/cdk/layout';
-
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
@@ -10,7 +9,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TokenStorageService } from '../core/auth/token-storage.service';
 import { NgIf } from '@angular/common';
-import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthStateService } from '../core/auth/authstate.service';
 
@@ -52,13 +50,15 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor (
     private tokenStorageService: TokenStorageService,
     private _router: Router,
-    private authStateService: AuthStateService
+    private authStateService: AuthStateService,
+    private changeDetectorRef: ChangeDetectorRef,
+    private media: MediaMatcher,
+    private zone: NgZone
   ) {
-    const changeDetectorRef = inject(ChangeDetectorRef);
-    const media = inject(MediaMatcher);
-
-    this.mobileQuery = media.matchMedia('(max-width: 600px)');
-    this._mobileQueryListener = () => changeDetectorRef.detectChanges();
+    this.mobileQuery = this.media.matchMedia('(max-width: 600px)');
+    this._mobileQueryListener = () => this.zone.run(() => {
+      this.changeDetectorRef.detectChanges();
+    });
     this.mobileQuery.addListener(this._mobileQueryListener);
   }
 

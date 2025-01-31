@@ -32,6 +32,11 @@ export const routes: Routes = [
 
   },
   {
+    path: 'Entradas/panel-control',
+    loadComponent: () => import('../features/shared/panel-control/panel-control.component').then(c => c.PanelControlComponent),
+
+  },
+  {
     path: '',
     redirectTo: 'login', // Redirige a /login por defecto
     pathMatch: 'full'
