@@ -22,6 +22,7 @@ import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { InputService } from '../../../core/services/input.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-nueva-entrada',
@@ -190,18 +191,35 @@ export class NuevaEntradaComponent implements OnInit {
 
       this._inputService.createInput(inputData).subscribe({ // Llama al servicio
         next: (res) => {
-          console.log('Respuesta del servidor:', res);
           // Restablece el formulario o muestra un mensaje de éxito
+          Swal.fire({
+            icon: 'success',
+            title: '¡Registro creado!',
+            text: 'El registro se ha creado correctamente.',
+            showConfirmButton: false,
+            timer: 1500
+          });
           this.inputForm.reset();
           this.router.navigate(['/Entradas']);// Puedes navegar a otra página o mostrar un mensaje de éxito
         },
         error: (err) => {
           console.error('Error al crear el registro:', err);
           // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+            showConfirmButton: true
+          });
         }
       });
     } else {
       console.log("Formulario no válido");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario inválido',
+        text: 'Por favor, completa todos los campos requeridos.'
+      });
     }
   }
 

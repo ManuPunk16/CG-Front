@@ -66,7 +66,7 @@ export class FichaTecnicaComponent implements OnInit {
             if (res.input) {
               this.inputDetails = res.input;
               this.loadPdfs();
-              this.loadDuplicated();
+              this.cdr.detectChanges();
             } else {
               console.error("No se encontraron datos del input.");
             }
@@ -75,6 +75,7 @@ export class FichaTecnicaComponent implements OnInit {
             console.log(err);
           }
         });
+         this.loadDuplicated();
       }
     });
   }

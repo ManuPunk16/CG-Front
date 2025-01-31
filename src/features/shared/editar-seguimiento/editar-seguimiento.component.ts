@@ -22,6 +22,7 @@ import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { TokenStorageService } from '../../../core/auth/token-storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-editar-seguimiento',
@@ -157,16 +158,34 @@ export class EditarSeguimientoComponent implements OnInit {
       // 4. Llamar al servicio
       this._inputService.updateInput(this.id, inputData).subscribe({
         next: (res) => {
-          console.log('Respuesta:', res);
+          Swal.fire({
+            icon: 'success',
+            title: '¡Registro editado!',
+            text: 'El registro se ha editado correctamente.',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          this.seguimientoForm.reset();
           this.router.navigate(['/Entradas']); // Redirige o muestra mensaje de éxito
         },
         error: (err) => {
           console.error('Error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+            showConfirmButton: true
+          });
           // Muestra mensaje de error al usuario
         }
       });
     } else {
       console.log("Formulario no válido");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario inválido',
+        text: 'Por favor, completa todos los campos requeridos.'
+      });
     }
   }
 

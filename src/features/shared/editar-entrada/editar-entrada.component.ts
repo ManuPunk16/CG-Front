@@ -22,6 +22,7 @@ import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { TokenStorageService } from '../../../core/auth/token-storage.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-editar-entrada',
@@ -145,16 +146,33 @@ export class EditarEntradaComponent implements OnInit {
 
       this._inputService.updateInput(this.id, valoresDelFormulario).subscribe({ // Usa el servicio updateInput
         next: (res) => {
-          console.log('Respuesta:', res);
+          Swal.fire({
+            icon: 'success',
+            title: '¡Registro editado!',
+            text: 'El registro se ha editado correctamente.',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          this.inputForm.reset();
           this.router.navigate(['/Entradas']); // Redirige a la lista de inputs o muestra un mensaje de éxito
         },
         error: (err) => {
           console.error('Error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+            showConfirmButton: true
+          });
           // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
         }
       });
     } else {
-      console.log("Hola");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario inválido',
+        text: 'Por favor, completa todos los campos requeridos.'
+      });
     }
   }
 

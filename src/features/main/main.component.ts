@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-main',
@@ -91,6 +92,27 @@ export class MainComponent implements OnInit {
       this.showModerator = this.roles.includes('ROLE_MODERATOR');
       this.username = user.username;
     }
+  }
+
+  deleteById(row: Input) {
+    console.log(row._id);
+    Swal.fire({
+      title: "Estas seguro de borrar el registro?",
+      text: "No podras revertir esto!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Si, borrar!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Borrado!",
+          text: "Tu archivo ha sido borrado con exito.",
+          icon: "success"
+        });
+      }
+    });
   }
 
   loadInputs() {

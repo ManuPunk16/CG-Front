@@ -45,6 +45,10 @@
             <button mat-button *ngIf="showLinker || showAdmin" (click)="editSeguimiento(row)">
               <mat-icon> border_color </mat-icon>
             </button>
+
+            <button mat-button (click)="deleteById(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </td>
         </ng-container>
 
