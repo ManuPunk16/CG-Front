@@ -52,7 +52,7 @@
                 <mat-icon> border_color </mat-icon>
               </button>
 
-              <button mat-button disabled (click)="deleteById(row)">
+              <button mat-button disabled *ngIf="showModerator || showAdmin" (click)="deleteById(row)">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -117,7 +117,7 @@
     </mat-card>
   </section>
 
-  <section>
+  <section *ngIf="showModerator || showAdmin">
     <div>
       <app-instruments></app-instruments>
     </div>
@@ -126,8 +126,4 @@
       <app-institutions></app-institutions>
     </div>
   </section>
-
-  <aside class="lateral">
-    Mantenimiento
-  </aside>
 </main>
