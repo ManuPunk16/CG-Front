@@ -1,7 +1,8 @@
 <div>
   <mat-card>
     <mat-card-header>
-      <mat-card-title>Registros de Entradas</mat-card-title>
+      <mat-card-title><h2>Registros de Entradas</h2></mat-card-title>
+      <mat-card-subtitle>Informacion del año en curso <strong>{{ currentYear }}</strong></mat-card-subtitle>
     </mat-card-header>
     <!-- <mat-divider></mat-divider> -->
     <br>
@@ -46,7 +47,7 @@
               <mat-icon> border_color </mat-icon>
             </button>
 
-            <button mat-button (click)="deleteById(row)">
+            <button mat-button disabled (click)="deleteById(row)">
               <mat-icon>delete</mat-icon>
             </button>
           </td>

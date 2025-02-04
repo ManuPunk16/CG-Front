@@ -37,16 +37,57 @@ export class InstitutionsService {
   }
 
   getAllNoDeletedInstitutions(): Observable<Institution[]> {
-      return this.http.get<ApiResponse>(this.apiUrl).pipe(
-        map((response: ApiResponse) => {
+    return this.http.get<ApiResponse>(this.apiUrl).pipe(
+      map((response: ApiResponse) => {
+        if (response.status === 'success') {
+          return response.institutions;
+        } else {
+          // Si el backend devuelve un error con status 'error', lanzamos un error manejable
+          throw new Error(response.message || 'Error al obtener las áreas');
+        }
+      }),
+      catchError(this.handleError) // Manejo de errores
+    );
+  }
+
+  getInstitutionById(id: string): Observable<Institution> {
+      const url = `${this.apiUrl}/${id}`;
+      return this.http.get<Institution>(url).pipe(
+        map((response: Institution) => {
           if (response.status === 'success') {
-            return response.institutions;
+            return response;
           } else {
-            // Si el backend devuelve un error con status 'error', lanzamos un error manejable
-            throw new Error(response.message || 'Error al obtener las áreas');
+            throw new Error(response.message || 'Error al obtener el institutiono');
           }
         }),
-        catchError(this.handleError) // Manejo de errores
+        catchError(this.handleError)
+      );
+    }
+
+    saveInstitution(institution: Institution): Observable<Institution> {
+      return this.http.post<Institution>(this.apiUrl + '/new', institution).pipe(
+        map((response: Institution) => {
+          if (response.status === 'success') {
+            return response;
+          } else {
+            throw new Error(response.message || 'Error al guardar la institucion');
+          }
+        }),
+        catchError(this.handleError)
+      );
+    }
+
+    updateInstitution(id: string, institution: Institution): Observable<Institution> {
+      const url = `${this.apiUrl}/${id}`;
+      return this.http.put<Institution>(url, institution).pipe(
+        map((response: Institution) => {
+          if (response.status === 'success') {
+            return response;
+          } else {
+            throw new Error(response.message || 'Error al actualizar la institucion');
+          }
+        }),
+        catchError(this.handleError)
       );
     }
 }

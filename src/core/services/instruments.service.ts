@@ -49,4 +49,45 @@ export class InstrumentsService {
         catchError(this.handleError) // Manejo de errores
       );
   }
+
+  getInstrumentById(id: string): Observable<Instrument> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.get<Instrument>(url).pipe(
+      map((response: Instrument) => {
+        if (response.status === 'success') {
+          return response;
+        } else {
+          throw new Error(response.message || 'Error al obtener el instrumento');
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  saveInstrument(instrument: Instrument): Observable<Instrument> {
+    return this.http.post<Instrument>(this.apiUrl + '/new', instrument).pipe(
+      map((response: Instrument) => {
+        if (response.status === 'success') {
+          return response;
+        } else {
+          throw new Error(response.message || 'Error al guardar el instrumento');
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  updateInstrument(id: string, instrument: Instrument): Observable<Instrument> {
+    const url = `${this.apiUrl}/${id}`;
+    return this.http.put<Instrument>(url, instrument).pipe(
+      map((response: Instrument) => {
+        if (response.status === 'success') {
+          return response;
+        } else {
+          throw new Error(response.message || 'Error al actualizar el instrumento');
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
 }

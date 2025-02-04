@@ -4,4 +4,6 @@ export interface Instrument {
   deleted: boolean;
   updatedAt: Date;
   createdAt: Date;
+  status: string;
+  message?: string;
 }

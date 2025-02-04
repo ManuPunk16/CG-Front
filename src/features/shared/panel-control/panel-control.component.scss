@@ -1,0 +1,25 @@
+.badge-success {
+  color: #fff;
+  background-color: #1d7431;
+}
+
+.badge-warning {
+  color: #fff;
+  background-color: #af1717;
+}
+
+section {
+  display: flex;
+  flex-wrap: wrap; /* Permite que las tarjetas se envuelvan en múltiples filas si el espacio es insuficiente */
+  gap: 16px; /* Espacio entre tarjetas */
+  margin-bottom: 10px;
+
+  div {
+    flex: 1; /* Permite que las tarjetas se expandan para ocupar todo el espacio disponible */
+    min-width: 300px; /* Establece un ancho mínimo para las tarjetas */
+  }
+}
+
+.buscador {
+  margin-left: 15px;
+}

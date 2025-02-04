@@ -48,6 +48,8 @@ import Swal from 'sweetalert2';
 })
 export class MainComponent implements OnInit {
 
+  public currentYear: number = new Date().getFullYear();
+
   isLoggedIn = false;
   private roles: string[] = [];
   username?: string;
@@ -78,7 +80,9 @@ export class MainComponent implements OnInit {
     private datePipe: DatePipe,
     private _tokenStorage: TokenStorageService,
     private router: Router
-  ) {}
+  ) {
+    this.currentYear;
+  }
 
   ngOnInit(): void {
     this.loadInputs();

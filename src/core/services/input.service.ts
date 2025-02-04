@@ -79,6 +79,7 @@ export class InputService {
     );
   }
 
+  // Current year
   getNoDeletedInputs(): Observable<InputsResponse> {
     let params = new HttpParams();
 
@@ -87,10 +88,29 @@ export class InputService {
     );
   }
 
+  // Previous years
+  getNoDeletedInputsPreviousYers(): Observable<InputsResponse> {
+    let params = new HttpParams();
+
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs_previous`, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+
+  // Current year
   getNoDeletedInputsByNormalUsers(asignado: string): Observable<InputsResponse> {
     let params = new HttpParams();
 
     return this.http.get<InputsResponse>(`${this.apiUrl}inputs_area/` + asignado, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+
+  // Previous yers
+  getNoDeletedInputsPreviousYearsByNormalUsers(asignado: string): Observable<InputsResponse> {
+    let params = new HttpParams();
+
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs_area_previous/` + asignado, { params }).pipe(
         catchError(this.handleError)
     );
   }
