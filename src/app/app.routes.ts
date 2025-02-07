@@ -38,6 +38,11 @@ export const routes: Routes = [
     canActivate:[AuthGuard]
   },
   {
+    path: 'Perfil',
+    loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
+    canActivate:[AuthGuard]
+  },
+  {
     path: '',
     redirectTo: 'login', // Redirige a /login por defecto
     pathMatch: 'full'

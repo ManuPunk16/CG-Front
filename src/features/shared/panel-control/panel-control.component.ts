@@ -22,6 +22,8 @@ import { Institution } from '../../../core/models/institution.model';
 import { Instrument } from '../../../core/models/instrument.model';
 import { InstrumentsComponent } from '../instruments/instruments.component';
 import { InstitutionsComponent } from '../institutions/institutions.component';
+import { ReportesService } from '../../../core/services/reportes.service';
+import saveAs from 'file-saver';
 
 @Component({
   selector: 'app-panel-control',
@@ -85,7 +87,8 @@ export class PanelControlComponent implements OnInit {
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
     private _tokenStorage: TokenStorageService,
-    private router: Router
+    private router: Router,
+    private _reportes: ReportesService
   ) {
 
   }
@@ -239,5 +242,41 @@ export class PanelControlComponent implements OnInit {
     } else {
       console.error('El ID del registro es inválido');
     }
+  }
+
+  exportToExcelAll() {
+      this._reportes.exportarExcelTodosAniosPosteriores().subscribe({
+        next: (blob) => {
+          const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blobData, 'Registros_anios_posteriores.xlsx');
+        },
+        error: (error) => {
+          console.error(error);
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Algo salio mal!",
+          });
+        }
+      });
+    }
+
+  exportToExcelEnlace() {
+    const user = this._tokenStorage.getUser();
+    const areaUser = user.area;
+    this._reportes.exportarExcelEnlaceAniosPosteriores(areaUser).subscribe({
+      next: (blob) => {
+        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blobData, 'Registros_enlace_anios_posteriores.xlsx');
+      },
+      error: (error) => {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Algo salio mal!",
+        });
+      }
+    });
   }
 }

@@ -1,7 +1,7 @@
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
-import { ChangeDetectionStrategy, Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { InputService } from '../../core/services/input.service';
 import { Input } from '../../core/models/input.model';
 import { CommonModule, DatePipe, NgIf } from '@angular/common';
@@ -18,6 +18,8 @@ import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { ReportesService } from '../../core/services/reportes.service';
+import saveAs from 'file-saver';
 
 @Component({
   selector: 'app-main',
@@ -74,12 +76,17 @@ export class MainComponent implements OnInit {
   startDate!: Date;
   endDate!: Date;
 
+  reportes: any[] = [];
+  fechaBusqueda: string = '';
+
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
     private _tokenStorage: TokenStorageService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private _reportes: ReportesService
   ) {
     this.currentYear;
   }
@@ -96,6 +103,7 @@ export class MainComponent implements OnInit {
       this.showModerator = this.roles.includes('ROLE_MODERATOR');
       this.username = user.username;
     }
+    this.cdr.detectChanges();
   }
 
   deleteById(row: Input) {
@@ -244,5 +252,41 @@ export class MainComponent implements OnInit {
     } else {
       console.error('El ID del registro es inválido');
     }
+  }
+
+  exportToExcelAll() {
+    this._reportes.exportarExcelTodosAnioActual().subscribe({
+      next: (blob) => {
+        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blobData, 'Registros_anio_actual.xlsx');
+      },
+      error: (error) => {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Algo salio mal!",
+        });
+      }
+    });
+  }
+
+  exportToExcelEnlace() {
+    const user = this._tokenStorage.getUser();
+    const areaUser = user.area;
+    this._reportes.exportarExcelEnlaceAnioActual(areaUser).subscribe({
+      next: (blob) => {
+        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blobData, 'Registros_enlace_anio_actual.xlsx');
+      },
+      error: (error) => {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Algo salio mal!",
+        });
+      }
+    });
   }
 }

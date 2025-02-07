@@ -1,0 +1,86 @@
+<header>
+  <h1>Panel de Usuario</h1>
+</header>
+<main class="container">
+  <section class="principal">
+    <mat-card class="card-one" *ngIf="showModerator || showAdmin">
+      <mat-card-header>
+        <mat-card-title>
+          <h1>Reporte en forma de resumen por dia</h1>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div>
+          <div>
+            <input type="date" [(ngModel)]="fechaBusqueda">
+            <button (click)="buscarReportes()">Buscar</button>
+            <button mat-raised-button (click)="descargarReporte()" [disabled]="_isTrue">Exportar a EXCEL</button>
+            <div *ngIf="reportes.length > 0">
+              <!-- <div *ngFor="let reporte of reportes">
+                <p>{{ reporte._id }}: {{ reporte.cantidad }} registros</p>
+              </div> -->
+              <div *ngFor="let reporte of reportes">
+                <h3>{{ reporte._id }}</h3>
+                <ul>
+                  <li *ngFor="let asunto of reporte.asunto">
+                    {{ asunto }}
+                  </li>
+                  <p>Cantidad de registros: {{ reporte.cantidad }}</p>
+                </ul>
+              </div>
+            </div>
+            <div *ngIf="!reportes.length">
+              <p>No se encontraron registros para la fecha seleccionada.</p>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card-one">
+      <mat-card-content>
+        Espera por mas contenido
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <aside class="lateral">
+    <mat-card class="card-two" *ngIf="showModerator || showAdmin">
+      <mat-card-header>
+        <mat-card-title>
+          <h3>
+            Reportes
+          </h3>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div>
+          <div>
+            <label for="startDate">Fecha Inicial: </label>
+            <input type="date" [(ngModel)]="startDate" name="startDate">
+          </div>
+          <div>
+            <label for="endDate">Fecha Final: </label>
+            <input type="date" [(ngModel)]="endDate" name="endDate">
+          </div>
+          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="generarReporte()">Excel Formato</button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card-three">
+      <mat-card-header>
+        <mat-card-title>
+          <h3>
+            Otros
+          </h3>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div>
+          Espera por mas contenido
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </aside>
+</main>
