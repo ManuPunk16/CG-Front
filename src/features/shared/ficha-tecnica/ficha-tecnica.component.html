@@ -107,8 +107,9 @@
           <h4>Num. de Oficio consultado: {{ item.num_oficio }}</h4>
           <ul>
             <li *ngFor="let duplicado of item.duplicados">
-              ID: {{ duplicado._id }}<br>
+              ID: <a [routerLink]="['/ficha_tecnica', duplicado._id]" routerLinkActive="router-link-active" >{{ duplicado._id }}</a><br>
               Folio: {{ duplicado.folio }}<br>
+              Fecha Recepcion: {{ duplicado.fecha_recepcion | date:'dd/MM/yyyy' }}<br>
               Asignado: {{ duplicado.asignado }} <br><br>
             </li>
           </ul>

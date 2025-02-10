@@ -124,7 +124,11 @@ export class UserPanelComponent implements OnInit {
         },
         error: (error) => {
           console.error(error);
-          // Mostrar un mensaje de error al usuario
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Debes de seleccionar una fecha primero!",
+          });
         }
       });
   }

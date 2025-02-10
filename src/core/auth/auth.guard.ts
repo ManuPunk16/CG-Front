@@ -6,16 +6,19 @@ import { TokenStorageService } from './token-storage.service';
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
 
+  isLoggedIn = false;
+
   constructor(private tokenStorage: TokenStorageService, private router: Router) { }
 
   canActivate(
     route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+    state: RouterStateSnapshot
+  ): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
 
-    const user = this.tokenStorage.getUser();
-
-    if (user) {
-      return true;
+    this.isLoggedIn = !!this.tokenStorage.getToken();
+    if (this.isLoggedIn) {
+        // logged in so return true
+        return true;
     }
 
     this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });

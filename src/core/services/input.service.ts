@@ -142,4 +142,11 @@ export class InputService {
       catchError(this.handleError)
     );
   }
+
+  getDuplicatedOficiosByNormalUsers(id: string, asignado: string): Observable<DuplicadosResponse> {
+    const url = `${this.apiUrl}inputs_oficio_enlace/${id}/duplicados/${asignado}`;
+    return this.http.get<DuplicadosResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
 }

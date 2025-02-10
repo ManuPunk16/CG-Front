@@ -1,17 +1,19 @@
 import { InputService } from './../../../core/services/input.service';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Input } from '../../../core/models/input.model';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { TokenStorageService } from '../../../core/auth/token-storage.service';
 
 interface Duplicado {
   _id: string;
   num_oficio: string;
   folio: number;
   asignado: string;
+  fecha_recepcion?: string;
 }
 
 interface DuplicadosResponse {
@@ -29,7 +31,8 @@ interface DuplicadosResponse {
     NgFor,
     MatCardModule,
     DatePipe,
-    MatButtonModule
+    MatButtonModule,
+    RouterModule
   ],
   standalone: true,
   templateUrl: './ficha-tecnica.component.html',
@@ -52,7 +55,9 @@ export class FichaTecnicaComponent implements OnInit {
     private _input: InputService,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private datePipe: DatePipe,
+    private _tokenStorage: TokenStorageService
   ) {
 
   }
@@ -75,7 +80,12 @@ export class FichaTecnicaComponent implements OnInit {
             console.log(err);
           }
         });
-         this.loadDuplicated();
+        const user = this._tokenStorage.getUser();
+        if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
+          this.loadDuplicated();
+        } else {
+          this.loadDuplicatedByNormalUsers();
+        }
       }
     });
   }
@@ -85,6 +95,33 @@ export class FichaTecnicaComponent implements OnInit {
       this.id = params.get('id');
       if (this.id) {
         this._input.getDuplicatedOficios(this.id).subscribe({
+          next: (res: DuplicadosResponse) => {
+            this.loading = false;
+            if (res && res.duplicados && res.duplicados.length > 0) {
+              this.duplicados = res.duplicados;
+              this.cdr.detectChanges();
+            } else {
+              this.duplicados = null;
+              console.log("No hay nada");
+            }
+          },
+          error: err => {
+            this.loading = false;
+            console.error(err);
+            this.duplicados = null;
+          }
+        });
+      }
+    });
+  }
+
+  loadDuplicatedByNormalUsers() {
+    this.route.paramMap.subscribe(params => {
+      this.id = params.get('id');
+      if (this.id) {
+        const user = this._tokenStorage.getUser();
+        const areaUser = user.area;
+        this._input.getDuplicatedOficiosByNormalUsers(this.id, areaUser).subscribe({
           next: (res: DuplicadosResponse) => {
             this.loading = false;
             if (res && res.duplicados && res.duplicados.length > 0) {

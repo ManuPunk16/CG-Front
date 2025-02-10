@@ -11,6 +11,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { Router } from '@angular/router';
 import { AuthStateService } from '../../core/auth/authstate.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -83,6 +84,11 @@ export class LoginComponent implements OnInit {
         error: err => {
           this.errorMessage = err.error.message;
           this.isLoginFailed = true;
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: "Usuario o contraseña incorrectos!",
+          });
         }
       });
     }
