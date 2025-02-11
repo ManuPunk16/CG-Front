@@ -130,6 +130,7 @@ export class NuevaEntradaComponent implements OnInit {
     this._area.getAllAreas().subscribe({
       next: (areas) => {
         this.areas = areas;
+        this.changeDetectorRef.detectChanges();
       },
       error: (error) => {
         console.error('Error al obtener las áreas:', error);
@@ -141,6 +142,7 @@ export class NuevaEntradaComponent implements OnInit {
     this._institution.getAllNoDeletedInstitutions().subscribe({
       next: (res) => {
         this.institutions = res;
+        this.changeDetectorRef.detectChanges();
       },
       error: (error) => {
         console.error('Error al obtener las instituciones:', error);
@@ -152,6 +154,7 @@ export class NuevaEntradaComponent implements OnInit {
     this._instrument.getAllNoDeletedInstruments().subscribe({
       next: (res) => {
         this.instruments = res;
+        this.changeDetectorRef.detectChanges();
       },
       error: (error) => {
         console.error('Error al obtener las instituciones:', error);
