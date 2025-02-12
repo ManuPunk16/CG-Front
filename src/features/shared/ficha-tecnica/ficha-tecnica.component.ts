@@ -156,11 +156,7 @@ export class FichaTecnicaComponent implements OnInit {
           },
           error: (error: Error) => { // Tipado de error
             console.error('Error obteniendo PDF:', error);
-            if (error.message === 'Archivo no encontrado en el servidor.') { // Comprueba el mensaje
-                this.errorPdfEntrada = "Verificar nombre de archivo de entrada, parece incorrecto.";
-            } else {
-                this.errorPdfEntrada = "Error obteniendo PDF de entrada."; // Otro error
-            }
+            this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
             this.pdfUrls = [];
             this.pdfFilenames = [];
             this.cdr.detectChanges();
@@ -183,11 +179,7 @@ export class FichaTecnicaComponent implements OnInit {
           },
           error: (error: Error) => { // Tipado de error
             console.error('Error obteniendo PDF de seguimiento:', error);
-            if (error.message === 'Archivo no encontrado en el servidor.') { // Comprueba el mensaje
-                this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
-            } else {
-                this.errorPdfSeguimiento = "Error obteniendo PDF de seguimiento."; // Otro error
-            }
+            this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
             this.pdfUrlsSeguimiento = [];
             this.pdfFilenamesSeguimiento = [];
             this.cdr.detectChanges();

@@ -70,27 +70,29 @@
   <aside class="lateral">
     <mat-card class="card-two">
       <mat-card-content>
-          <div class="pdf-list">
-              <h2>Archivos PDF Entrada</h2>
-              <ul *ngIf="pdfUrls.length > 0; else noPdfsEntrada">
-                  <li *ngFor="let pdfUrl of pdfUrls; let i = index">
-                      <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
-                  </li>
-              </ul>
-              <ng-template #noPdfsEntrada>
-                  <p *ngIf="errorPdfEntrada"> {{ errorPdfEntrada }} </p> <p *ngIf="!errorPdfEntrada">No hay archivos PDF disponibles.</p>
-              </ng-template>
+        <div class="pdf-list">
+          <h2>Archivos PDF Entrada</h2>
+          <ul *ngIf="pdfUrls.length > 0 && !errorPdfEntrada; else noPdfsEntrada">
+            <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+              <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
+            </li>
+          </ul>
+          <ng-template #noPdfsEntrada>
+            <p *ngIf="errorPdfEntrada"> {{ errorPdfEntrada }} </p>
+            <p *ngIf="!errorPdfEntrada">No hay archivos PDF disponibles.</p>
+          </ng-template>
 
-              <h2>Archivos PDF Seguimiento</h2>
-              <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfsSeguimiento">
-                  <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
-                      <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
-                  </li>
-              </ul>
-              <ng-template #noPdfsSeguimiento>
-                  <p *ngIf="errorPdfSeguimiento"> {{ errorPdfSeguimiento }} </p> <p *ngIf="!errorPdfSeguimiento">No hay archivos PDF de seguimiento disponibles.</p>
-              </ng-template>
-          </div>
+          <h2>Archivos PDF Seguimiento</h2>
+          <ul *ngIf="pdfUrlsSeguimiento.length > 0 && !errorPdfSeguimiento; else noPdfsSeguimiento">
+            <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
+              <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
+            </li>
+          </ul>
+          <ng-template #noPdfsSeguimiento>
+            <p *ngIf="errorPdfSeguimiento"> {{ errorPdfSeguimiento }} </p>
+            <p *ngIf="!errorPdfSeguimiento">No hay archivos PDF de seguimiento disponibles.</p>
+          </ng-template>
+        </div>
       </mat-card-content>
     </mat-card>
 
