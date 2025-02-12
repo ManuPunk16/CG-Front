@@ -138,24 +138,25 @@ export class EditarSeguimientoComponent implements OnInit {
 
   onSubmit() {
     if (this.seguimientoForm.valid && this.inputDetails) {
-      // 1. Formatear fechas
-      const formattedValues = { ...this.seguimientoForm.value }; // Crear copia para no modificar el original directamente.
+      let fechaRespuesta = this.inputDetails.seguimientos?.fecha_respuesta;
+      if (!fechaRespuesta) {
+        fechaRespuesta = new Date(), 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US';
+      }
+
+      const formattedValues = { ...this.seguimientoForm.value, fecha_respuesta: fechaRespuesta };
       for (const key in formattedValues) {
         if (formattedValues.hasOwnProperty(key) && (key.startsWith('fecha_') || key.endsWith('_fecha'))) {
           formattedValues[key] = formattedValues[key] ? formatDate(formattedValues[key], 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
         }
       }
 
-      // 2. Crear objeto seguimientoData
       const seguimientoData = { ...this.inputDetails.seguimientos, ...formattedValues };
 
-      // 3. Crear objeto inputData
       const inputData: Input = {
         ...this.inputDetails,
         seguimientos: seguimientoData
       };
 
-      // 4. Llamar al servicio
       this._inputService.updateInput(this.id, inputData).subscribe({
         next: (res) => {
           Swal.fire({
@@ -166,7 +167,7 @@ export class EditarSeguimientoComponent implements OnInit {
             timer: 1500
           });
           this.seguimientoForm.reset();
-          this.router.navigate(['/Entradas']); // Redirige o muestra mensaje de éxito
+          this.router.navigate(['/Entradas']);
         },
         error: (err) => {
           console.error('Error:', err);
@@ -176,7 +177,6 @@ export class EditarSeguimientoComponent implements OnInit {
             text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
             showConfirmButton: true
           });
-          // Muestra mensaje de error al usuario
         }
       });
     } else {
@@ -191,6 +191,8 @@ export class EditarSeguimientoComponent implements OnInit {
 
   initForm() {
     if (this.inputDetails && this.currentUser) {
+      const fechaRespuestaExistente = this.inputDetails.seguimientos?.fecha_respuesta;
+
       this.seguimientoForm = this.fb.group({
         oficio_salida: [this.inputDetails.seguimientos?.oficio_salida || null, Validators.required],
         num_expediente: [this.inputDetails.seguimientos?.num_expediente || null],
@@ -203,8 +205,8 @@ export class EditarSeguimientoComponent implements OnInit {
         estatus: [this.inputDetails.estatus || null, Validators.required],
         comentarios: [this.inputDetails.seguimientos?.comentarios || null],
         firma_visado: [this.inputDetails.seguimientos?.firma_visado || null],
-        archivosPdf_seguimiento: this.fb.array(this.inputDetails.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
-        fecha_respuesta: [this.inputDetails.seguimientos?.fecha_respuesta || null],
+        archivosPdf_seguimiento: this.fb.array(this.inputDetails.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : []),
+        fecha_respuesta: [fechaRespuestaExistente || null],
         usuario: this.fb.group({
           id: [this.currentUser.id],
           username: [this.currentUser.username]

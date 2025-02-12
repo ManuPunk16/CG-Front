@@ -41,11 +41,11 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content *ngIf="inputDetails">
-        <div *ngIf="inputDetails && inputDetails.seguimientos.oficio_salida" class="info-grid">
+        <div *ngIf="inputDetails?.seguimientos?.atencion_otorgada" class="info-grid">
           <div class="info-column">
             <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida}}</p>
             <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente}}</p>
-            <p><strong>Fecha Acuse Recibido:</strong> {{inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy'}}</p>
+            <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy' }}</p>
             <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy'}}</p>
           </div>
           <div class="info-column">
@@ -60,8 +60,8 @@
             <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios}}</p>
           </div>
         </div>
-        <div *ngIf="!inputDetails.seguimientos.oficio_salida">
-          <p><strong>Sin respuesta relacionada con un Oficio de Salida</strong></p>
+        <div *ngIf="!inputDetails.seguimientos?.atencion_otorgada">
+          <p><strong>Sin respuesta relacionada a una atencion otorgada</strong></p>
         </div>
       </mat-card-content>
     </mat-card>
@@ -70,23 +70,27 @@
   <aside class="lateral">
     <mat-card class="card-two">
       <mat-card-content>
-        <div class="pdf-list"> <h2>Archivos PDF Entrada</h2>
-          <ul *ngIf="pdfUrls.length > 0; else noPdfs">
-            <li *ngFor="let pdfUrl of pdfUrls; let i = index">
-                <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
-            </li>
-          </ul>
+          <div class="pdf-list">
+              <h2>Archivos PDF Entrada</h2>
+              <ul *ngIf="pdfUrls.length > 0; else noPdfsEntrada">
+                  <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+                      <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
+                  </li>
+              </ul>
+              <ng-template #noPdfsEntrada>
+                  <p *ngIf="errorPdfEntrada"> {{ errorPdfEntrada }} </p> <p *ngIf="!errorPdfEntrada">No hay archivos PDF disponibles.</p>
+              </ng-template>
 
-          <h2>Archivos PDF Seguimiento</h2>
-          <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfs">
-            <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
-                <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
-            </li>
-          </ul>
-          <ng-template #noPdfs>
-              <p>No hay archivos PDF disponibles.</p>
-          </ng-template>
-        </div>
+              <h2>Archivos PDF Seguimiento</h2>
+              <ul *ngIf="pdfUrlsSeguimiento.length > 0; else noPdfsSeguimiento">
+                  <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
+                      <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
+                  </li>
+              </ul>
+              <ng-template #noPdfsSeguimiento>
+                  <p *ngIf="errorPdfSeguimiento"> {{ errorPdfSeguimiento }} </p> <p *ngIf="!errorPdfSeguimiento">No hay archivos PDF de seguimiento disponibles.</p>
+              </ng-template>
+          </div>
       </mat-card-content>
     </mat-card>
 
@@ -102,28 +106,27 @@
           <h2>Oficios relacionados o duplicados por el num. de oficio</h2>
         </mat-card-title>
       </mat-card-header>
-      <mat-card-content *ngIf="duplicados">
+      <mat-card-content>
+        <div *ngIf="loading">
+          <p>Cargando...</p>
+        </div>
+      </mat-card-content>
+      <mat-card-content>
+        <div *ngIf="!loading && !duplicados">
+          <p>No se encontraron duplicados.</p>
+        </div>
+      </mat-card-content>
+      <mat-card-content *ngIf="!loading && duplicados">
         <div *ngFor="let item of duplicados">
           <h4>Num. de Oficio consultado: {{ item.num_oficio }}</h4>
           <ul>
             <li *ngFor="let duplicado of item.duplicados">
-              ID: <a [routerLink]="['/ficha_tecnica', duplicado._id]" routerLinkActive="router-link-active" >{{ duplicado._id }}</a><br>
+              ID: <a [routerLink]="['/ficha_tecnica', duplicado._id]">{{ duplicado._id }}</a><br>
               Folio: {{ duplicado.folio }}<br>
               Fecha Recepcion: {{ duplicado.fecha_recepcion | date:'dd/MM/yyyy' }}<br>
               Asignado: {{ duplicado.asignado }} <br><br>
-            </li>
+          </li>
           </ul>
-
-        </div>
-      </mat-card-content>
-      <mat-card-content>
-        <div *ngIf="!duplicados && !loading">
-          <p>No se encontraron duplicados.</p>
-        </div>
-      </mat-card-content>
-      <mat-card-content>
-        <div *ngIf="loading">
-          <p>Cargando...</p>
         </div>
       </mat-card-content>
     </mat-card>

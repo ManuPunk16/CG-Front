@@ -78,7 +78,7 @@ export class EditarEntradaComponent implements OnInit {
   ) {
     this.currentUser = this._tokenStorageService.getUser();
     this.inputForm = new FormGroup({
-      anio: new FormControl(),
+      // anio: new FormControl(),
       folio: new FormControl(),
       num_oficio: new FormControl(),
       fecha_oficio: new FormControl(),
@@ -215,7 +215,7 @@ export class EditarEntradaComponent implements OnInit {
   initForm() {
     if (this.inputDetails) { // Verifica que inputDetails esté definido
       this.inputForm = this.fb.group({
-        anio: [this.inputDetails.anio, Validators.required],
+        // anio: [this.inputDetails.anio, Validators.required],
         folio: [this.inputDetails.folio, Validators.required],
         num_oficio: [this.inputDetails.num_oficio || '', Validators.required],
         fecha_oficio: [this.inputDetails.fecha_oficio || null, Validators.required],

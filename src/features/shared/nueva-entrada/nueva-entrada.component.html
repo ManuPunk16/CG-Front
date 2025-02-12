@@ -8,11 +8,11 @@
 
     <form [formGroup]="inputForm" class="form-container" *ngIf="inputForm" (ngSubmit)="onSubmit()">
       <div class="container">
-        <mat-form-field appearance="fill">
+        <!-- <mat-form-field appearance="fill">
           <mat-label>Año</mat-label>
           <input matInput type="number" formControlName="anio">
           <mat-error *ngIf="inputForm.get('anio')?.hasError('required')">Año es requerido</mat-error>
-        </mat-form-field>
+        </mat-form-field> -->
 
         <mat-form-field appearance="fill">
           <mat-label>Folio</mat-label>

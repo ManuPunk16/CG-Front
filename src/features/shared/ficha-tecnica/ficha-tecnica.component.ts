@@ -1,7 +1,7 @@
 import { InputService } from './../../../core/services/input.service';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Input } from '../../../core/models/input.model';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -51,13 +51,16 @@ export class FichaTecnicaComponent implements OnInit {
   pdfFilenames: string[] = [];
   pdfFilenamesSeguimiento: string[] = [];
 
+  errorPdfEntrada: string | null = null;
+  errorPdfSeguimiento: string | null = null;
+
   constructor(
     private _input: InputService,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
-    private datePipe: DatePipe,
-    private _tokenStorage: TokenStorageService
+    private _tokenStorage: TokenStorageService,
+    private router: Router
   ) {
 
   }
@@ -97,18 +100,14 @@ export class FichaTecnicaComponent implements OnInit {
         this._input.getDuplicatedOficios(this.id).subscribe({
           next: (res: DuplicadosResponse) => {
             this.loading = false;
-            if (res && res.duplicados && res.duplicados.length > 0) {
-              this.duplicados = res.duplicados;
-              this.cdr.detectChanges();
-            } else {
-              this.duplicados = null;
-              console.log("No hay nada");
-            }
+            this.duplicados = (res && res.duplicados && res.duplicados.length > 0) ? res.duplicados : null; // Asignación condicional
+            this.cdr.detectChanges();
           },
           error: err => {
             this.loading = false;
             console.error(err);
             this.duplicados = null;
+            this.cdr.detectChanges();
           }
         });
       }
@@ -155,14 +154,22 @@ export class FichaTecnicaComponent implements OnInit {
             this.pdfUrls.push(safeUrl);
             this.cdr.detectChanges();
           },
-          error: (error) => {
+          error: (error: Error) => { // Tipado de error
             console.error('Error obteniendo PDF:', error);
+            if (error.message === 'Archivo no encontrado en el servidor.') { // Comprueba el mensaje
+                this.errorPdfEntrada = "Verificar nombre de archivo de entrada, parece incorrecto.";
+            } else {
+                this.errorPdfEntrada = "Error obteniendo PDF de entrada."; // Otro error
+            }
+            this.pdfUrls = [];
+            this.pdfFilenames = [];
+            this.cdr.detectChanges();
           }
         });
       });
     }
 
-    if (this.inputDetails && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
+    if (this.inputDetails && this.inputDetails.seguimientos && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
       this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach(pdfPathSeguimiento => {
         const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
         this.pdfFilenamesSeguimiento.push(filename);
@@ -174,8 +181,16 @@ export class FichaTecnicaComponent implements OnInit {
             this.pdfUrlsSeguimiento.push(safeUrl);
             this.cdr.detectChanges();
           },
-          error: (error) => {
-            console.error('Error obteniendo PDF:', error);
+          error: (error: Error) => { // Tipado de error
+            console.error('Error obteniendo PDF de seguimiento:', error);
+            if (error.message === 'Archivo no encontrado en el servidor.') { // Comprueba el mensaje
+                this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
+            } else {
+                this.errorPdfSeguimiento = "Error obteniendo PDF de seguimiento."; // Otro error
+            }
+            this.pdfUrlsSeguimiento = [];
+            this.pdfFilenamesSeguimiento = [];
+            this.cdr.detectChanges();
           }
         });
       });

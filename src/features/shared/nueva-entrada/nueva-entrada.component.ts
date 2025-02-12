@@ -100,7 +100,7 @@ export class NuevaEntradaComponent implements OnInit {
 
   newForm() {
     this.inputForm = this.fb.group({ // Usa fb.group para consistencia
-      anio: [this.currentYear, Validators.required], // Usa array para definir valor inicial y validadores
+      // anio: [this.currentYear, Validators.required], // Usa array para definir valor inicial y validadores
       folio: ['', Validators.required],
       num_oficio: ['', Validators.required],
       fecha_oficio: ['', Validators.required],
@@ -114,7 +114,7 @@ export class NuevaEntradaComponent implements OnInit {
       asignado: ['', Validators.required],
       estatus: ['', Validators.required],
       observacion: [''],
-      archivosPdf: this.fb.array([], [Validators.required, this.archivosPdfValidator]),
+      archivosPdf: this.fb.array([]),
       create_user: this.fb.group({ // Agrupa create_user con fb.group
         id: [this.currentUser.id], // Asigna el ID del usuario actual
         username: [this.currentUser.username] // Asigna el username del usuario actual
@@ -185,6 +185,7 @@ export class NuevaEntradaComponent implements OnInit {
   }
 
   onSubmit() {
+    console.log(this.inputForm.value);
     if (this.inputForm.valid) {
       const inputData: Input = this.inputForm.value;
 

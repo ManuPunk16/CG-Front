@@ -7,10 +7,10 @@
   <mat-card-content>
     <form [formGroup]="inputForm" class="form-container" *ngIf="inputForm" (ngSubmit)="onSubmit()">
       <div class="container">
-        <mat-form-field  appearance="fill">
+        <!-- <mat-form-field  appearance="fill">
           <mat-label>Año</mat-label>
           <input matInput type="number" formControlName="anio">
-        </mat-form-field>
+        </mat-form-field> -->
 
         <mat-form-field appearance="fill">
           <mat-label>Folio</mat-label>
@@ -89,8 +89,8 @@
         <mat-form-field appearance="fill">
           <mat-label>Asignado</mat-label>
            <mat-select formControlName="asignado">
-            <mat-option *ngFor="let item of areas" [value]="item.area" name="asignado">
-              {{item.area}}
+            <mat-option *ngFor="let item of areas" [value]="item.direccion" name="asignado">
+              {{item.direccion}}
             </mat-option>
            </mat-select>
         </mat-form-field>
