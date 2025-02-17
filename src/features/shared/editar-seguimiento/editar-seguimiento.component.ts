@@ -196,8 +196,8 @@ export class EditarSeguimientoComponent implements OnInit {
       this.seguimientoForm = this.fb.group({
         oficio_salida: [this.inputDetails.seguimientos?.oficio_salida || null, Validators.required],
         num_expediente: [this.inputDetails.seguimientos?.num_expediente || null],
-        fecha_oficio_salida: [this.inputDetails.seguimientos?.fecha_oficio_salida || null],
-        fecha_acuse_recibido: [this.inputDetails.seguimientos?.fecha_acuse_recibido || null, Validators.required],
+        fecha_oficio_salida: [this.inputDetails.seguimientos?.fecha_oficio_salida ? new Date(this.inputDetails.seguimientos.fecha_oficio_salida): null],
+        fecha_acuse_recibido: [this.inputDetails.seguimientos?.fecha_acuse_recibido ? new Date(this.inputDetails.seguimientos.fecha_acuse_recibido): null, Validators.required],
         destinatario: [this.inputDetails.seguimientos?.destinatario || null, Validators.required],
         cargo: [this.inputDetails.seguimientos?.cargo || null, Validators.required],
         atencion_otorgada: [this.inputDetails.seguimientos?.atencion_otorgada || null, Validators.required],

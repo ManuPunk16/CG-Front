@@ -135,16 +135,27 @@ export class EditarEntradaComponent implements OnInit {
     });
   }
 
+  ajustarFecha(fecha: Date): Date {
+    const CAMPECHE_TIMEZONE_OFFSET = -6;
+    const fechaCampeche = new Date(fecha.getTime() + CAMPECHE_TIMEZONE_OFFSET * 60 * 60 * 1000);
+    return fechaCampeche;
+  }
+
   onSubmit() {
     if (this.inputForm.valid) {
-      this.inputForm.value.fecha_oficio = this.inputForm.value.fecha_oficio ? formatDate(this.inputForm.value.fecha_oficio, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
-      this.inputForm.value.fecha_vencimiento = this.inputForm.value.fecha_vencimiento ? formatDate(this.inputForm.value.fecha_vencimiento, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
-      this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
+      const valoresDelFormulario = { ...this.inputForm.value }; // Crea una copia del formulario
 
-      const valoresDelFormulario = this.inputForm.value;
-      // console.log(valoresDelFormulario);
-
-      this._inputService.updateInput(this.id, valoresDelFormulario).subscribe({ // Usa el servicio updateInput
+      // Ajusta las fechas a la zona horaria de Campeche
+      if (valoresDelFormulario.fecha_oficio) {
+        valoresDelFormulario.fecha_oficio = this.ajustarFecha(valoresDelFormulario.fecha_oficio);
+      }
+      if (valoresDelFormulario.fecha_vencimiento) {
+        valoresDelFormulario.fecha_vencimiento = this.ajustarFecha(valoresDelFormulario.fecha_vencimiento);
+      }
+      if (valoresDelFormulario.fecha_recepcion) {
+        valoresDelFormulario.fecha_recepcion = this.ajustarFecha(valoresDelFormulario.fecha_recepcion);
+      }
+      this._inputService.updateInput(this.id, this.inputForm.value).subscribe({ // Usa el servicio updateInput
         next: (res) => {
           Swal.fire({
             icon: 'success',
@@ -168,6 +179,12 @@ export class EditarEntradaComponent implements OnInit {
         }
       });
     } else {
+      Object.keys(this.inputForm.controls).forEach(key => {
+        const control = this.inputForm.get(key);
+        if (control?.invalid) {
+          console.log(`- ${key}:`, control.errors);
+        }
+      });
       Swal.fire({
         icon: 'warning',
         title: 'Formulario inválido',
@@ -218,9 +235,9 @@ export class EditarEntradaComponent implements OnInit {
         // anio: [this.inputDetails.anio, Validators.required],
         folio: [this.inputDetails.folio, Validators.required],
         num_oficio: [this.inputDetails.num_oficio || '', Validators.required],
-        fecha_oficio: [this.inputDetails.fecha_oficio || null, Validators.required],
-        fecha_vencimiento: [this.inputDetails.fecha_vencimiento || null],
-        fecha_recepcion: [this.inputDetails.fecha_recepcion || null, Validators.required],
+        fecha_oficio: [this.inputDetails.fecha_oficio ? new Date(this.inputDetails.fecha_oficio) : null, Validators.required],
+        fecha_vencimiento: [this.inputDetails.fecha_vencimiento ? new Date(this.inputDetails.fecha_vencimiento) : null],
+        fecha_recepcion: [this.inputDetails.fecha_recepcion ? new Date(this.inputDetails.fecha_recepcion) : null, Validators.required],
         hora_recepcion: [this.inputDetails.hora_recepcion || ''],
         instrumento_juridico: [this.inputDetails.instrumento_juridico || '', Validators.required],
         remitente: [this.inputDetails.remitente || '', Validators.required],
@@ -229,7 +246,7 @@ export class EditarEntradaComponent implements OnInit {
         asignado: [this.inputDetails.asignado || '', Validators.required],
         estatus: [this.inputDetails.estatus || '', Validators.required],
         observacion: [this.inputDetails.observacion || ''],
-        archivosPdf: this.fb.array(this.inputDetails.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : [], [this.archivosPdfValidator]),
+        archivosPdf: this.fb.array(this.inputDetails.archivosPdf ? this.inputDetails.archivosPdf.map(pdf => this.fb.control(pdf)) : []),
         editor_user: this.fb.group({
           id: [this.currentUser.id],
           username: [this.currentUser.username]

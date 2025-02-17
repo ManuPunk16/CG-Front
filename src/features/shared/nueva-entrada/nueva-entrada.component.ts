@@ -94,7 +94,7 @@ export class NuevaEntradaComponent implements OnInit {
     this.getInstitutions();
     this.getInstruments();
     this.newForm();
-
+    this.obtenerUltimoFolio();
     this.changeDetectorRef.detectChanges();
   }
 
@@ -184,8 +184,18 @@ export class NuevaEntradaComponent implements OnInit {
     return null;
   }
 
+  obtenerUltimoFolio() {
+    this._inputService.obtenerUltimoFolio(this.currentYear).subscribe(folio => {
+      if (folio !== undefined && folio !== null) { // Verifica si folio es un número válido
+        this.inputForm.patchValue({ folio: folio + 1 });
+      } else {
+        this.inputForm.patchValue({ folio: 1 }); // O puedes dejarlo en blanco: this.inputForm.patchValue({ folio: '' });
+      }
+    });
+  }
+
   onSubmit() {
-    console.log(this.inputForm.value);
+    // console.log(this.inputForm.value);
     if (this.inputForm.valid) {
       const inputData: Input = this.inputForm.value;
 
@@ -193,27 +203,40 @@ export class NuevaEntradaComponent implements OnInit {
       this.inputForm.value.fecha_vencimiento = this.inputForm.value.fecha_vencimiento ? formatDate(this.inputForm.value.fecha_vencimiento, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
       this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
 
-      this._inputService.createInput(inputData).subscribe({ // Llama al servicio
-        next: (res) => {
-          // Restablece el formulario o muestra un mensaje de éxito
-          Swal.fire({
-            icon: 'success',
-            title: '¡Registro creado!',
-            text: 'El registro se ha creado correctamente.',
-            showConfirmButton: false,
-            timer: 1500
-          });
-          this.inputForm.reset();
-          this.router.navigate(['/Entradas']);// Puedes navegar a otra página o mostrar un mensaje de éxito
-        },
-        error: (err) => {
-          console.error('Error al crear el registro:', err);
-          // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
+      const anio = new Date().getFullYear();
+      const folio = inputData.folio;
+
+      this._inputService.verificarFolioExistente(anio, folio).subscribe(existe => {
+        if (existe) {
           Swal.fire({
             icon: 'error',
-            title: 'Oops...',
-            text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
-            showConfirmButton: true
+            title: 'Folio Duplicado',
+            text: `Ya existe un registro con el folio ${folio} en el año ${anio}. Por favor, ingrese un folio diferente.`,
+          });
+        } else {
+          this._inputService.createInput(inputData).subscribe({ // Llama al servicio
+            next: (res) => {
+              // Restablece el formulario o muestra un mensaje de éxito
+              Swal.fire({
+                icon: 'success',
+                title: '¡Registro creado!',
+                text: 'El registro se ha creado correctamente.',
+                showConfirmButton: false,
+                timer: 1500
+              });
+              this.inputForm.reset();
+              this.router.navigate(['/Entradas']);// Puedes navegar a otra página o mostrar un mensaje de éxito
+            },
+            error: (err) => {
+              console.error('Error al crear el registro:', err);
+              // Muestra el mensaje de error al usuario (usando un servicio de notificaciones, por ejemplo)
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Algo salió mal. Por favor, inténtalo de nuevo.',
+                showConfirmButton: true
+              });
+            }
           });
         }
       });

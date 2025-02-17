@@ -72,6 +72,14 @@ export class InputService {
       );
   }
 
+  obtenerUltimoFolio(anio: number): Observable<number | undefined> {
+    return this.http.get<number | undefined>(`${this.apiUrl}inputs/ultimo-folio/${anio}`);
+  }
+
+  verificarFolioExistente(anio: number, folio: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}inputs/existe-folio/${anio}/${folio}`);
+  }
+
   updateInput(id: string, inputData: Input): Observable<UpdateInputResponse> {
     const url = `${this.apiUrl}updateInputById/${id}`;
     return this.http.patch<UpdateInputResponse>(url, inputData).pipe(

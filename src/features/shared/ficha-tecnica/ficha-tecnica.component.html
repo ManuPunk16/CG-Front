@@ -15,8 +15,9 @@
             <p><strong>ID:</strong> {{inputDetails._id}}</p>
             <p><strong>Folio:</strong> {{inputDetails.folio}}</p>
             <p><strong>Num. Oficio:</strong> {{inputDetails.num_oficio}}</p>
-            <p><strong>Fecha Oficio:</strong> {{inputDetails.fecha_oficio | date:'dd/MM/yyyy'}}</p>
-            <p><strong>Fecha Recepción:</strong> {{inputDetails.fecha_recepcion | date:'dd/MM/yyyy'}}</p>
+            <p><strong>Fecha Oficio:</strong> {{inputDetails.fecha_oficio | date:'dd/MM/yyyy':'UTC'}}</p>
+            <p><strong>Fecha Recepción:</strong> {{inputDetails.fecha_recepcion | date:'dd/MM/yyyy':'UTC'}}</p>
+            <p><strong>Fecha Vencimiento:</strong> {{inputDetails.fecha_vencimiento | date:'dd/MM/yyyy':'UTC'}}</p>
           </div>
           <div class="info-column">
             <p><strong>Hora Recepción:</strong> {{inputDetails.hora_recepcion}}</p>
@@ -41,12 +42,12 @@
         </mat-card-title>
       </mat-card-header>
       <mat-card-content *ngIf="inputDetails">
-        <div *ngIf="inputDetails?.seguimientos?.atencion_otorgada" class="info-grid">
+        <div class="info-grid">
           <div class="info-column">
             <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida}}</p>
             <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente}}</p>
-            <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy' }}</p>
-            <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy'}}</p>
+            <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy':'UTC' }}</p>
+            <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy':'UTC'}}</p>
           </div>
           <div class="info-column">
             <p><strong>Destinatario:</strong> {{inputDetails.seguimientos.destinatario}}</p>
