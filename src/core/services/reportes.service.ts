@@ -10,6 +10,16 @@ interface ApiResponse<T> {
   data?: T;
 }
 
+interface TiempoRespuesta {
+  _id: string;
+  num_oficio: string;
+  tiempo_recepcion: Date;
+  tiempo_respuesta: Date;
+  asignado: string;
+  diferencia_milisegundos: number;
+  diferencia_dias: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -117,5 +127,24 @@ export class ReportesService {
     return this.http.get(url, { params, responseType: 'blob' }).pipe(
       catchError(this.handleError)
     );
+  }
+
+  getTiempoRespuestaPorId(id: string): Observable<TiempoRespuesta> {
+    const url = `${this.apiUrl}tiempos/${id}`;
+
+    return this.http.get<TiempoRespuesta>(url)
+      .pipe(
+        map((data: TiempoRespuesta) => {
+          // Convertir las fechas de string a Date
+          if (data.tiempo_recepcion) {
+            data.tiempo_recepcion = new Date(data.tiempo_recepcion);
+          }
+          if (data.tiempo_respuesta) {
+            data.tiempo_respuesta = new Date(data.tiempo_respuesta);
+          }
+          return data;
+        }),
+        catchError(this.handleError)
+      );
   }
 }

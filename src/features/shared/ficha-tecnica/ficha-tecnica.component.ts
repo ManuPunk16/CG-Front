@@ -7,6 +7,7 @@ import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { TokenStorageService } from '../../../core/auth/token-storage.service';
+import { ReportesService } from '../../../core/services/reportes.service';
 
 interface Duplicado {
   _id: string;
@@ -22,6 +23,16 @@ interface DuplicadosResponse {
     num_oficio: string;
     duplicados: Duplicado[];
   }[];
+}
+
+interface TiempoRespuesta {
+  _id: string;
+  num_oficio: string;
+  tiempo_recepcion: Date;
+  tiempo_respuesta: Date;
+  asignado: string;
+  diferencia_milisegundos: number;
+  diferencia_dias: number;
 }
 
 @Component({
@@ -55,13 +66,17 @@ export class FichaTecnicaComponent implements OnInit {
   errorPdfSeguimiento: string | null = null;
   pdfsCargados: boolean = false;
 
+  tiempoRespuesta: TiempoRespuesta | null = null;
+  error: string | null = null;
+
   constructor(
     private _input: InputService,
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private _tokenStorage: TokenStorageService,
-    private router: Router
+    private router: Router,
+    private _reportes: ReportesService
   ) {
 
   }
@@ -90,6 +105,28 @@ export class FichaTecnicaComponent implements OnInit {
         } else {
           this.loadDuplicatedByNormalUsers();
         }
+      }
+    });
+
+    this.loadCalcularTiemposRespuestaPorId();
+  }
+
+  loadCalcularTiemposRespuestaPorId() {
+    this.route.paramMap.subscribe(params => {
+      this.id = params.get('id');
+      if (this.id) {
+        this._reportes.getTiempoRespuestaPorId(this.id).subscribe({
+          next: (data: TiempoRespuesta) => {
+            this.tiempoRespuesta = data;
+            this.tiempoRespuesta.diferencia_dias = Math.floor(data.diferencia_dias);
+            console.log(this.tiempoRespuesta);
+            this.cdr.detectChanges();
+          },
+          error: (error: any) => {
+            this.error = error.message;
+            console.error("Error desde el componente:", error);
+          }
+        });
       }
     });
   }

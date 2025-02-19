@@ -71,6 +71,26 @@
   <aside class="lateral">
     <mat-card class="card-two">
       <mat-card-content>
+        <mat-card-title>
+          <h2>Tiempo de respuesta</h2>
+        </mat-card-title>
+
+        <mat-card-content>
+          <div *ngIf="tiempoRespuesta">
+            <p>Num. Oficio: {{ tiempoRespuesta.num_oficio }}</p>
+            <p>Día de Recepción: {{ tiempoRespuesta.tiempo_recepcion | date }}</p>
+            <p>Día de Respuesta: {{ tiempoRespuesta.tiempo_respuesta | date }}</p>
+            <p>Diferencia (días): {{ tiempoRespuesta.diferencia_dias }}</p>
+          </div>
+          <div *ngIf="error">
+            <p>{{ error }}</p>
+          </div>
+        </mat-card-content>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="card-two">
+      <mat-card-content>
         <div class="pdf-list">
           <h2>Archivos PDF Entrada</h2>
           <ul *ngIf="pdfUrls.length > 0 && pdfsCargados && !errorPdfEntrada; else noPdfsEntrada">

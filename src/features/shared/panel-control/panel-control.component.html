@@ -49,7 +49,7 @@
                 <mat-icon> border_color </mat-icon>
               </button>
 
-              <button mat-button *ngIf="showLinker || showAdmin" (click)="editSeguimiento(row)">
+              <button mat-button *ngIf="showLinker || showModerator || showAdmin" (click)="editSeguimiento(row)">
                 <mat-icon> border_color </mat-icon>
               </button>
 
@@ -102,7 +102,9 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by atencion">
               Atencion Otorgada
             </th>
-            <td mat-cell *matCellDef="let element"> {{element.seguimientos?.atencion_otorgada ?? '-'}} </td>
+            <td mat-cell *matCellDef="let element">
+              {{ element.seguimientos?.atencion_otorgada ? (element.seguimientos.atencion_otorgada.trim() === '' ? '-' : element.seguimientos.atencion_otorgada) : '-' }}
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
