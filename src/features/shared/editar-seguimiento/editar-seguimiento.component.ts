@@ -150,6 +150,12 @@ export class EditarSeguimientoComponent implements OnInit {
         }
       }
 
+      // 1. Filtrar archivosPdf_seguimiento antes de enviar
+      const archivosPdfSeguimiento = this.seguimientoForm.value.archivosPdf_seguimiento.filter((path: string) => path !== '');
+
+      // 2. Actualizar el formulario con el array filtrado
+      this.seguimientoForm.patchValue({ archivosPdf_seguimiento: archivosPdfSeguimiento });
+
       const seguimientoData = { ...this.inputDetails.seguimientos, ...formattedValues };
 
       const inputData: Input = {

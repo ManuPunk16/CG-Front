@@ -10,6 +10,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import Swal from 'sweetalert2';
 import saveAs from 'file-saver';
+import { AreaService } from '../../core/services/areas.service';
+import { Area } from '../../core/models/area.model';
 
 @Component({
   selector: 'app-user-panel',
@@ -39,6 +41,13 @@ export class UserPanelComponent implements OnInit {
   startDate: string = '';
   endDate: string = '';
 
+  startDate2: string = '';
+  endDate2: string = '';
+  estatus: string = 'ATENDIDO';
+
+  selectedArea: string = '';
+  areas: Area[] = [];
+
   isLoggedIn = false;
   private roles: string[] = [];
   username?: string;
@@ -46,11 +55,13 @@ export class UserPanelComponent implements OnInit {
   showLinker = false;
   showModerator = false;
   _isTrue = true;
+  error: string | null = null;
 
   constructor(
     private _tokenStorage: TokenStorageService,
     private _reportes: ReportesService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private _area: AreaService
   ) {
     this.isLoggedIn = !!this._tokenStorage.getToken();
     if (this.isLoggedIn) {
@@ -64,7 +75,19 @@ export class UserPanelComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.getAreas();
+  }
 
+  getAreas() {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
+    });
   }
 
   buscarReportes() {
@@ -76,12 +99,61 @@ export class UserPanelComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: (error) => {
-          console.error('Error al obtener los reportes:', error);
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Error al obtener los reportes"
-          });
+          console.error("Error en la solicitud:", error);
+
+          if (error.status = 404) { // Verifica si el error es un 404
+              Swal.fire({
+                  icon: "info", // Icono de información
+                  title: "Sin resultados",
+                  text: "No se encontraron registros para los parámetros seleccionados."
+              });
+          } else if (error.error instanceof Blob) {
+              const reader = new FileReader();
+              reader.onload = (event: any) => {
+                  try {
+                      const errorData = JSON.parse(event.target.result);
+                      console.error("Error del backend:", errorData);
+                      let errorMessage = errorData.error;
+                      if (Array.isArray(errorMessage)) {
+                        errorMessage = errorMessage.join('\n');
+                      }
+                      if (errorMessage) {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Error",
+                              text: errorMessage,
+                          });
+                      } else {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Oops...",
+                              text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                          });
+                      }
+                  } catch (jsonError) {
+                      console.error("Error al parsear JSON:", jsonError);
+                      Swal.fire({
+                          icon: "error",
+                          title: "Oops...",
+                          text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                      });
+                  }
+              };
+              reader.readAsText(error.error);
+          } else if (error.error && typeof error.error === 'string') {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: error.error
+            });
+          }
+          else {
+              Swal.fire({
+                  icon: "error",
+                  title: "Oops...",
+                  text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+              });
+          }
         }
       });
   }
@@ -102,13 +174,62 @@ export class UserPanelComponent implements OnInit {
           window.URL.revokeObjectURL(downloadURL);
         },
         error: (error) => {
-          console.error('Error al descargar el reporte:', error);
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Error al descargar el reporte"
-          });
-        }
+          console.error("Error en la solicitud:", error);
+
+          if (error.status = 404) { // Verifica si el error es un 404
+              Swal.fire({
+                  icon: "info", // Icono de información
+                  title: "Sin resultados",
+                  text: "No se encontraron registros para los parámetros seleccionados."
+              });
+          } else if (error.error instanceof Blob) {
+              const reader = new FileReader();
+              reader.onload = (event: any) => {
+                  try {
+                      const errorData = JSON.parse(event.target.result);
+                      console.error("Error del backend:", errorData);
+                      let errorMessage = errorData.error;
+                      if (Array.isArray(errorMessage)) {
+                        errorMessage = errorMessage.join('\n');
+                      }
+                      if (errorMessage) {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Error",
+                              text: errorMessage,
+                          });
+                      } else {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Oops...",
+                              text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                          });
+                      }
+                  } catch (jsonError) {
+                      console.error("Error al parsear JSON:", jsonError);
+                      Swal.fire({
+                          icon: "error",
+                          title: "Oops...",
+                          text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                      });
+                  }
+              };
+              reader.readAsText(error.error);
+          } else if (error.error && typeof error.error === 'string') {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: error.error
+            });
+          }
+          else {
+              Swal.fire({
+                  icon: "error",
+                  title: "Oops...",
+                  text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+              });
+          }
+      }
       });
     }
   }
@@ -123,13 +244,209 @@ export class UserPanelComponent implements OnInit {
           saveAs(blob, 'reporte.xlsx');
         },
         error: (error) => {
-          console.error(error);
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Debes de seleccionar una fecha primero!",
-          });
-        }
+          console.error("Error en la solicitud:", error);
+
+          if (error.status = 404) { // Verifica si el error es un 404
+              Swal.fire({
+                  icon: "info", // Icono de información
+                  title: "Sin resultados",
+                  text: "No se encontraron registros para los parámetros seleccionados."
+              });
+          } else if (error.error instanceof Blob) {
+              const reader = new FileReader();
+              reader.onload = (event: any) => {
+                  try {
+                      const errorData = JSON.parse(event.target.result);
+                      console.error("Error del backend:", errorData);
+                      let errorMessage = errorData.error;
+                      if (Array.isArray(errorMessage)) {
+                        errorMessage = errorMessage.join('\n');
+                      }
+                      if (errorMessage) {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Error",
+                              text: errorMessage,
+                          });
+                      } else {
+                          Swal.fire({
+                              icon: "error",
+                              title: "Oops...",
+                              text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                          });
+                      }
+                  } catch (jsonError) {
+                      console.error("Error al parsear JSON:", jsonError);
+                      Swal.fire({
+                          icon: "error",
+                          title: "Oops...",
+                          text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                      });
+                  }
+              };
+              reader.readAsText(error.error);
+          } else if (error.error && typeof error.error === 'string') {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: error.error
+            });
+          }
+          else {
+              Swal.fire({
+                  icon: "error",
+                  title: "Oops...",
+                  text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+              });
+          }
+      }
+      });
+  }
+
+  generarReporteEstatus() {
+    const fechaInicio = this.startDate2;
+    const fechaFin = this.endDate2;
+    const estatus = this.estatus;
+    const user = this._tokenStorage.getUser();
+    const area = user.area;
+
+    this._reportes.exportarDatosExcelPorEstatusFechaPorArea(estatus, area, fechaInicio, fechaFin)
+      .subscribe({
+          next: (blob) => {
+              const formattedDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+              const filename = `Reporte_por_${estatus}_${formattedDate}.xlsx`;
+              saveAs(blob, filename);
+          },
+          error: (error) => {
+              console.error("Error en la solicitud:", error);
+
+              if (error.status = 404) { // Verifica si el error es un 404
+                  Swal.fire({
+                      icon: "info", // Icono de información
+                      title: "Sin resultados",
+                      text: "No se encontraron registros para los parámetros seleccionados."
+                  });
+              } else if (error.error instanceof Blob) {
+                  const reader = new FileReader();
+                  reader.onload = (event: any) => {
+                      try {
+                          const errorData = JSON.parse(event.target.result);
+                          console.error("Error del backend:", errorData);
+                          let errorMessage = errorData.error;
+                          if (Array.isArray(errorMessage)) {
+                            errorMessage = errorMessage.join('\n');
+                          }
+                          if (errorMessage) {
+                              Swal.fire({
+                                  icon: "error",
+                                  title: "Error",
+                                  text: errorMessage,
+                              });
+                          } else {
+                              Swal.fire({
+                                  icon: "error",
+                                  title: "Oops...",
+                                  text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                              });
+                          }
+                      } catch (jsonError) {
+                          console.error("Error al parsear JSON:", jsonError);
+                          Swal.fire({
+                              icon: "error",
+                              title: "Oops...",
+                              text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                          });
+                      }
+                  };
+                  reader.readAsText(error.error);
+              } else if (error.error && typeof error.error === 'string') {
+                Swal.fire({
+                  icon: "error",
+                  title: "Oops...",
+                  text: error.error
+                });
+              }
+              else {
+                  Swal.fire({
+                      icon: "error",
+                      title: "Oops...",
+                      text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                  });
+              }
+          }
+      });
+  }
+
+  generarReporteEstatusPorArea() {
+    const fechaInicio = this.startDate2;
+    const fechaFin = this.endDate2;
+    const estatus = this.estatus;
+    const asignado = this.selectedArea;
+
+    this._reportes.exportarDatosExcelPorEstatusFechaPorArea(estatus, asignado, fechaInicio, fechaFin)
+      .subscribe({
+          next: (blob) => {
+              const formattedDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+              const filename = `Reporte_por_${estatus}_${formattedDate}.xlsx`;
+              saveAs(blob, filename);
+          },
+          error: (error) => {
+              console.error("Error en la solicitud:", error);
+
+              if (error.status = 404) { // Verifica si el error es un 404
+                  Swal.fire({
+                      icon: "info", // Icono de información
+                      title: "Sin resultados",
+                      text: "No se encontraron registros para los parámetros seleccionados."
+                  });
+              } else if (error.error instanceof Blob) {
+                  const reader = new FileReader();
+                  reader.onload = (event: any) => {
+                      try {
+                          const errorData = JSON.parse(event.target.result);
+                          console.error("Error del backend:", errorData);
+                          let errorMessage = errorData.error;
+                          if (Array.isArray(errorMessage)) {
+                            errorMessage = errorMessage.join('\n');
+                          }
+                          if (errorMessage) {
+                              Swal.fire({
+                                  icon: "error",
+                                  title: "Error",
+                                  text: errorMessage,
+                              });
+                          } else {
+                              Swal.fire({
+                                  icon: "error",
+                                  title: "Oops...",
+                                  text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                              });
+                          }
+                      } catch (jsonError) {
+                          console.error("Error al parsear JSON:", jsonError);
+                          Swal.fire({
+                              icon: "error",
+                              title: "Oops...",
+                              text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                          });
+                      }
+                  };
+                  reader.readAsText(error.error);
+              } else if (error.error && typeof error.error === 'string') {
+                Swal.fire({
+                  icon: "error",
+                  title: "Oops...",
+                  text: error.error
+                });
+              }
+              else {
+                  Swal.fire({
+                      icon: "error",
+                      title: "Oops...",
+                      text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+                  });
+              }
+          }
       });
   }
 }

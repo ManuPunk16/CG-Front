@@ -199,6 +199,12 @@ export class NuevaEntradaComponent implements OnInit {
     if (this.inputForm.valid) {
       const inputData: Input = this.inputForm.value;
 
+      // 1. Filtrar archivosPdf antes de enviar
+      const archivosPdf = inputData.archivosPdf.filter((path: string) => path !== ''); // Filtra cadenas vacías
+
+      // 2. Actualizar inputData con el array filtrado
+      inputData.archivosPdf = archivosPdf;
+
       this.inputForm.value.fecha_oficio = this.inputForm.value.fecha_oficio ? formatDate(this.inputForm.value.fecha_oficio, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
       this.inputForm.value.fecha_vencimiento = this.inputForm.value.fecha_vencimiento ? formatDate(this.inputForm.value.fecha_vencimiento, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;
       this.inputForm.value.fecha_recepcion = this.inputForm.value.fecha_recepcion ? formatDate(this.inputForm.value.fecha_recepcion, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 'en-US') : null;

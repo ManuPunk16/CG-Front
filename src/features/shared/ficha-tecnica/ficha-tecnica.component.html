@@ -73,8 +73,8 @@
       <mat-card-content>
         <div class="pdf-list">
           <h2>Archivos PDF Entrada</h2>
-          <ul *ngIf="pdfUrls.length > 0 && !errorPdfEntrada; else noPdfsEntrada">
-            <li *ngFor="let pdfUrl of pdfUrls; let i = index">
+          <ul *ngIf="pdfUrls.length > 0 && pdfsCargados && !errorPdfEntrada; else noPdfsEntrada">
+            <li *ngFor="let pdfUrl of pdfUrls; let i = index; trackBy: trackByIndex">
               <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenames[i] }}</a>
             </li>
           </ul>
@@ -84,8 +84,8 @@
           </ng-template>
 
           <h2>Archivos PDF Seguimiento</h2>
-          <ul *ngIf="pdfUrlsSeguimiento.length > 0 && !errorPdfSeguimiento; else noPdfsSeguimiento">
-            <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index">
+          <ul *ngIf="pdfUrlsSeguimiento.length > 0 && pdfsCargados && !errorPdfSeguimiento; else noPdfsSeguimiento">
+            <li *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index; trackBy: trackByIndex">
               <a mat-button [href]="pdfUrl" target="_blank">{{ pdfFilenamesSeguimiento[i] }}</a>
             </li>
           </ul>

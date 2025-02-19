@@ -49,7 +49,7 @@
       <mat-card-header>
         <mat-card-title>
           <h3>
-            Reportes
+            Reporte Diario
           </h3>
         </mat-card-title>
       </mat-card-header>
@@ -72,13 +72,43 @@
       <mat-card-header>
         <mat-card-title>
           <h3>
-            Otros
+            Exportar registros por estatus y fecha
           </h3>
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div>
-          Espera por mas contenido
+          <div>
+            <label for="startDate">Fecha Inicial: </label>
+            <input type="date" [(ngModel)]="startDate2" name="startDate2">
+          </div>
+          <div>
+            <label for="endDate">Fecha Final: </label>
+            <input type="date" [(ngModel)]="endDate2" name="endDate2">
+          </div>
+          <div>
+            <label for="estatus">Estatus: </label>
+            <select [(ngModel)]="estatus" name="estatus">
+              <option value="ATENDIDO">Atendido</option>
+              <option value="NO ATENDIDO">No Atendido</option>
+            </select>
+          </div>
+
+          <div *ngIf="showModerator || showAdmin">
+            <label for="area">Área: </label>
+            <select [(ngModel)]="selectedArea" name="area">
+              <option *ngFor="let area of areas" [value]="area.direccion">
+                {{ area.direccion }}
+              </option>
+            </select>
+          </div>
+
+          <button mat-raised-button (click)="generarReporteEstatus()">Generar Excel Enlace</button>
+          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="generarReporteEstatusPorArea()" [disabled]="!selectedArea">Generar Excel</button>
+
+          <div *ngIf="error" class="error-message">  {{ error }}
+          </div>
+
         </div>
       </mat-card-content>
     </mat-card>

@@ -93,4 +93,29 @@ export class ReportesService {
       catchError(this.handleError)
     );
   }
+
+  // exportarDatosExcelPorEstatusFecha(estatus: string, fechaInicio: string, fechaFin?: string): Observable<Blob> {
+  //   const url = `${this.apiUrl}reporte-estatus-fecha/`;
+  //   const params = new HttpParams()
+  //     .set('estatus', estatus)
+  //     .set('fechaInicio', fechaInicio)
+  //     .set('fechaFin', fechaFin || '');
+
+  //   return this.http.get(url, { params, responseType: 'blob' }).pipe(
+  //     catchError(this.handleError)
+  //   );
+  // }
+
+  exportarDatosExcelPorEstatusFechaPorArea(estatus: string, asignado: string, fechaInicio: string, fechaFin?: string): Observable<Blob> {
+    const url = `${this.apiUrl}reporte_estatus_area/`;
+    const params = new HttpParams()
+      .set('estatus', estatus)
+      .set('area', asignado)
+      .set('fechaInicio', fechaInicio)
+      .set('fechaFin', fechaFin || '');
+
+    return this.http.get(url, { params, responseType: 'blob' }).pipe(
+      catchError(this.handleError)
+    );
+  }
 }

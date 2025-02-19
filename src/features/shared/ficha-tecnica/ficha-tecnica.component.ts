@@ -53,6 +53,7 @@ export class FichaTecnicaComponent implements OnInit {
 
   errorPdfEntrada: string | null = null;
   errorPdfSeguimiento: string | null = null;
+  pdfsCargados: boolean = false;
 
   constructor(
     private _input: InputService,
@@ -141,51 +142,66 @@ export class FichaTecnicaComponent implements OnInit {
     });
   }
 
+  trackByIndex(index: number, obj: any): any {
+    return index;
+  }
+
   loadPdfs() {
+    this.pdfUrls = [];
+    this.pdfUrlsSeguimiento = [];
+    this.pdfFilenames = [];
+    this.pdfFilenamesSeguimiento = [];
+    this.errorPdfEntrada = null;
+    this.errorPdfSeguimiento = null;
+
     if (this.inputDetails && this.inputDetails.archivosPdf) {
-      this.inputDetails.archivosPdf.forEach(pdfPath => {
-        const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
-        this.pdfFilenames.push(filename);
-        this._input.getPdfByIdInput(this.inputDetails._id, filename).subscribe({
-          next: (blob: Blob) => {
-            const urlCreator = window.URL || window.webkitURL;
-            const blobUrl = urlCreator.createObjectURL(blob);
-            const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
-            this.pdfUrls.push(safeUrl);
-            this.cdr.detectChanges();
-          },
-          error: (error: Error) => { // Tipado de error
-            console.error('Error obteniendo PDF:', error);
-            this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
-            this.pdfUrls = [];
-            this.pdfFilenames = [];
-            this.cdr.detectChanges();
-          }
+        this.inputDetails.archivosPdf.forEach((pdfPath, index) => { // Agregar index
+            const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
+            this.pdfFilenames.push(filename);
+
+            this._input.getPdfByIdInput(this.inputDetails._id, filename).subscribe({
+                next: (blob: Blob) => {
+                    const urlCreator = window.URL || window.webkitURL;
+                    const blobUrl = urlCreator.createObjectURL(blob);
+                    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+                    this.pdfUrls[index] = safeUrl; // Usar index para asignar la URL correcta
+                    if (index === this.inputDetails.archivosPdf.length - 1) { // <-- Verificar si es el último PDF
+                      this.pdfsCargados = true;
+                    }
+                    this.cdr.detectChanges();
+                },
+                error: (error: Error) => {
+                    console.error('Error obteniendo PDF:', error, filename); // Incluir filename en el error
+                    this.errorPdfEntrada = "Error al cargar " + filename + ". Verificar nombre de archivo."; // Mensaje de error específico
+                    this.cdr.detectChanges();
+                }
+            });
         });
-      });
     }
 
     if (this.inputDetails && this.inputDetails.seguimientos && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
-      this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach(pdfPathSeguimiento => {
-        const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
-        this.pdfFilenamesSeguimiento.push(filename);
-        this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).subscribe({
-          next: (blob: Blob) => {
-            const urlCreator = window.URL || window.webkitURL;
-            const blobUrl = urlCreator.createObjectURL(blob);
-            const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
-            this.pdfUrlsSeguimiento.push(safeUrl);
-            this.cdr.detectChanges();
-          },
-          error: (error: Error) => { // Tipado de error
-            console.error('Error obteniendo PDF de seguimiento:', error);
-            this.errorPdfSeguimiento = "Verificar nombre de archivo de seguimiento, parece incorrecto.";
-            this.pdfUrlsSeguimiento = [];
-            this.pdfFilenamesSeguimiento = [];
-            this.cdr.detectChanges();
-          }
+        this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach((pdfPathSeguimiento, index) => { // Agregar index
+            const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
+            this.pdfFilenamesSeguimiento.push(filename);
+
+            this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).subscribe({
+                next: (blob: Blob) => {
+                    const urlCreator = window.URL || window.webkitURL;
+                    const blobUrl = urlCreator.createObjectURL(blob);
+                    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
+                    this.pdfUrlsSeguimiento[index] = safeUrl; // Usar index para asignar la URL correcta
+                    if (index === this.inputDetails.archivosPdf.length - 1) { // <-- Verificar si es el último PDF
+                      this.pdfsCargados = true;
+                    }
+                    this.cdr.detectChanges();
+                },
+                error: (error: Error) => {
+                    console.error('Error obteniendo PDF de seguimiento:', error, filename); // Incluir filename en el error
+                    this.errorPdfSeguimiento = "Error al cargar " + filename + ". Verificar nombre de archivo."; // Mensaje de error específico
+                    this.cdr.detectChanges();
+                }
+            });
         });
-      });
     }
   }
 }
