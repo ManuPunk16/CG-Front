@@ -20,6 +20,18 @@ interface TiempoRespuesta {
   diferencia_dias: number;
 }
 
+interface TiempoRespuesta {
+  promedio_dias: number | null;
+  mediana_dias: number | null;
+  percentil25_dias: number | null;
+  percentil75_dias: number | null;
+  desviacion_estandar_dias: number | null;
+  total_atendidos: number | null;
+  total_no_atendidos: number | null;
+  total_oficios: number;
+  datos_oficios: Input[]; // Puedes definir una interfaz más específica para los datos de los oficios
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,6 +60,7 @@ export class ReportesService {
     const url = `${this.apiUrl}reporte_diario/${searchDay}`;
     return this.http.get<ApiResponse<Input[]>>(url).pipe(
       map((response: ApiResponse<Input[]>) => {
+        console.log(response);
         if (response.status === 'success' && Array.isArray(response.data)) {
           return response.data;
         } else {
@@ -144,6 +157,22 @@ export class ReportesService {
           }
           return data;
         }),
+        catchError(this.handleError)
+      );
+  }
+
+  calcularTiempoRespuestaTotal(area: string, fechaInicio?: string, fechaFin?: string): Observable<TiempoRespuesta> {
+    let params = new HttpParams();
+
+    if (fechaInicio) {
+      params = params.append('fechaInicio', fechaInicio);
+    }
+    if (fechaFin) {
+      params = params.append('fechaFin', fechaFin);
+    }
+
+    return this.http.get<TiempoRespuesta>(`${this.apiUrl}tiempos-total/${area}`, { params })
+      .pipe(
         catchError(this.handleError)
       );
   }

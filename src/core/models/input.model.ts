@@ -27,6 +27,9 @@ export interface Input {
   deleted: boolean;
   seguimientos: Seguimiento;
   timestamps: Date;
+  diferencia_dias: number | null;
+  tiempo_recepcion: Date;
+  tiempo_respuesta: Date;
 }
 
 export interface Seguimiento {

@@ -71,7 +71,10 @@ export class PanelControlComponent implements OnInit {
 
   @ViewChild(MatSort) sort!: MatSort;
 
-  displayedColumns: string[] = ['actions', 'folio', 'num_oficio', 'fecha_recepcion', 'asignado', 'asunto', 'atencion_otorgada'];
+  displayedColumns: string[] = [
+    'actions', 'folio', 'num_oficio', 'fecha_recepcion',
+    'asignado', 'remitente', 'institucion_origen', 'asunto', 'atencion_otorgada'
+  ];
   dataSource!: MatTableDataSource<Input>;
   inputs: Input[] = [];
   totalInputs: number = 0;

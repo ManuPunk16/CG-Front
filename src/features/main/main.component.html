@@ -87,6 +87,20 @@
           <td mat-cell *matCellDef="let element"> {{element.asignado}} </td>
         </ng-container>
 
+        <ng-container matColumnDef="remitente">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by remitente">
+            Remitente
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.remitente}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="institucion_origen">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by institucion_origen">
+            Institucion de Origen
+          </th>
+          <td mat-cell *matCellDef="let element"> {{element.institucion_origen}} </td>
+        </ng-container>
+
         <ng-container matColumnDef="asunto">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asunto">
             Asunto

@@ -3,10 +3,80 @@
 </header>
 <main class="container">
   <section class="principal">
+
+    <mat-card class="card-one">
+      <mat-card-header>
+        <mat-card-title>
+          <h2>Consultar valores estadisticos por area y por fecha</h2>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div>
+          <div>
+            <label for="startDate">Fecha Inicial: </label>
+            <input type="date" [(ngModel)]="startDate3" name="startDate3">
+          </div>
+          <div>
+            <label for="endDate">Fecha Final: </label>
+            <input type="date" [(ngModel)]="endDate3" name="endDate3">
+          </div>
+
+          <div *ngIf="showModerator || showAdmin">
+            <label for="area">Área: </label>
+            <select [(ngModel)]="selectedArea2" name="area2">
+              <option *ngFor="let area of areas" [value]="area.direccion">
+                {{ area.direccion }}
+              </option>
+            </select>
+          </div>
+
+          <button mat-raised-button [disabled]="!startDate3" (click)="cargarReporte()">Buscar como enlace</button>
+          <button mat-raised-button [disabled]="!startDate3 || !selectedArea2" (click)="cargarReporteModerador()">Buscar como Moderador</button>
+        </div>
+        <div>
+          <canvas #myChart></canvas>
+
+          <div *ngIf="reporte && graficaActivada">
+            <p><b>Área consultada:</b> {{ areaConsultada }}</p>
+            <p><b>Rango de fechas:</b> {{ startDate3 | date:'dd/MM/yyyy' }} - {{ endDate3 | date:'dd/MM/yyyy' }}</p>
+            <p><b>Promedio:</b> {{ reporte.promedio_dias?.toFixed(2) }} días</p>
+            <p><b>Mediana:</b> {{ reporte.mediana_dias?.toFixed(2) }} días</p>
+            <p><b>Percentil 25:</b> {{ reporte.percentil25_dias?.toFixed(2) }} días</p>
+            <p><b>Percentil 75:</b> {{ reporte.percentil75_dias?.toFixed(2) }} días</p>
+            <p><b>Desviación estándar:</b> {{ reporte.desviacion_estandar_dias?.toFixed(2) }} días</p>
+            <p><b>Total de oficios por 'Atendido':</b> {{ reporte.total_atendidos }}</p>
+            <p><b>Total de oficios por 'No Atendido':</b> {{ reporte.total_no_atendidos }}</p>
+            <p style="font-size: 20px;"><b>Total de oficios en general:</b> {{ reporte.total_oficios }}</p>
+
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background-color: #f2f2f2;">
+                  <th style="padding: 8px; border: 1px solid #ddd;">N° de Oficio</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Estatus</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Tiempo Recepción</th>
+                  <th style="padding: 8px; border: 1px solid #ddd;">Tiempo Respuesta</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let oficio of reporte.datos_oficios">
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.num_oficio }}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.estatus }}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_recepcion | date:'dd/MM/yyyy' }}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_respuesta | date:'dd/MM/yyyy' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <aside class="lateral">
     <mat-card class="card-one" *ngIf="showModerator || showAdmin">
       <mat-card-header>
         <mat-card-title>
-          <h1>Reporte en forma de resumen por dia</h1>
+          <h3>Reporte en forma de resumen por dia</h3>
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
@@ -20,10 +90,11 @@
                 <p>{{ reporte._id }}: {{ reporte.cantidad }} registros</p>
               </div> -->
               <div *ngFor="let reporte of reportes">
-                <h3>{{ reporte._id }}</h3>
+                <h3>{{ reporte.asignado }}</h3>
+                <p>Fecha de recepcion: {{reporte.fecha_recepcion | date }}</p>
                 <ul>
                   <li *ngFor="let asunto of reporte.asunto">
-                    {{ asunto }}
+                    {{ asunto }} <br><br>
                   </li>
                   <p>Cantidad de registros: {{ reporte.cantidad }}</p>
                 </ul>
@@ -37,14 +108,6 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="card-one">
-      <mat-card-content>
-        Espera por mas contenido
-      </mat-card-content>
-    </mat-card>
-  </section>
-
-  <aside class="lateral">
     <mat-card class="card-two" *ngIf="showModerator || showAdmin">
       <mat-card-header>
         <mat-card-title>

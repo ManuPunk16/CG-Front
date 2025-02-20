@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { ReportesService } from '../../core/services/reportes.service';
@@ -12,6 +12,23 @@ import Swal from 'sweetalert2';
 import saveAs from 'file-saver';
 import { AreaService } from '../../core/services/areas.service';
 import { Area } from '../../core/models/area.model';
+import { Input } from '../../core/models/input.model';
+import { Chart, BarController, CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip } from 'chart.js';
+import { DatePipe } from '@angular/common';
+
+Chart.register(BarController, CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip);
+
+interface TiempoRespuesta {
+  promedio_dias: number | null;
+  mediana_dias: number | null;
+  percentil25_dias: number | null;
+  percentil75_dias: number | null;
+  desviacion_estandar_dias: number | null;
+  total_atendidos: number | null;
+  total_no_atendidos: number | null;
+  total_oficios: number;
+  datos_oficios: Input[]; // Puedes definir una interfaz más específica para los datos de los oficios
+}
 
 @Component({
   selector: 'app-user-panel',
@@ -22,7 +39,8 @@ import { Area } from '../../core/models/area.model';
     FormsModule,
     MatFormFieldModule,
     MatDatepickerModule,
-    MatInputModule
+    MatInputModule,
+    DatePipe
   ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,6 +75,27 @@ export class UserPanelComponent implements OnInit {
   _isTrue = true;
   error: string | null = null;
 
+  reporte: TiempoRespuesta = {
+    promedio_dias: null,
+    mediana_dias: null,
+    percentil25_dias: null,
+    percentil75_dias: null,
+    desviacion_estandar_dias: null,
+    total_atendidos: null,
+    total_no_atendidos: null,
+    total_oficios: 0,
+    datos_oficios: [] // O un array vacío si aplica
+  };
+  area = 'DIRECCIÓN DE SERVICIOS LEGALES';
+  startDate3: string = '';
+  endDate3: string = '';
+  selectedArea2: string = '';
+  areaConsultada!: string;
+  graficaActivada: boolean = false;
+
+  @ViewChild('myChart') myChart!: ElementRef; // Obtén una referencia al elemento canvas
+  chart!: Chart;
+
   constructor(
     private _tokenStorage: TokenStorageService,
     private _reportes: ReportesService,
@@ -76,6 +115,149 @@ export class UserPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAreas();
+  }
+
+  cargarReporteModerador() {
+    const fechaInicio = this.startDate3;
+    const fechaFin = this.endDate3;
+    const asignado = this.selectedArea2;
+    this.areaConsultada = asignado;
+
+    this._reportes.calcularTiempoRespuestaTotal(asignado, fechaInicio, fechaFin).subscribe({
+      next: (data: TiempoRespuesta) => {
+        this.reporte = data;
+        console.log(this.reporte);
+        this.crearGrafica();
+        this.graficaActivada = true;
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error("Error en la solicitud:", error);
+
+        if (error.status = 404) { // Verifica si el error es un 404
+            Swal.fire({
+                icon: "info", // Icono de información
+                title: "Sin resultados",
+                text: "No se encontraron registros para los parámetros seleccionados."
+            });
+        } else if (error.error && typeof error.error === 'string') {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: error.error
+          });
+        }
+        else {
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+            });
+        }
+      }
+    });
+  }
+
+  cargarReporte() {
+    const fechaInicio = this.startDate3;
+    const fechaFin = this.endDate3;
+    const user = this._tokenStorage.getUser();
+    const area = user.area;
+    this.areaConsultada = area;
+
+    this._reportes.calcularTiempoRespuestaTotal(area, fechaInicio, fechaFin).subscribe({
+      next: (data: TiempoRespuesta) => {
+        this.reporte = data;
+        this.crearGrafica();
+        this.graficaActivada = true;
+        this.cdr.detectChanges();
+      },
+      error: (error: any) => {
+        console.error("Error en la solicitud:", error);
+
+        if (error.status = 404) { // Verifica si el error es un 404
+            Swal.fire({
+                icon: "info", // Icono de información
+                title: "Sin resultados",
+                text: "No se encontraron registros para los parámetros seleccionados."
+            });
+        } else if (error.error && typeof error.error === 'string') {
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: error.error
+          });
+        }
+        else {
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Error al generar el reporte. Inténtalo de nuevo más tarde."
+            });
+        }
+      }
+    });
+  }
+
+  crearGrafica() {
+    if (this.chart) {
+      this.chart.destroy(); // Destruye la instancia anterior si existe
+    }
+
+    const canvas = this.myChart.nativeElement.getContext('2d');
+
+    this.chart = new Chart(canvas, {
+      type: 'bar', // Tipo de gráfico (puedes cambiarlo)
+      data: {
+        labels: this.reporte?.datos_oficios?.map(oficio => oficio.num_oficio) ?? [],
+        datasets: [{
+          label: 'Diferencia en días',
+          data: this.reporte?.datos_oficios?.map(oficio => oficio.diferencia_dias) ?? [],
+          backgroundColor: this.reporte?.datos_oficios?.map(oficio => {
+            return oficio.estatus === 'ATENDIDO' ? 'rgb(82, 255, 82)' : 'rgb(255, 41, 41)';
+        }) ?? [],
+          borderColor: 'rgba(54, 162, 235, 1)', // Color del borde de las barras
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Diferencia de dias entre la Fecha de Recepcion y la Fecha de Acuse de Recibido'
+          },
+          tooltip: { // <-- Configuración de tooltips
+            callbacks: {
+                label: (context) => {
+                    const index = context.dataIndex;
+                    const oficio = this.reporte.datos_oficios[index];
+
+                    const tiempoRecepcion = new Date(oficio.tiempo_recepcion);
+                    const tiempoRespuesta = new Date(oficio.tiempo_respuesta);
+
+                    const formattedRecepcion = `${tiempoRecepcion.getDate()}/${tiempoRecepcion.getMonth() + 1}/${tiempoRecepcion.getFullYear()}`;
+                    const formattedRespuesta = `${tiempoRespuesta.getDate()}/${tiempoRespuesta.getMonth() + 1}/${tiempoRespuesta.getFullYear()}`;
+
+                    return [
+                        `Estatus: ${oficio.estatus}`,
+                        `Recepción: ${formattedRecepcion}`,
+                        `Respuesta: ${formattedRespuesta}`
+                    ];
+                }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true // Comienza el eje y en 0
+          }
+        }
+      }
+    });
   }
 
   getAreas() {
