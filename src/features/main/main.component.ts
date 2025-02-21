@@ -20,6 +20,12 @@ import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { ReportesService } from '../../core/services/reportes.service';
 import saveAs from 'file-saver';
+import { MatSelectModule } from '@angular/material/select';
+import { EstatusEntrada } from '../../core/models/estatus.model';
+import { InstitutionsService } from '../../core/services/institutions.service';
+import { Institution } from '../../core/models/institution.model';
+import { Area } from '../../core/models/area.model';
+import { AreaService } from '../../core/services/areas.service';
 
 @Component({
   selector: 'app-main',
@@ -37,7 +43,8 @@ import saveAs from 'file-saver';
     MatDatepickerModule,
     FormsModule,
     NgIf,
-    MatButtonModule
+    MatButtonModule,
+    MatSelectModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -66,8 +73,8 @@ export class MainComponent implements OnInit {
   sort!: MatSort;
 
   displayedColumns: string[] = [
-    'actions', 'folio', 'num_oficio', 'fecha_recepcion',
-    'asignado', 'remitente', 'institucion_origen', 'asunto', 'atencion_otorgada'
+    'actions', 'folio', 'fecha_recepcion', 'num_oficio',
+    'institucion_origen', 'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual'
   ];
   dataSource!: MatTableDataSource<Input>;
   inputs: Input[] = [];
@@ -82,6 +89,17 @@ export class MainComponent implements OnInit {
   reportes: any[] = [];
   fechaBusqueda: string = '';
 
+  institutions: Institution[] = [];
+  areas: Area[] = [];
+
+  searchFields: string[] = [
+    'folio', 'fecha_recepcion', 'num_oficio', 'institucion_origen',
+    'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual', 'estatus'
+  ];
+  searchTerms: { [key: string]: string } = {};
+  statusOptions = Object.values(EstatusEntrada);
+  canEditAssignation: boolean = false;
+
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
@@ -89,7 +107,9 @@ export class MainComponent implements OnInit {
     private _tokenStorage: TokenStorageService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private _reportes: ReportesService
+    private _reportes: ReportesService,
+    private _institution: InstitutionsService,
+    private _area: AreaService
   ) {
     this.currentYear;
   }
@@ -105,8 +125,19 @@ export class MainComponent implements OnInit {
       this.showLinker = this.roles.includes('ROLE_LINKER');
       this.showModerator = this.roles.includes('ROLE_MODERATOR');
       this.username = user.username;
+      if (this.showAdmin || this.showModerator) {
+        this.canEditAssignation = true;
+      } else {
+        this.canEditAssignation = false;
+      }
     }
+    this.getInstitutions();
+    this.getAreas();
     this.cdr.detectChanges();
+  }
+
+  getAtencionOtorgada(seguimientos: any): string {
+    return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
   }
 
   deleteById(row: Input) {
@@ -130,6 +161,30 @@ export class MainComponent implements OnInit {
     });
   }
 
+  getInstitutions() {
+    this._institution.getAllNoDeletedInstitutions().subscribe({
+      next: (res) => {
+        this.institutions = res;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
+  }
+
+  getAreas() {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
+    });
+  }
+
   loadInputs() {
     const user = this._tokenStorage.getUser();
     if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
@@ -138,7 +193,11 @@ export class MainComponent implements OnInit {
           this.inputs = response.inputs;
           this.totalInputs = response.totalInputs;
           this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs);
+          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+            ...input, // Mantén las propiedades existentes
+            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
+          })));
+          // this.dataSource = new MatTableDataSource(this.inputs);
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },
@@ -172,13 +231,45 @@ export class MainComponent implements OnInit {
     }
   }
 
-  // applyFilter(event: Event): void {
-  //   const filter = (event.target as HTMLInputElement).value.trim().toLocaleLowerCase();
-  //   this.dataSource.filter = filter;
-  //   if (this.dataSource.paginator) {
-  //     this.dataSource.paginator.firstPage();
-  //   }
-  // }
+  applyFilters() {
+    this.dataSource.filterPredicate = (data: Input, filter: string) => {
+      let isValid = true;
+      for (const field of this.searchFields) {
+        const searchTerm = this.searchTerms[field]?.toLowerCase();
+        const dataValue = data[field as keyof Input]?.toString().toLowerCase();
+
+        if (searchTerm) {
+          if (field === 'fecha_recepcion') {
+            // Lógica especial para 'fecha_recepcion': búsqueda en formato dd/MM/yyyy
+            const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
+            isValid = isValid && formattedDate.toLowerCase().includes(searchTerm);
+          } else if (field === 'estatus') {
+            // Búsqueda EXACta para 'estatus'
+            isValid = isValid && dataValue === searchTerm; // Compara igualdad estricta
+          } else if (dataValue) {
+            // Búsqueda PARCIAL para otros campos
+            isValid = isValid && dataValue.includes(searchTerm);
+          } else {
+            isValid = false; // Si no hay valor en los datos y se busca, no es válido
+          }
+        }
+      }
+      return isValid;
+    };
+
+    this.dataSource.filter = 'applied'; // Se usa un valor dummy para forzar el filtro
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
+  clearFilter() {
+    this.searchTerms = {};
+    this.dataSource.filter = '';
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
 
   applyFilter(event: Event): void {
     const filterValue = (event.target as HTMLInputElement).value.trim().toLocaleLowerCase();

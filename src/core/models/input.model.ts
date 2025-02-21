@@ -30,6 +30,7 @@ export interface Input {
   diferencia_dias: number | null;
   tiempo_recepcion: Date;
   tiempo_respuesta: Date;
+  atencion_otorgada_visual: string;
 }
 
 export interface Seguimiento {

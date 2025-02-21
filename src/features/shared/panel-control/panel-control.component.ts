@@ -1,7 +1,7 @@
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
-import { ChangeDetectionStrategy, Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { InputService } from '../../../core/services/input.service';
 import { Input } from '../../../core/models/input.model';
 import { CommonModule, DatePipe, NgIf } from '@angular/common';
@@ -24,6 +24,11 @@ import { InstrumentsComponent } from '../instruments/instruments.component';
 import { InstitutionsComponent } from '../institutions/institutions.component';
 import { ReportesService } from '../../../core/services/reportes.service';
 import saveAs from 'file-saver';
+import { MatSelectModule } from '@angular/material/select';
+import { Area } from '../../../core/models/area.model';
+import { EstatusEntrada } from '../../../core/models/estatus.model';
+import { AreaService } from '../../../core/services/areas.service';
+import { InstitutionsService } from '../../../core/services/institutions.service';
 
 @Component({
   selector: 'app-panel-control',
@@ -43,7 +48,8 @@ import saveAs from 'file-saver';
     NgIf,
     MatButtonModule,
     InstrumentsComponent,
-    InstitutionsComponent
+    InstitutionsComponent,
+    MatSelectModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -72,8 +78,8 @@ export class PanelControlComponent implements OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   displayedColumns: string[] = [
-    'actions', 'folio', 'num_oficio', 'fecha_recepcion',
-    'asignado', 'remitente', 'institucion_origen', 'asunto', 'atencion_otorgada'
+    'actions', 'folio', 'fecha_recepcion', 'num_oficio',
+    'institucion_origen', 'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual'
   ];
   dataSource!: MatTableDataSource<Input>;
   inputs: Input[] = [];
@@ -85,13 +91,26 @@ export class PanelControlComponent implements OnInit {
   startDate!: Date;
   endDate!: Date;
 
+  areas: Area[] = [];
+
+  searchFields: string[] = [
+    'folio', 'fecha_recepcion', 'num_oficio', 'institucion_origen',
+    'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual', 'estatus'
+  ];
+  searchTerms: { [key: string]: string } = {};
+  statusOptions = Object.values(EstatusEntrada);
+  canEditAssignation: boolean = false;
+
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
     private _tokenStorage: TokenStorageService,
     private router: Router,
-    private _reportes: ReportesService
+    private _reportes: ReportesService,
+    private cdr: ChangeDetectorRef,
+    private _institution: InstitutionsService,
+    private _area: AreaService
   ) {
 
   }
@@ -107,6 +126,82 @@ export class PanelControlComponent implements OnInit {
       this.showLinker = this.roles.includes('ROLE_LINKER');
       this.showModerator = this.roles.includes('ROLE_MODERATOR');
       this.username = user.username;
+      if (this.showAdmin || this.showModerator) {
+        this.canEditAssignation = true;
+      } else {
+        this.canEditAssignation = false;
+      }
+    }
+    this.getInstitutions();
+    this.getAreas();
+    this.cdr.detectChanges();
+  }
+
+  getAtencionOtorgada(seguimientos: any): string {
+    return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
+  }
+
+  getInstitutions() {
+    this._institution.getAllNoDeletedInstitutions().subscribe({
+      next: (res) => {
+        this.institutions = res;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener las instituciones:', error);
+      }
+    });
+  }
+
+  getAreas() {
+    this._area.getAllAreas().subscribe({
+      next: (areas) => {
+        this.areas = areas;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener las áreas:', error);
+      }
+    });
+  }
+
+  applyFilters() {
+    this.dataSource.filterPredicate = (data: Input, filter: string) => {
+      let isValid = true;
+      for (const field of this.searchFields) {
+        const searchTerm = this.searchTerms[field]?.toLowerCase();
+        const dataValue = data[field as keyof Input]?.toString().toLowerCase();
+
+        if (searchTerm) {
+          if (field === 'fecha_recepcion') {
+            // Lógica especial para 'fecha_recepcion': búsqueda en formato dd/MM/yyyy
+            const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
+            isValid = isValid && formattedDate.toLowerCase().includes(searchTerm);
+          } else if (field === 'estatus') {
+            // Búsqueda EXACta para 'estatus'
+            isValid = isValid && dataValue === searchTerm; // Compara igualdad estricta
+          } else if (dataValue) {
+            // Búsqueda PARCIAL para otros campos
+            isValid = isValid && dataValue.includes(searchTerm);
+          } else {
+            isValid = false; // Si no hay valor en los datos y se busca, no es válido
+          }
+        }
+      }
+      return isValid;
+    };
+
+    this.dataSource.filter = 'applied'; // Se usa un valor dummy para forzar el filtro
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+  }
+
+  clearFilter() {
+    this.searchTerms = {};
+    this.dataSource.filter = '';
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
 
@@ -139,7 +234,11 @@ export class PanelControlComponent implements OnInit {
           this.inputs = response.inputs;
           this.totalInputs = response.totalInputs;
           this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs);
+          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+            ...input, // Mantén las propiedades existentes
+            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
+          })));
+          // this.dataSource = new MatTableDataSource(this.inputs);
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },
