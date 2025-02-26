@@ -16,6 +16,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideRouter(routes), provideHttpClient(),
     provideNativeDateAdapter(),
-    DatePipe
+    DatePipe, provideAnimationsAsync()
   ]
 };
