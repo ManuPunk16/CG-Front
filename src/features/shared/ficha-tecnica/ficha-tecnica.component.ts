@@ -89,6 +89,7 @@ export class FichaTecnicaComponent implements OnInit {
           next: (res: any) => {
             if (res.input) {
               this.inputDetails = res.input;
+              // console.log(this.inputDetails);
               this.loadPdfs();
               this.cdr.detectChanges();
             } else {
@@ -119,7 +120,7 @@ export class FichaTecnicaComponent implements OnInit {
           next: (data: TiempoRespuesta) => {
             this.tiempoRespuesta = data;
             this.tiempoRespuesta.diferencia_dias = Math.floor(data.diferencia_dias);
-            console.log(this.tiempoRespuesta);
+            // console.log(this.tiempoRespuesta);
             this.cdr.detectChanges();
           },
           error: (error: any) => {

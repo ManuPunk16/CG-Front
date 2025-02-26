@@ -15,9 +15,9 @@
             <p><strong>ID:</strong> {{inputDetails._id}}</p>
             <p><strong>Folio:</strong> {{inputDetails.folio}}</p>
             <p><strong>Num. Oficio:</strong> {{inputDetails.num_oficio}}</p>
-            <p><strong>Fecha Oficio:</strong> {{inputDetails.fecha_oficio | date:'dd/MM/yyyy':'UTC'}}</p>
-            <p><strong>Fecha Recepción:</strong> {{inputDetails.fecha_recepcion | date:'dd/MM/yyyy':'UTC'}}</p>
-            <p><strong>Fecha Vencimiento:</strong> {{inputDetails.fecha_vencimiento | date:'dd/MM/yyyy':'UTC'}}</p>
+            <p><strong>Fecha Oficio:</strong> {{inputDetails.fecha_oficio | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Fecha Recepción:</strong> {{inputDetails.fecha_recepcion | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Fecha Vencimiento:</strong> {{inputDetails.fecha_vencimiento | date:'dd/MM/yyyy' }}</p>
           </div>
           <div class="info-column">
             <p><strong>Hora Recepción:</strong> {{inputDetails.hora_recepcion}}</p>
@@ -46,8 +46,8 @@
           <div class="info-column">
             <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida}}</p>
             <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente}}</p>
-            <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy':'UTC' }}</p>
-            <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy':'UTC'}}</p>
+            <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy' }}</p>
+            <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy' }}</p>
           </div>
           <div class="info-column">
             <p><strong>Destinatario:</strong> {{inputDetails.seguimientos.destinatario}}</p>
@@ -56,7 +56,6 @@
             <p><strong>Atencion Otorgada:</strong> {{inputDetails.seguimientos.atencion_otorgada}}</p>
           </div>
           <div class="info-column">
-            <p><strong>Estatus:</strong> {{inputDetails.seguimientos.estatus}}</p>
             <p><strong>Anexo:</strong> {{inputDetails.seguimientos.anexo}}</p>
             <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios}}</p>
           </div>
@@ -81,6 +80,7 @@
             <p>Día de Recepción: {{ tiempoRespuesta.tiempo_recepcion | date }}</p>
             <p>Día de Respuesta: {{ tiempoRespuesta.tiempo_respuesta | date }}</p>
             <p>Diferencia (días): {{ tiempoRespuesta.diferencia_dias }}</p>
+            <p><strong>Estatus:</strong> {{inputDetails.estatus}}</p>
           </div>
           <div *ngIf="error">
             <p>{{ error }}</p>

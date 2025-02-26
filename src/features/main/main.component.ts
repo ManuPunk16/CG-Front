@@ -212,7 +212,11 @@ export class MainComponent implements OnInit {
           this.inputs = response.inputs;
           this.totalInputs = response.totalInputs;
           this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs);
+          // this.dataSource = new MatTableDataSource(this.inputs);
+          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+            ...input, // Mantén las propiedades existentes
+            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
+          })));
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
         },

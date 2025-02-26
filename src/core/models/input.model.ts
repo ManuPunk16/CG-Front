@@ -43,7 +43,6 @@ export interface Seguimiento {
   cargo: string;
   atencion_otorgada?: string;
   anexo?: string;
-  estatus: string;
   comentarios: string;
   firma_visado?: string;
   archivosPdf_seguimiento: string[];

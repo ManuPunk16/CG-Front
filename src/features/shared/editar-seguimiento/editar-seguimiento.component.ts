@@ -80,19 +80,19 @@ export class EditarSeguimientoComponent implements OnInit {
   ) {
     this.currentUser = this._tokenStorageService.getUser();
     this.seguimientoForm = new FormGroup({
-      oficio_salida: new FormControl(),
-      num_expediente: new FormControl(),
-      fecha_oficio_salida: new FormControl(),
-      fecha_acuse_recibido: new FormControl(),
-      destinatario: new FormControl(),
-      cargo: new FormControl(),
-      atencion_otorgada: new FormControl(),
-      anexo: new FormControl(),
-      estatus: new FormControl(),
-      comentarios: new FormControl(),
-      firma_visado: new FormControl(),
+      oficio_salida: new FormControl(null, Validators.required),
+      num_expediente: new FormControl(null),
+      fecha_oficio_salida: new FormControl(null),
+      fecha_acuse_recibido: new FormControl(null, Validators.required),
+      destinatario: new FormControl(null, Validators.required),
+      cargo: new FormControl(null, Validators.required),
+      atencion_otorgada: new FormControl(null, Validators.required),
+      anexo: new FormControl(null),
+      estatus: new FormControl(null, Validators.required),
+      comentarios: new FormControl(null),
+      firma_visado: new FormControl(null),
       archivosPdf_seguimiento: this.fb.array([]),
-      fecha_respuesta: new FormControl(),
+      fecha_respuesta: new FormControl(null),
       usuario: this.fb.group({
         id: [this.currentUser.id],
         username: [this.currentUser.username]
@@ -160,9 +160,9 @@ export class EditarSeguimientoComponent implements OnInit {
 
       const inputData: Input = {
         ...this.inputDetails,
+        estatus: this.seguimientoForm.value.estatus,
         seguimientos: seguimientoData
       };
-
       this._inputService.updateInput(this.id, inputData).subscribe({
         next: (res) => {
           Swal.fire({
@@ -199,24 +199,28 @@ export class EditarSeguimientoComponent implements OnInit {
     if (this.inputDetails && this.currentUser) {
       const fechaRespuestaExistente = this.inputDetails.seguimientos?.fecha_respuesta;
 
-      this.seguimientoForm = this.fb.group({
-        oficio_salida: [this.inputDetails.seguimientos?.oficio_salida || null, Validators.required],
-        num_expediente: [this.inputDetails.seguimientos?.num_expediente || null],
-        fecha_oficio_salida: [this.inputDetails.seguimientos?.fecha_oficio_salida ? new Date(this.inputDetails.seguimientos.fecha_oficio_salida): null],
-        fecha_acuse_recibido: [this.inputDetails.seguimientos?.fecha_acuse_recibido ? new Date(this.inputDetails.seguimientos.fecha_acuse_recibido): null, Validators.required],
-        destinatario: [this.inputDetails.seguimientos?.destinatario || null, Validators.required],
-        cargo: [this.inputDetails.seguimientos?.cargo || null, Validators.required],
-        atencion_otorgada: [this.inputDetails.seguimientos?.atencion_otorgada || null, Validators.required],
-        anexo: [this.inputDetails.seguimientos?.anexo || null],
-        estatus: [this.inputDetails.estatus || null, Validators.required],
-        comentarios: [this.inputDetails.seguimientos?.comentarios || null],
-        firma_visado: [this.inputDetails.seguimientos?.firma_visado || null],
-        archivosPdf_seguimiento: this.fb.array(this.inputDetails.seguimientos?.archivosPdf_seguimiento ? this.inputDetails.seguimientos.archivosPdf_seguimiento.map(pdf => this.fb.control(pdf)) : []),
-        fecha_respuesta: [fechaRespuestaExistente || null],
-        usuario: this.fb.group({
-          id: [this.currentUser.id],
-          username: [this.currentUser.username]
-        })
+      this.archivosPdf_seguimientoFromArray.clear();
+      this.inputDetails.seguimientos?.archivosPdf_seguimiento?.forEach(pdf => {
+        this.archivosPdf_seguimientoFromArray.push(new FormControl(pdf));
+      });
+
+      this.seguimientoForm.patchValue({
+        oficio_salida: this.inputDetails.seguimientos?.oficio_salida || null,
+        num_expediente: this.inputDetails.seguimientos?.num_expediente || null,
+        fecha_oficio_salida: this.inputDetails.seguimientos?.fecha_oficio_salida ? this.inputDetails.seguimientos.fecha_oficio_salida : null,
+        fecha_acuse_recibido: this.inputDetails.seguimientos?.fecha_acuse_recibido ? this.inputDetails.seguimientos.fecha_acuse_recibido : null,
+        fecha_respuesta: fechaRespuestaExistente ? new Date(fechaRespuestaExistente) : null,
+        destinatario: this.inputDetails.seguimientos?.destinatario || null,
+        cargo: this.inputDetails.seguimientos?.cargo || null,
+        atencion_otorgada: this.inputDetails.seguimientos?.atencion_otorgada || null,
+        anexo: this.inputDetails.seguimientos?.anexo || null,
+        estatus: this.inputDetails.estatus || null,
+        comentarios: this.inputDetails.seguimientos?.comentarios || null,
+        firma_visado: this.inputDetails.seguimientos?.firma_visado || null,
+        usuario: {
+          id: this.currentUser.id,
+          username: this.currentUser.username
+        }
       });
     }
   }

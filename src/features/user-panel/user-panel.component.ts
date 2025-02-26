@@ -15,6 +15,7 @@ import { Area } from '../../core/models/area.model';
 import { Input } from '../../core/models/input.model';
 import { Chart, BarController, CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip } from 'chart.js';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 Chart.register(BarController, CategoryScale, LinearScale, PointElement, BarElement, Title, Tooltip);
 
@@ -40,7 +41,8 @@ interface TiempoRespuesta {
     MatFormFieldModule,
     MatDatepickerModule,
     MatInputModule,
-    DatePipe
+    DatePipe,
+    RouterLink
   ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,7 +128,7 @@ export class UserPanelComponent implements OnInit {
     this._reportes.calcularTiempoRespuestaTotal(asignado, fechaInicio, fechaFin).subscribe({
       next: (data: TiempoRespuesta) => {
         this.reporte = data;
-        console.log(this.reporte);
+        // console.log(this.reporte);
         this.crearGrafica();
         this.graficaActivada = true;
         this.cdr.detectChanges();
@@ -254,6 +256,13 @@ export class UserPanelComponent implements OnInit {
         scales: {
           y: {
             beginAtZero: true // Comienza el eje y en 0
+          }
+        },
+        onClick: (event, elements) => { // Agrega evento onClick
+          if (elements && elements.length > 0) {
+            const index = elements[0].index;
+            const oficio = this.reporte.datos_oficios[index];
+            window.open(`/ficha_tecnica/${oficio._id}`, '_blank');
           }
         }
       }

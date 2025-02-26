@@ -59,7 +59,9 @@
               </thead>
               <tbody>
                 <tr *ngFor="let oficio of reporte.datos_oficios">
-                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.num_oficio }}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">
+                    <a [routerLink]="['/ficha_tecnica', oficio._id]">{{ oficio.num_oficio }}</a>
+                  </td>
                   <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.estatus }}</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_recepcion | date:'dd/MM/yyyy' }}</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_respuesta | date:'dd/MM/yyyy' }}</td>
