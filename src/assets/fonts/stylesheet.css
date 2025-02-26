@@ -1,0 +1,120 @@
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-SemiBoldItalic.eot');
+    src: local('Quatro Slab SemiBold Italic'), local('QuatroSlab-SemiBoldItalic'),
+        url('QuatroSlab-SemiBoldItalic.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-SemiBoldItalic.woff2') format('woff2'),
+        url('QuatroSlab-SemiBoldItalic.woff') format('woff'),
+        url('QuatroSlab-SemiBoldItalic.ttf') format('truetype');
+    font-weight: 600;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Quatro Slab UltraBlack';
+    src: url('QuatroSlab-UltraBlackItalic.eot');
+    src: local('Quatro Slab UltraBlack Italic'), local('QuatroSlab-UltraBlackItalic'),
+        url('QuatroSlab-UltraBlackItalic.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-UltraBlackItalic.woff2') format('woff2'),
+        url('QuatroSlab-UltraBlackItalic.woff') format('woff'),
+        url('QuatroSlab-UltraBlackItalic.ttf') format('truetype');
+    font-weight: 900;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-Bold.eot');
+    src: local('Quatro Slab Bold'), local('QuatroSlab-Bold'),
+        url('QuatroSlab-Bold.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-Bold.woff2') format('woff2'),
+        url('QuatroSlab-Bold.woff') format('woff'),
+        url('QuatroSlab-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-Italic.eot');
+    src: local('Quatro Slab Italic'), local('QuatroSlab-Italic'),
+        url('QuatroSlab-Italic.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-Italic.woff2') format('woff2'),
+        url('QuatroSlab-Italic.woff') format('woff'),
+        url('QuatroSlab-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-Regular.eot');
+    src: local('Quatro Slab Regular'), local('QuatroSlab-Regular'),
+        url('QuatroSlab-Regular.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-Regular.woff2') format('woff2'),
+        url('QuatroSlab-Regular.woff') format('woff'),
+        url('QuatroSlab-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-SemiBold.eot');
+    src: local('Quatro Slab SemiBold'), local('QuatroSlab-SemiBold'),
+        url('QuatroSlab-SemiBold.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-SemiBold.woff2') format('woff2'),
+        url('QuatroSlab-SemiBold.woff') format('woff'),
+        url('QuatroSlab-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-BoldItalic.eot');
+    src: local('Quatro Slab Bold Italic'), local('QuatroSlab-BoldItalic'),
+        url('QuatroSlab-BoldItalic.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-BoldItalic.woff2') format('woff2'),
+        url('QuatroSlab-BoldItalic.woff') format('woff'),
+        url('QuatroSlab-BoldItalic.ttf') format('truetype');
+    font-weight: bold;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-Medium.eot');
+    src: local('Quatro Slab Medium'), local('QuatroSlab-Medium'),
+        url('QuatroSlab-Medium.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-Medium.woff2') format('woff2'),
+        url('QuatroSlab-Medium.woff') format('woff'),
+        url('QuatroSlab-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Quatro Slab UltraBlack';
+    src: url('QuatroSlab-UltraBlack.eot');
+    src: local('Quatro Slab UltraBlack'), local('QuatroSlab-UltraBlack'),
+        url('QuatroSlab-UltraBlack.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-UltraBlack.woff2') format('woff2'),
+        url('QuatroSlab-UltraBlack.woff') format('woff'),
+        url('QuatroSlab-UltraBlack.ttf') format('truetype');
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Quatro Slab';
+    src: url('QuatroSlab-MediumItalic.eot');
+    src: local('Quatro Slab Medium Italic'), local('QuatroSlab-MediumItalic'),
+        url('QuatroSlab-MediumItalic.eot?#iefix') format('embedded-opentype'),
+        url('QuatroSlab-MediumItalic.woff2') format('woff2'),
+        url('QuatroSlab-MediumItalic.woff') format('woff'),
+        url('QuatroSlab-MediumItalic.ttf') format('truetype');
+    font-weight: 500;
+    font-style: italic;
+}
+

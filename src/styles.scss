@@ -1,7 +1,174 @@
 
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
+@use 'sass:map';
 @use '@angular/material' as mat;
+@include mat.elevation-classes();
+@include mat.app-background();
+
+$_palettes: (
+  primary: (
+    0: #000000,
+    10: #691C32, // Pantone 7421 C (oscuro)
+    20: #691C32,
+    25: #691C32,
+    30: #691C32,
+    35: #691C32,
+    40: #691C32,
+    50: #9F2241, // Pantone 7420 C (principal)
+    60: #9F2241,
+    70: #9F2241,
+    80: #9F2241,
+    90: #9F2241,
+    95: #F2E0E6, // Un tono claro para el fondo
+    98: #FAEBF0,
+    99: #FFF6F9,
+    100: #ffffff,
+  ),
+  secondary: (
+    0: #000000,
+    10: #AB9470, // Pantone P 13-7 C (oscuro)
+    20: #AB9470,
+    25: #AB9470,
+    30: #AB9470,
+    35: #AB9470,
+    40: #AB9470,
+    50: #BCA986, // Pantone P 13-7 C (principal)
+    60: #BCA986,
+    70: #BCA986,
+    80: #BCA986,
+    90: rgb(234, 222, 201),
+    95: #f3efe6, // Un tono claro para el fondo
+    98: #FAF9F6,
+    99: #FFFDFC,
+    100: #ffffff,
+  ),
+  tertiary: (
+    0: #000000,
+    10: #10312B, // Pantone 627 C (oscuro)
+    20: #10312B,
+    25: #10312B,
+    30: #10312B,
+    35: #10312B,
+    40: #10312B,
+    50: #235B4E, // Pantone 626 C (principal)
+    60: #235B4E,
+    70: #235B4E,
+    80: #235B4E,
+    90: #235B4E,
+    95: #E0EBE8, // Un tono claro para el fondo
+    98: #EBF1EF,
+    99: #F6F9F8,
+    100: #ffffff,
+  ),
+  neutral: (
+    0: #000000,
+    4: #0b0b0b,
+    6: #101111,
+    10: #1b1c1c,
+    12: #1f2020,
+    17: #292a2b,
+    20: #2f3031,
+    22: #343435,
+    24: #39393a,
+    25: #3b3b3c,
+    30: #464747,
+    35: #525253,
+    40: #5e5e5e,
+    50: #777777,
+    60: #919191,
+    70: #ababab,
+    80: #c7c6c6,
+    87: #dbdada,
+    90: #e3e2e2,
+    92: #e9e8e8,
+    94: #efeded,
+    95: #f2f0f0,
+    96: #f5f3f3,
+    98: #faf9f9,
+    99: #fdfcfc,
+    100: #ffffff,
+  ),
+  neutral-variant: (
+    0: #000000,
+    10: #131e10,
+    20: #283424,
+    25: #323f2e,
+    30: #3e4a39,
+    35: #495644,
+    40: #556250,
+    50: #6d7b67,
+    60: #879580,
+    70: #a1af9a,
+    80: #bccbb4,
+    90: #d8e7cf,
+    95: #e7f5dd,
+    98: #effee6,
+    99: #f7ffee,
+    100: #ffffff,
+  ),
+  error: (
+    0: #000000,
+    10: #410002,
+    20: #690005,
+    25: #7e0007,
+    30: #93000a,
+    35: #a80710,
+    40: #ba1a1a,
+    50: #de3730,
+    60: #ff5449,
+    70: #ff897d,
+    80: #ffb4ab,
+    90: #ffdad6,
+    95: #ffedea,
+    98: #fff8f7,
+    99: #fffbff,
+    100: #ffffff,
+  ),
+);
+
+$_rest: (
+  secondary: map.get($_palettes, secondary),
+  neutral: map.get($_palettes, neutral),
+  neutral-variant: map.get($_palettes,  neutral-variant),
+  error: map.get($_palettes, error),
+);
+$_primary: map.merge(map.get($_palettes, primary), $_rest);
+$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
+
+// Light theme configuration
+$light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: $_primary,
+    tertiary: $_tertiary,
+  )
+));
+
+// Dark theme configuration
+$dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: $_primary,
+    tertiary: $_tertiary,
+  )
+));
+
+@font-face {
+  font-family: 'Quatro Slab';
+  src: url('../src/assets/fonts/QuatroSlab-Regular.woff2') format('woff2'),
+       url('../src/assets/fonts/QuatroSlab-Regular.woff') format('woff'),
+       url('../src/assets/fonts/QuatroSlab-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+:root {
+  @include mat.all-component-themes($light-theme);
+
+  // Add backwards compatibility styles for color variants
+  @include mat.color-variants-backwards-compatibility($light-theme);
+}
 
 html {
   @include mat.theme((
@@ -13,4 +180,50 @@ html {
   ));
 }
 html, body { height: 100%; }
-body { margin: 0; font-family: Inter, "Helvetica Neue", sans-serif; }
+body {
+  margin: 0; font-family: "Quatro Slab", Averta, Inter, "Helvetica Neue", sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, p, span {
+  font-family: "Quatro Slab", Averta, Inter, "Helvetica Neue", sans-serif;
+}
+
+mat-sidenav-container {
+  background-color: map.get(map.get($_palettes, secondary), 50) !important;
+}
+
+mat-toolbar {
+  background-color: map.get(map.get($_palettes, primary), 50) !important;
+  --mat-toolbar-container-text-color: rgb(255, 255, 255) !important;
+
+  span {
+    font-size: 17px !important;
+  }
+}
+
+button {
+  font-size: 18px !important;
+}
+
+input {
+  font-size: 18px !important;
+}
+
+select {
+  font-size: 18px !important;
+  max-width: 250px;
+}
+
+fieldset {
+  background-color: map.get(map.get($_palettes, secondary), 90) !important;
+}
+
+mat-card {
+  background-color: map.get(map.get($_palettes, secondary), 95) !important;
+}
+
+table {
+  thead {
+    background-color: map.get(map.get($_palettes, secondary), 90) !important;
+  }
+}
