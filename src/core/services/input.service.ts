@@ -72,6 +72,20 @@ export class InputService {
       );
   }
 
+  getInputsByYear(year: number): Observable<InputsResponse> {
+    const params = new HttpParams().set('year', year.toString());
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs/year`, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+
+  getInputsByYearByNormalUser(year: number, area: string): Observable<InputsResponse> {
+    const params = new HttpParams().set('year', year.toString()).set('area', area);
+    return this.http.get<InputsResponse>(`${this.apiUrl}inputs/year/normal`, { params }).pipe(
+        catchError(this.handleError)
+    );
+  }
+
   obtenerUltimoFolio(anio: number): Observable<number | undefined> {
     return this.http.get<number | undefined>(`${this.apiUrl}inputs/ultimo-folio/${anio}`);
   }

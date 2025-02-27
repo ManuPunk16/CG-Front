@@ -1,7 +1,7 @@
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { InputService } from '../../../core/services/input.service';
 import { Input } from '../../../core/models/input.model';
 import { CommonModule, DatePipe, NgIf } from '@angular/common';
@@ -60,7 +60,7 @@ import { InstitutionsService } from '../../../core/services/institutions.service
   templateUrl: './panel-control.component.html',
   styleUrl: './panel-control.component.scss'
 })
-export class PanelControlComponent implements OnInit {
+export class PanelControlComponent implements OnInit, AfterViewInit  {
 
   public currentYear: number = new Date().getFullYear();
   institutions: Institution[] = [];
@@ -86,8 +86,8 @@ export class PanelControlComponent implements OnInit {
   totalInputs: number = 0;
   totalPages: number = 0;
   currentPage: number = 1;
-  pageSize: number = 50;
-  pageSizeOptions: number[] = [50, 100, 300, 500];
+  pageSize: number = 25;
+  pageSizeOptions: number[] = [25, 50, 100, 300, 500];
   startDate!: Date;
   endDate!: Date;
 
@@ -100,6 +100,11 @@ export class PanelControlComponent implements OnInit {
   searchTerms: { [key: string]: string } = {};
   statusOptions = Object.values(EstatusEntrada);
   canEditAssignation: boolean = false;
+
+  error: string = '';
+  years: number[] = [];
+  selectedYear!: number;
+  dataLoaded: boolean = false;
 
   constructor(
     private inputService: InputService,
@@ -116,8 +121,8 @@ export class PanelControlComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadInputs();
-
+    this.generateYears();
+    this.selectedYear = this.years[0];
     this.isLoggedIn = !!this._tokenStorage.getToken();
     if (this.isLoggedIn) {
       const user = this._tokenStorage.getUser();
@@ -134,7 +139,124 @@ export class PanelControlComponent implements OnInit {
     }
     this.getInstitutions();
     this.getAreas();
+    this.loadData();
     this.cdr.detectChanges();
+  }
+
+  ngAfterViewInit(): void {
+    if (this.dataSource) {
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+    }
+}
+
+  generateYears(): void {
+    for (let year = this.currentYear - 1; year >= 2021; year--) {
+        this.years.push(year);
+    }
+  }
+
+  onYearChange(): void {
+      this.loadData();
+  }
+
+  loadData(): void {
+      this.dataLoaded = false;
+      this.getInputsByYear(this.selectedYear);
+  }
+
+  getInputsByYear(year: number): void {
+    const user = this._tokenStorage.getUser();
+    if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
+      this.inputService.getInputsByYear(year).subscribe({
+        next: (response) => {
+            this.inputs = response.inputs;
+            this.totalInputs = response.totalInputs;
+            this.totalPages = response.totalPages;
+
+            if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
+                this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+                    ...input,
+                    atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
+                })));
+                this.dataSource.paginator = this.paginator;
+                this.dataSource.sort = this.sort;
+                this.dataLoaded = true;
+                this.cdr.detectChanges();
+                this.ngAfterViewInit();
+            } else { // Datos vacíos: mostrar Swal
+                this.inputs = [];
+                this.totalInputs = 0;
+                this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
+                this.dataLoaded = true;
+                Swal.fire({
+                    icon: "info",
+                    title: "Sin resultados",
+                    text: "No se encontraron registros para los parámetros seleccionados."
+                });
+                this.cdr.detectChanges();
+            }
+        },
+        error: (err) => {
+            console.error('Error al obtener los registros:', err);
+            this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
+            this.inputs = [];
+            this.totalInputs = 0;
+            this.dataLoaded = true;
+            Swal.fire({
+                icon: "info",
+                title: "Sin resultados",
+                text: "No se encontraron registros para los parámetros seleccionados."
+            });
+            this.cdr.detectChanges();
+        }
+      });
+    } else {
+      const areaUser = user.area;
+      this.inputService.getInputsByYearByNormalUser(year, areaUser).subscribe({
+        next: (response) => {
+          this.inputs = response.inputs;
+          this.totalInputs = response.totalInputs;
+          this.totalPages = response.totalPages;
+
+          if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
+              this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+                  ...input,
+                  atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
+              })));
+              this.dataSource.paginator = this.paginator;
+              this.dataSource.sort = this.sort;
+              this.dataLoaded = true;
+              this.cdr.detectChanges();
+              this.ngAfterViewInit();
+          } else { // Datos vacíos: mostrar Swal
+              this.inputs = [];
+              this.totalInputs = 0;
+              this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
+              this.dataLoaded = true;
+              Swal.fire({
+                  icon: "info",
+                  title: "Sin resultados",
+                  text: "No se encontraron registros para los parámetros seleccionados."
+              });
+              this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
+          console.error('Error al obtener los registros:', err);
+          this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
+          this.inputs = [];
+          this.totalInputs = 0;
+          this.dataLoaded = true;
+          Swal.fire({
+              icon: "info",
+              title: "Sin resultados",
+              text: "No se encontraron registros para los parámetros seleccionados."
+          });
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 
   getAtencionOtorgada(seguimientos: any): string {
@@ -224,44 +346,6 @@ export class PanelControlComponent implements OnInit {
         });
       }
     });
-  }
-
-  loadInputs() {
-    const user = this._tokenStorage.getUser();
-    if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
-      this.inputService.getNoDeletedInputsPreviousYers().subscribe({
-        next: (response) => {
-          this.inputs = response.inputs;
-          this.totalInputs = response.totalInputs;
-          this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-            ...input, // Mantén las propiedades existentes
-            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
-          })));
-          // this.dataSource = new MatTableDataSource(this.inputs);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        error: (err) => {
-            console.error(err);
-        }
-      });
-    } else {
-      const areaUser = user.area;
-      this.inputService.getNoDeletedInputsPreviousYearsByNormalUsers(areaUser).subscribe({
-        next: (response) => {
-          this.inputs = response.inputs;
-          this.totalInputs = response.totalInputs;
-          this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        error: (err) => {
-            console.error(err);
-        }
-    });
-    }
   }
 
   announceSortChange(sortState: Sort) {

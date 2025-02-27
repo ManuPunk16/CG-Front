@@ -9,6 +9,21 @@
       <br>
       <div class="filtros">
         <fieldset>
+            <legend>Seleccionar Año para consultar</legend>
+            <mat-form-field appearance="outline">
+                <mat-label>Año</mat-label>
+                <mat-select [(ngModel)]="selectedYear" (selectionChange)="onYearChange()">
+                    <mat-option *ngFor="let year of years" [value]="year">
+                        {{ year }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </fieldset>
+        <br>
+      </div>
+
+      <div class="filtros" *ngIf="dataLoaded">
+        <fieldset>
           <legend>Filtros de busqueda</legend>
           <form (ngSubmit)="applyFilters()">
             <div *ngFor="let field of searchFields" class="search-field">
@@ -78,7 +93,7 @@
         <br>
       </div>
 
-      <mat-card-content>
+      <mat-card-content *ngIf="dataLoaded">
         <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
             class="mat-elevation-z8">
 
@@ -171,11 +186,15 @@
           <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
         </table>
         <mat-paginator #paginator
-                [length]="100"
-                [pageSize]="15"
-                [pageSizeOptions]="[25, 50, 100, 500]"
-                aria-label="Select page">
+          [length]="totalInputs"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          aria-label="Select page">
         </mat-paginator>
+      </mat-card-content>
+
+      <mat-card-content *ngIf="!dataLoaded">
+        <p>Cargando datos...</p>
       </mat-card-content>
     </mat-card>
   </section>
