@@ -83,7 +83,7 @@
             <p>Num. Oficio: {{ tiempoRespuesta.num_oficio }}</p>
             <p>Día de Recepción: {{ tiempoRespuesta.tiempo_recepcion | date }}</p>
             <p>Día de Respuesta: {{ tiempoRespuesta.tiempo_respuesta | date }}</p>
-            <p>Diferencia (días): {{ tiempoRespuesta.diferencia_dias }}</p>
+            <p>Tiempo de atención (días): {{ tiempoRespuesta.diferencia_dias }}</p>
             <p><strong>Estatus:</strong> {{inputDetails.estatus}}</p>
           </div>
           <div *ngIf="error">

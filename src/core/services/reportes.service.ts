@@ -106,11 +106,12 @@ export class ReportesService {
     );
   }
 
-  exportarExcelFormatogenerarReporte(fechaInicio: string, fechaFin?: string): Observable<Blob> {
+  exportarExcelFormatogenerarReporte(fechaInicio: string, fechaFin?: string, asignado?: string): Observable<Blob> {
     const url = `${this.apiUrl}reporte-rango/`;
     const params = new HttpParams()
     .set('fechaInicio', fechaInicio)
-    .set('fechaFin', fechaFin || '');
+    .set('fechaFin', fechaFin || '')
+    .set('area', asignado || '');
 
     return this.http.get(url, { params, responseType: 'blob' }).pipe(
       catchError(this.handleError)

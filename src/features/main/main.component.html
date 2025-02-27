@@ -11,7 +11,13 @@
         <legend>Filtros de busqueda</legend>
         <form (ngSubmit)="applyFilters()">
           <div *ngFor="let field of searchFields" class="search-field">
-            <mat-form-field appearance="outline" class="field-folio" *ngIf="field !== 'estatus' && field !== 'institucion_origen' && field !== 'asignado' && field !== 'fecha_recepcion'">
+            <mat-form-field appearance="outline" class="field-folio"
+              *ngIf="field !== 'estatus' &&
+                field !== 'institucion_origen' &&
+                field !== 'asignado' &&
+                field !== 'fecha_recepcion' &&
+                field !== 'atencion_otorgada_visual'"
+              >
               <mat-label>{{ field | titlecase }}</mat-label>
               <input matInput type="text" [(ngModel)]="searchTerms[field]" name="{{ field }}">
             </mat-form-field>
@@ -37,6 +43,11 @@
                   {{ item.direccion }}
                 </mat-option>
               </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="field-atencion_otorgada_visual" *ngIf="field === 'atencion_otorgada_visual'">
+              <mat-label>Atencion</mat-label>
+              <input matInput type="text" [(ngModel)]="searchTerms['atencion_otorgada_visual']" name="atencion_otorgada_visual">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="field-estatus" *ngIf="field === 'estatus'">

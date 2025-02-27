@@ -95,6 +95,8 @@ export class UserPanelComponent implements OnInit {
   areaConsultada!: string;
   graficaActivada: boolean = false;
 
+  selectedAreaReporteDiario: string = '';
+
   @ViewChild('myChart') myChart!: ElementRef; // Obtén una referencia al elemento canvas
   chart!: Chart;
 
@@ -428,8 +430,9 @@ export class UserPanelComponent implements OnInit {
   generarReporte() {
     const fechaInicio = this.startDate;
     const fechaFin = this.endDate;
+    const area = this.selectedAreaReporteDiario;
 
-    this._reportes.exportarExcelFormatogenerarReporte(fechaInicio, fechaFin)
+    this._reportes.exportarExcelFormatogenerarReporte(fechaInicio, fechaFin, area)
       .subscribe({
         next: (blob) => {
           saveAs(blob, 'reporte.xlsx');

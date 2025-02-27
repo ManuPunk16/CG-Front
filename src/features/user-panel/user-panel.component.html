@@ -128,7 +128,15 @@
             <label for="endDate">Fecha Final: </label>
             <input type="date" [(ngModel)]="endDate" name="endDate">
           </div>
-          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="generarReporte()">Excel Formato</button>
+          <div>
+            <label for="area">Área: </label>
+            <select [(ngModel)]="selectedAreaReporteDiario" name="area">
+              <option *ngFor="let area of areas" [value]="area.direccion">
+                {{ area.direccion }}
+              </option>
+            </select>
+          </div>
+          <button mat-raised-button *ngIf="showModerator || showAdmin" [disabled]="!selectedAreaReporteDiario" (click)="generarReporte()">Excel Formato</button>
         </div>
       </mat-card-content>
     </mat-card>
