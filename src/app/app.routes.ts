@@ -1,3 +1,4 @@
+import { NuevaEntradaAntiguosComponent } from '../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component';
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../core/auth/auth.guard';
 
@@ -20,6 +21,11 @@ export const routes: Routes = [
   {
     path: 'nueva-entrada',
     loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
+    canActivate:[AuthGuard]
+  },
+  {
+    path: 'nueva-entrada-antiguos',
+    loadComponent: () => import('../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component').then(c => c.NuevaEntradaAntiguosComponent),
     canActivate:[AuthGuard]
   },
   {

@@ -72,6 +72,7 @@
           <div>
             <button mat-raised-button (click)="exportToExcelEnlace()">Exportar datos de enlace a Excel</button>
             <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll()">Exportar todos los datos a Excel</button>
+            <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="newInput()">Nuevo Registro</button>
           </div>
         </fieldset>
         <br>

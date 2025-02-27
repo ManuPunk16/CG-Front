@@ -335,7 +335,7 @@ export class PanelControlComponent implements OnInit {
   }
 
   newInput() {
-    this.router.navigate(['/nueva-entrada']);
+    this.router.navigate(['/nueva-entrada-antiguos']);
   }
 
   tecnicalView(row: Input) {
