@@ -92,18 +92,18 @@ export class ReportesService {
     );
   }
 
-  exportarExcelEnlaceAniosPosteriores(asignado: string): Observable<Blob> {
-    const url = `${this.apiUrl}exportar-excel-enlace-anios-posteriores/`+ asignado;
+  exportarExcelEnlaceAniosPosteriores(asignado: string, year: number): Observable<Blob> {
+    const url = `${this.apiUrl}exportar-excel-enlace-anios-posteriores/${asignado}/${year}`;
     return this.http.get(url, { responseType: 'blob' }).pipe(
-      catchError(this.handleError)
+        catchError(this.handleError)
     );
   }
 
-  exportarExcelTodosAniosPosteriores(): Observable<Blob> {
-    const url = `${this.apiUrl}exportar-excel-todos-anios-posteriores`;
-    return this.http.get(url, { responseType: 'blob' }).pipe(
-      catchError(this.handleError)
-    );
+  exportarExcelTodosAniosPosteriores(year: number): Observable<Blob> {
+      const url = `${this.apiUrl}exportar-excel-todos-anios-posteriores/${year}`;
+      return this.http.get(url, { responseType: 'blob' }).pipe(
+          catchError(this.handleError)
+      );
   }
 
   exportarExcelFormatogenerarReporte(fechaInicio: string, fechaFin?: string, asignado?: string): Observable<Blob> {

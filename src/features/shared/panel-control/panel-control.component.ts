@@ -430,11 +430,11 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
     }
   }
 
-  exportToExcelAll() {
-      this._reportes.exportarExcelTodosAniosPosteriores().subscribe({
+  exportToExcelAll(year: number) {
+      this._reportes.exportarExcelTodosAniosPosteriores(year).subscribe({
         next: (blob) => {
           const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          saveAs(blobData, 'Registros_anios_posteriores.xlsx');
+          saveAs(blobData, `Registros_Areas_${year}.xlsx`);
         },
         error: (error) => {
           console.error(error);
@@ -447,13 +447,13 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
       });
     }
 
-  exportToExcelEnlace() {
+  exportToExcelEnlace(year: number) {
     const user = this._tokenStorage.getUser();
     const areaUser = user.area;
-    this._reportes.exportarExcelEnlaceAniosPosteriores(areaUser).subscribe({
+    this._reportes.exportarExcelEnlaceAniosPosteriores(areaUser, year).subscribe({
       next: (blob) => {
         const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blobData, 'Registros_enlace_anios_posteriores.xlsx');
+        saveAs(blobData, `Registros_${areaUser}_${year}.xlsx`);
       },
       error: (error) => {
         console.error(error);

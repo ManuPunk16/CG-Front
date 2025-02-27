@@ -85,8 +85,8 @@
         <fieldset>
           <legend>Seleccion de acciones</legend>
           <div>
-            <button mat-raised-button (click)="exportToExcelEnlace()">Exportar datos de enlace a Excel</button>
-            <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll()">Exportar todos los datos a Excel</button>
+            <button mat-raised-button (click)="exportToExcelEnlace(selectedYear)">Exportar datos de enlace a Excel</button>
+            <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll(selectedYear)">Exportar todos los datos a Excel</button>
             <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="newInput()">Nuevo Registro</button>
           </div>
         </fieldset>
