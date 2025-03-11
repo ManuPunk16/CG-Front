@@ -73,7 +73,7 @@ export class MainComponent implements OnInit {
   sort!: MatSort;
 
   displayedColumns: string[] = [
-    'actions', 'folio', 'fecha_recepcion', 'num_oficio',
+    'actions', 'folio', 'fecha_recepcion', 'diasAtraso', 'num_oficio',
     'institucion_origen', 'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual'
   ];
   dataSource!: MatTableDataSource<Input>;
@@ -81,8 +81,8 @@ export class MainComponent implements OnInit {
   totalInputs: number = 0;
   totalPages: number = 0;
   currentPage: number = 1;
-  pageSize: number = 50;
-  pageSizeOptions: number[] = [50, 100, 300, 500];
+  pageSize: number = 25;
+  pageSizeOptions: number[] = [25, 50, 100, 300, 500];
   startDate!: Date;
   endDate!: Date;
 

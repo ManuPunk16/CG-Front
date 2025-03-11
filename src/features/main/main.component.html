@@ -122,6 +122,20 @@
           <td mat-cell *matCellDef="let element"> {{element.fecha_recepcion | date:'dd/MM/yyyy' }} </td>
         </ng-container>
 
+        <ng-container matColumnDef="diasAtraso">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by diasAtraso">
+            Dias Para Responder
+          </th>
+          <td mat-cell *matCellDef="let element">
+            <ng-container *ngIf="element.diasAtraso !== null; else mensajeAtraso">
+              {{ element.diasAtraso }}
+            </ng-container>
+            <ng-template #mensajeAtraso>
+                {{ element.mensajeAtraso }}
+            </ng-template>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="num_oficio">
           <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by num_oficio">
             Num. Oficio
@@ -169,12 +183,12 @@
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
-      <mat-paginator
-              [length]="100"
-              [pageSize]="15"
-              [pageSizeOptions]="[25, 50, 100, 500]"
-              aria-label="Select page">
-      </mat-paginator>
+      <mat-paginator #paginator
+          [length]="totalInputs"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="pageSizeOptions"
+          aria-label="Select page">
+        </mat-paginator>
     </mat-card-content>
   </mat-card>
 </div>

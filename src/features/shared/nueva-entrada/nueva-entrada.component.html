@@ -40,6 +40,7 @@
           <input matInput [matDatepicker]="fechaVencimientoPicker" formControlName="fecha_vencimiento">
           <mat-datepicker-toggle matSuffix [for]="fechaVencimientoPicker"></mat-datepicker-toggle>
           <mat-datepicker #fechaVencimientoPicker></mat-datepicker>
+          <mat-error *ngIf="inputForm.get('fecha_vencimiento')?.hasError('required')">Fecha de Vencimiento es requerida</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">

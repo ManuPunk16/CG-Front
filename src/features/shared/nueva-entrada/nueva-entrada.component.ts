@@ -104,7 +104,7 @@ export class NuevaEntradaComponent implements OnInit {
       folio: ['', Validators.required],
       num_oficio: ['', Validators.required],
       fecha_oficio: ['', Validators.required],
-      fecha_vencimiento: [''],
+      fecha_vencimiento: ['', Validators.required],
       fecha_recepcion: ['', Validators.required],
       hora_recepcion: [''],
       instrumento_juridico: ['', Validators.required],

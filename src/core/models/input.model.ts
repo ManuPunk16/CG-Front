@@ -31,6 +31,8 @@ export interface Input {
   tiempo_recepcion: Date;
   tiempo_respuesta: Date;
   atencion_otorgada_visual: string;
+  diasAtraso: number;
+  mensajeAtraso: string;
 }
 
 export interface Seguimiento {
