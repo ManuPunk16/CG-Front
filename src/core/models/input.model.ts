@@ -33,6 +33,8 @@ export interface Input {
   atencion_otorgada_visual: string;
   diasAtraso: number;
   mensajeAtraso: string;
+  estadoSemaforo: string;
+  colorSemaforo: string;
 }
 
 export interface Seguimiento {

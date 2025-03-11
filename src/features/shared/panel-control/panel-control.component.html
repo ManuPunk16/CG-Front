@@ -140,15 +140,21 @@
 
           <ng-container matColumnDef="diasAtraso">
             <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by diasAtraso">
-              Dias Para Responder
+                Días Para Responder
             </th>
             <td mat-cell *matCellDef="let element">
-              <ng-container *ngIf="element.diasAtraso !== null; else mensajeAtraso">
-                {{ element.diasAtraso }}
-              </ng-container>
-              <ng-template #mensajeAtraso>
+              <div style="display: flex; align-items: center;">
+                <ng-container *ngIf="element.diasAtraso !== null; else mensajeAtraso">
+                  <span [style.backgroundColor]="element.colorSemaforo"
+                        style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
+                  {{ element.diasAtraso }}
+                </ng-container>
+                <ng-template #mensajeAtraso>
+                  <span [style.backgroundColor]="element.colorSemaforo"
+                        style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
                   {{ element.mensajeAtraso }}
-              </ng-template>
+                </ng-template>
+              </div>
             </td>
           </ng-container>
 
