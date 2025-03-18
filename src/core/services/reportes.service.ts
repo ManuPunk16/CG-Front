@@ -22,7 +22,7 @@ interface EstadisticasEstatusResponse {
   }[];
 }
 
-interface TiempoRespuesta {
+interface DetalleOficio {
   _id: string;
   num_oficio: string;
   tiempo_recepcion: Date;
@@ -32,7 +32,7 @@ interface TiempoRespuesta {
   diferencia_dias: number;
 }
 
-interface TiempoRespuesta {
+interface ResumenTiempos {
   promedio_dias: number | null;
   mediana_dias: number | null;
   percentil25_dias: number | null;
@@ -41,7 +41,7 @@ interface TiempoRespuesta {
   total_atendidos: number | null;
   total_no_atendidos: number | null;
   total_oficios: number;
-  datos_oficios: Input[]; // Puedes definir una interfaz más específica para los datos de los oficios
+  datos_oficios: Input[];
 }
 
 @Injectable({
@@ -72,7 +72,6 @@ export class ReportesService {
     const url = `${this.apiUrl}reporte_diario/${searchDay}`;
     return this.http.get<ApiResponse<Input[]>>(url).pipe(
       map((response: ApiResponse<Input[]>) => {
-        console.log(response);
         if (response.status === 'success' && Array.isArray(response.data)) {
           return response.data;
         } else {
@@ -130,18 +129,6 @@ export class ReportesService {
     );
   }
 
-  // exportarDatosExcelPorEstatusFecha(estatus: string, fechaInicio: string, fechaFin?: string): Observable<Blob> {
-  //   const url = `${this.apiUrl}reporte-estatus-fecha/`;
-  //   const params = new HttpParams()
-  //     .set('estatus', estatus)
-  //     .set('fechaInicio', fechaInicio)
-  //     .set('fechaFin', fechaFin || '');
-
-  //   return this.http.get(url, { params, responseType: 'blob' }).pipe(
-  //     catchError(this.handleError)
-  //   );
-  // }
-
   exportarDatosExcelPorEstatusFechaPorArea(estatus: string, asignado: string, fechaInicio: string, fechaFin?: string): Observable<Blob> {
     const url = `${this.apiUrl}reporte_estatus_area/`;
     const params = new HttpParams()
@@ -155,12 +142,12 @@ export class ReportesService {
     );
   }
 
-  getTiempoRespuestaPorId(id: string): Observable<TiempoRespuesta> {
+  getTiempoRespuestaPorId(id: string): Observable<DetalleOficio> {
     const url = `${this.apiUrl}tiempos/${id}`;
 
-    return this.http.get<TiempoRespuesta>(url)
+    return this.http.get<DetalleOficio>(url)
       .pipe(
-        map((data: TiempoRespuesta) => {
+        map((data: DetalleOficio) => {
           // Convertir las fechas de string a Date
           if (data.tiempo_recepcion) {
             data.tiempo_recepcion = new Date(data.tiempo_recepcion);
@@ -174,7 +161,7 @@ export class ReportesService {
       );
   }
 
-  calcularTiempoRespuestaTotal(area: string, fechaInicio?: string, fechaFin?: string): Observable<TiempoRespuesta> {
+  calcularTiempoRespuestaTotal(area: string, fechaInicio?: string, fechaFin?: string): Observable<ResumenTiempos> {
     let params = new HttpParams();
 
     if (fechaInicio) {
@@ -184,7 +171,7 @@ export class ReportesService {
       params = params.append('fechaFin', fechaFin);
     }
 
-    return this.http.get<TiempoRespuesta>(`${this.apiUrl}tiempos-total/${area}`, { params })
+    return this.http.get<ResumenTiempos>(`${this.apiUrl}tiempos-total/${area}`, { params })
       .pipe(
         catchError(this.handleError)
       );

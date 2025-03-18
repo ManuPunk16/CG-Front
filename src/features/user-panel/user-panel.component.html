@@ -13,32 +13,35 @@
       <mat-card-content>
         <div>
           <div>
-            <label for="startDate4">Fecha Inicial: </label>
-            <input type="date" [(ngModel)]="startDate4" name="startDate3">
+              <label for="startDate4">Fecha Inicial: </label>
+              <input type="date" [(ngModel)]="fechaInicioEstatus" name="startDate4">
           </div>
           <div>
-            <label for="endDate4">Fecha Final: </label>
-            <input type="date" [(ngModel)]="endDate4" name="endDate3">
+              <label for="endDate4">Fecha Final: </label>
+              <input type="date" [(ngModel)]="fechaFinEstatus" name="endDate4">
           </div>
 
-          <div *ngIf="showModerator || showAdmin">
-            <label for="area3">Área: </label>
-            <select [(ngModel)]="selectedArea3" name="area3">
-              <option *ngFor="let area of areas" [value]="area.direccion">
-                {{ area.direccion }}
-              </option>
-            </select>
+          <div *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
+              <label for="area3">Área: </label>
+              <select [(ngModel)]="selectedAreaEstatus" name="area3">
+                  <option *ngFor="let area of areas" [value]="area.direccion">
+                      {{ area.direccion }}
+                  </option>
+              </select>
           </div>
 
-          <button mat-raised-button [disabled]="!startDate4" (click)="generarEstatusGrafica()">Buscar como enlace</button>
-          <button mat-raised-button [disabled]="!startDate4 || !selectedArea3" *ngIf="showModerator || showAdmin" (click)="generarEstatusGraficaModerador()">Buscar como Moderador</button>
+          <button mat-raised-button [disabled]="!debeHabilitarBuscar()" (click)="loadReporteEstatusEnlace()">Buscar</button>
+
+          <button mat-raised-button [disabled]="!debeHabilitarBuscarModerador()"
+              *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')"
+              (click)="loadReporteEstatusModerador()">Buscar Moderador</button>
         </div>
 
-        <div *ngIf="estadisticas && estadisticas.length > 0">
+        <div *ngIf="reporteEstatus && reporteEstatus.length > 0">
           <h3>Estadísticas para {{ areaConsultada }}</h3>
-          <canvas #myChartEstatus></canvas>
+          <canvas #chartEstatus></canvas>
           <ul>
-            <li *ngFor="let estadistica of estadisticas">
+            <li *ngFor="let estadistica of reporteEstatus">
               {{ estadistica.estatus }}: {{ estadistica.count }}
             </li>
           </ul>
@@ -56,39 +59,46 @@
         <div>
           <div>
             <label for="startDate">Fecha Inicial: </label>
-            <input type="date" [(ngModel)]="startDate3" name="startDate3">
+            <input type="date" [(ngModel)]="fechaInicioTiempoRespuesta" name="startDate3">
           </div>
           <div>
             <label for="endDate">Fecha Final: </label>
-            <input type="date" [(ngModel)]="endDate3" name="endDate3">
+            <input type="date" [(ngModel)]="fechaFinTiempoRespuesta" name="endDate3">
           </div>
 
-          <div *ngIf="showModerator || showAdmin">
+          <div
+            *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
             <label for="area">Área: </label>
-            <select [(ngModel)]="selectedArea2" name="area2">
+            <select [(ngModel)]="selectedAreaTiempoRespuesta" name="area2">
               <option *ngFor="let area of areas" [value]="area.direccion">
                 {{ area.direccion }}
               </option>
             </select>
           </div>
 
-          <button mat-raised-button [disabled]="!startDate3" (click)="cargarReporte()">Buscar como enlace</button>
-          <button mat-raised-button [disabled]="!startDate3 || !selectedArea2" *ngIf="showModerator || showAdmin" (click)="cargarReporteModerador()">Buscar como Moderador</button>
+          <button mat-raised-button [disabled]="!debeHabilitarBuscarTiempoRespuesta()"
+            (click)="loadReporteTiempoRespuestaEnlace()">Buscar</button>
+
+          <button mat-raised-button [disabled]="!debeHabilitarBuscarTiempoRespuestaModerador()"
+            *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')"
+            (click)="loadReporteTiempoRespuestaModerador()">Buscar Moderador</button>
         </div>
         <div>
-          <canvas #myChart></canvas>
+          <canvas #chartTiempoRespuesta></canvas>
 
-          <div *ngIf="reporte && graficaActivada">
+          <div *ngIf="reporteTiempoRespuesta && graficaTiempoRespuestaActivada">
             <p><b>Área consultada:</b> {{ areaConsultada }}</p>
-            <p><b>Rango de fechas:</b> {{ startDate3 | date:'dd/MM/yyyy' }} - {{ endDate3 | date:'dd/MM/yyyy' }}</p>
-            <p><b>Promedio:</b> {{ reporte.promedio_dias?.toFixed(2) }} días</p>
-            <p><b>Mediana:</b> {{ reporte.mediana_dias?.toFixed(2) }} días</p>
-            <p><b>Percentil 25:</b> {{ reporte.percentil25_dias?.toFixed(2) }} días</p>
-            <p><b>Percentil 75:</b> {{ reporte.percentil75_dias?.toFixed(2) }} días</p>
-            <p><b>Desviación estándar:</b> {{ reporte.desviacion_estandar_dias?.toFixed(2) }} días</p>
-            <p><b>Total de oficios por 'Atendido':</b> {{ reporte.total_atendidos }}</p>
-            <p><b>Total de oficios por 'No Atendido':</b> {{ reporte.total_no_atendidos }}</p>
-            <p style="font-size: 20px;"><b>Total de oficios en general:</b> {{ reporte.total_oficios }}</p>
+            <p><b>Rango de fechas:</b> {{ fechaInicioTiempoRespuesta | date:'dd/MM/yyyy' }} - {{ fechaFinTiempoRespuesta
+              | date:'dd/MM/yyyy' }}</p>
+            <p><b>Promedio:</b> {{ reporteTiempoRespuesta.promedio_dias?.toFixed(2) }} días</p>
+            <p><b>Mediana:</b> {{ reporteTiempoRespuesta.mediana_dias?.toFixed(2) }} días</p>
+            <p><b>Percentil 25:</b> {{ reporteTiempoRespuesta.percentil25_dias?.toFixed(2) }} días</p>
+            <p><b>Percentil 75:</b> {{ reporteTiempoRespuesta.percentil75_dias?.toFixed(2) }} días</p>
+            <p><b>Desviación estándar:</b> {{ reporteTiempoRespuesta.desviacion_estandar_dias?.toFixed(2) }} días</p>
+            <p><b>Total de oficios por 'Atendido':</b> {{ reporteTiempoRespuesta.total_atendidos }}</p>
+            <p><b>Total de oficios por 'No Atendido':</b> {{ reporteTiempoRespuesta.total_no_atendidos }}</p>
+            <p style="font-size: 20px;"><b>Total de oficios en general:</b> {{ reporteTiempoRespuesta.total_oficios }}
+            </p>
 
             <table style="width: 100%; border-collapse: collapse;">
               <thead>
@@ -100,13 +110,15 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let oficio of reporte.datos_oficios">
+                <tr *ngFor="let oficio of reporteTiempoRespuesta.datos_oficios">
                   <td style="padding: 8px; border: 1px solid #ddd;">
                     <a [routerLink]="['/ficha_tecnica', oficio._id]">{{ oficio.num_oficio }}</a>
                   </td>
                   <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.estatus }}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_recepcion | date:'dd/MM/yyyy' }}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_respuesta | date:'dd/MM/yyyy' }}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_recepcion | date:'dd/MM/yyyy' }}
+                  </td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">{{ oficio.tiempo_respuesta | date:'dd/MM/yyyy' }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -117,7 +129,8 @@
   </section>
 
   <aside class="lateral">
-    <mat-card class="card-one" *ngIf="showModerator || showAdmin">
+    <mat-card class="card-one"
+      *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
       <mat-card-header>
         <mat-card-title>
           <h3>Reporte en forma de resumen por dia</h3>
@@ -126,14 +139,11 @@
       <mat-card-content>
         <div>
           <div>
-            <input type="date" [(ngModel)]="fechaBusqueda">
-            <button (click)="buscarReportes()">Buscar</button>
-            <button mat-raised-button (click)="descargarReporte()" [disabled]="_isTrue">Exportar a EXCEL</button>
-            <div *ngIf="reportes.length > 0">
-              <!-- <div *ngFor="let reporte of reportes">
-                <p>{{ reporte._id }}: {{ reporte.cantidad }} registros</p>
-              </div> -->
-              <div *ngFor="let reporte of reportes">
+            <input type="date" [(ngModel)]="fechaBusquedaDiaria">
+            <button (click)="loadReporteDiario()">Buscar</button>
+            <button mat-raised-button (click)="downloadReporteDiario()" [disabled]="!busquedaExitosa">Exportar a EXCEL</button>
+            <div *ngIf="reportesDiarios && reportesDiarios.length > 0">
+              <div *ngFor="let reporte of reportesDiarios">
                 <h3>{{ reporte.asignado }}</h3>
                 <p>Fecha de recepcion: {{reporte.fecha_recepcion | date }}</p>
                 <ul>
@@ -144,7 +154,7 @@
                 </ul>
               </div>
             </div>
-            <div *ngIf="!reportes.length">
+            <div *ngIf="!reportesDiarios || reportesDiarios.length === 0">
               <p>No se encontraron registros para la fecha seleccionada.</p>
             </div>
           </div>
@@ -152,7 +162,8 @@
       </mat-card-content>
     </mat-card>
 
-    <mat-card class="card-two" *ngIf="showModerator || showAdmin">
+    <mat-card class="card-two"
+      *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
       <mat-card-header>
         <mat-card-title>
           <h3>
@@ -164,11 +175,11 @@
         <div>
           <div>
             <label for="startDate">Fecha Inicial: </label>
-            <input type="date" [(ngModel)]="startDate" name="startDate">
+            <input type="date" [(ngModel)]="fechaInicioReporteDiario" name="startDate">
           </div>
           <div>
             <label for="endDate">Fecha Final: </label>
-            <input type="date" [(ngModel)]="endDate" name="endDate">
+            <input type="date" [(ngModel)]="fechaFinReporteDiario" name="endDate">
           </div>
           <div>
             <label for="area">Área: </label>
@@ -178,7 +189,8 @@
               </option>
             </select>
           </div>
-          <button mat-raised-button *ngIf="showModerator || showAdmin" [disabled]="!selectedAreaReporteDiario" (click)="generarReporte()">Excel Formato</button>
+          <button mat-raised-button [disabled]="!selectedAreaReporteDiario" (click)="downloadReporteGeneral()">Excel
+            Formato</button>
         </div>
       </mat-card-content>
     </mat-card>
@@ -195,21 +207,22 @@
         <div>
           <div>
             <label for="startDate">Fecha Inicial: </label>
-            <input type="date" [(ngModel)]="startDate2" name="startDate2">
+            <input type="date" [(ngModel)]="fechaInicioEstatus" name="startDate2">
           </div>
           <div>
             <label for="endDate">Fecha Final: </label>
-            <input type="date" [(ngModel)]="endDate2" name="endDate2">
+            <input type="date" [(ngModel)]="fechaFinEstatus" name="endDate2">
           </div>
           <div>
             <label for="estatus">Estatus: </label>
-            <select [(ngModel)]="estatus" name="estatus">
+            <select [(ngModel)]="estatusFiltro" name="estatus">
               <option value="ATENDIDO">Atendido</option>
               <option value="NO ATENDIDO">No Atendido</option>
             </select>
           </div>
 
-          <div *ngIf="showModerator || showAdmin">
+          <div
+            *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
             <label for="area">Área: </label>
             <select [(ngModel)]="selectedArea" name="area">
               <option *ngFor="let area of areas" [value]="area.direccion">
@@ -218,11 +231,13 @@
             </select>
           </div>
 
-          <button mat-raised-button (click)="generarReporteEstatus()">Generar Excel Enlace</button>
-          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="generarReporteEstatusPorArea()" [disabled]="!selectedArea">Generar Excel</button>
+          <button mat-raised-button (click)="downloadReporteEstatusEnlace()">Generar Excel Enlace</button>
+          <button mat-raised-button
+            *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')"
+            (click)="downloadReporteEstatusModerador()" [disabled]="!selectedArea">Generar Excel</button>
 
-          <div *ngIf="error" class="error-message">  {{ error }}
-          </div>
+          <!-- <div *ngIf="error" class="error-message"> {{ error }}
+          </div> -->
 
         </div>
       </mat-card-content>
