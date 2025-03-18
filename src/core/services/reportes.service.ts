@@ -10,6 +10,18 @@ interface ApiResponse<T> {
   data?: T;
 }
 
+interface EstadisticasEstatusResponse {
+  areaConsultada: string;
+  rangoFechas: {
+    fechaInicio: Date;
+    fechaFin: Date;
+  };
+  estadisticas: {
+    estatus: string;
+    count: number;
+  }[];
+}
+
 interface TiempoRespuesta {
   _id: string;
   num_oficio: string;
@@ -177,4 +189,15 @@ export class ReportesService {
         catchError(this.handleError)
       );
   }
+
+  obtenerEstadisticas(startDate: string, endDate: string, area: string): Observable<EstadisticasEstatusResponse> {
+      let params = new HttpParams()
+        .set('fechaInicio', startDate)
+        .set('fechaFin', endDate)
+        .set('area', area);
+
+      return this.http.get<EstadisticasEstatusResponse>(`${this.apiUrl}estadisticas_estatus`, { params: params }).pipe(
+        catchError(this.handleError)
+      );
+    }
 }

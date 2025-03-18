@@ -65,6 +65,12 @@ export class UserPanelComponent implements OnInit {
   endDate2: string = '';
   estatus: string = 'ATENDIDO';
 
+  startDate4: string = '';
+  endDate4: string = '';
+  selectedArea3: string = '';
+  estatus1: string = 'ATENDIDO';
+  estadisticas: { estatus: string; count: number }[] = [];
+
   selectedArea: string = '';
   areas: Area[] = [];
 
@@ -88,7 +94,6 @@ export class UserPanelComponent implements OnInit {
     total_oficios: 0,
     datos_oficios: [] // O un array vacío si aplica
   };
-  area = 'DIRECCIÓN DE SERVICIOS LEGALES';
   startDate3: string = '';
   endDate3: string = '';
   selectedArea2: string = '';
@@ -97,8 +102,11 @@ export class UserPanelComponent implements OnInit {
 
   selectedAreaReporteDiario: string = '';
 
-  @ViewChild('myChart') myChart!: ElementRef; // Obtén una referencia al elemento canvas
+  @ViewChild('myChart') myChart!: ElementRef;
   chart!: Chart;
+
+  @ViewChild('myChartEstatus') myChartEstatus!: ElementRef;
+  chartEstatus!: Chart;
 
   constructor(
     private _tokenStorage: TokenStorageService,
@@ -119,6 +127,83 @@ export class UserPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.getAreas();
+  }
+
+  generarEstatusGrafica() {
+
+  }
+
+  generarEstatusGraficaModerador() {
+    if (!this.startDate4 || !this.selectedArea3) {
+      console.error('Fecha de inicio y área son requeridas.');
+      return;
+    }
+
+    const fechaInicio = this.startDate4;
+    const fechaFin = this.endDate4;
+    const asignado = this.selectedArea3;
+    this.areaConsultada = asignado;
+
+    this._reportes.obtenerEstadisticas(fechaInicio, fechaFin, asignado).subscribe({
+      next: (res) => {
+        this.estadisticas = res.estadisticas;
+
+        this.cdr.detectChanges();
+        this.crearGraficaEstatus();
+      },
+      error: (error: any) => {
+        console.error('Error al obtener estadísticas:', error);
+      }
+    });
+  }
+
+  crearGraficaEstatus() {
+    if (this.chartEstatus) {
+      this.chartEstatus.destroy(); // Destruye la instancia anterior si existe
+    }
+
+    const estadisticasOrdenadas = [...this.estadisticas].sort((a, b) => {
+      if (a.estatus === 'ATENDIDO') return -1;
+      if (b.estatus === 'ATENDIDO') return 1;
+      return 0;
+    });
+
+    const canvas = this.myChartEstatus.nativeElement.getContext('2d');
+
+    this.chartEstatus = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: estadisticasOrdenadas.map(est => est.estatus),
+        datasets: [{
+          label: 'Cantidad por Estatus',
+          data: this.estadisticas.map(est => est.count),
+          backgroundColor: estadisticasOrdenadas.map(est => {
+            if (est.estatus === 'ATENDIDO') return 'rgb(82, 255, 82)';
+            if (est.estatus === 'NO ATENDIDO') return 'rgb(255, 41, 41)';
+            return 'rgba(54, 162, 235, 0.5)'; // Color por defecto para otros estatus
+          }),
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: `Estadísticas de Estatus para ${this.areaConsultada} (${this.startDate4} - ${this.endDate4})`
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
   }
 
   cargarReporteModerador() {
@@ -219,7 +304,7 @@ export class UserPanelComponent implements OnInit {
           data: this.reporte?.datos_oficios?.map(oficio => oficio.diferencia_dias) ?? [],
           backgroundColor: this.reporte?.datos_oficios?.map(oficio => {
             return oficio.estatus === 'ATENDIDO' ? 'rgb(82, 255, 82)' : 'rgb(255, 41, 41)';
-        }) ?? [],
+          }) ?? [],
           borderColor: 'rgba(54, 162, 235, 1)', // Color del borde de las barras
           borderWidth: 1
         }]

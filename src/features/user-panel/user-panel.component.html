@@ -3,11 +3,53 @@
 </header>
 <main class="container">
   <section class="principal">
+    <mat-card class="card-one">
+      <mat-card-header>
+        <mat-card-title>
+          <h2>Consultar grafica por estatus, area y fechas</h2>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div>
+          <div>
+            <label for="startDate4">Fecha Inicial: </label>
+            <input type="date" [(ngModel)]="startDate4" name="startDate3">
+          </div>
+          <div>
+            <label for="endDate4">Fecha Final: </label>
+            <input type="date" [(ngModel)]="endDate4" name="endDate3">
+          </div>
+
+          <div *ngIf="showModerator || showAdmin">
+            <label for="area3">Área: </label>
+            <select [(ngModel)]="selectedArea3" name="area3">
+              <option *ngFor="let area of areas" [value]="area.direccion">
+                {{ area.direccion }}
+              </option>
+            </select>
+          </div>
+
+          <button mat-raised-button [disabled]="!startDate4" (click)="generarEstatusGrafica()">Buscar como enlace</button>
+          <button mat-raised-button [disabled]="!startDate4 || !selectedArea3" *ngIf="showModerator || showAdmin" (click)="generarEstatusGraficaModerador()">Buscar como Moderador</button>
+        </div>
+
+        <div *ngIf="estadisticas && estadisticas.length > 0">
+          <h3>Estadísticas para {{ areaConsultada }}</h3>
+          <canvas #myChartEstatus></canvas>
+          <ul>
+            <li *ngFor="let estadistica of estadisticas">
+              {{ estadistica.estatus }}: {{ estadistica.count }}
+            </li>
+          </ul>
+        </div>
+      </mat-card-content>
+    </mat-card>
 
     <mat-card class="card-one">
       <mat-card-header>
         <mat-card-title>
-          <h2>Consultar valores estadisticos por area y por fecha</h2>
+          <h2>Consultar grafica de oficios por area y fechas</h2>
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
@@ -31,7 +73,7 @@
           </div>
 
           <button mat-raised-button [disabled]="!startDate3" (click)="cargarReporte()">Buscar como enlace</button>
-          <button mat-raised-button [disabled]="!startDate3 || !selectedArea2" (click)="cargarReporteModerador()">Buscar como Moderador</button>
+          <button mat-raised-button [disabled]="!startDate3 || !selectedArea2" *ngIf="showModerator || showAdmin" (click)="cargarReporteModerador()">Buscar como Moderador</button>
         </div>
         <div>
           <canvas #myChart></canvas>
