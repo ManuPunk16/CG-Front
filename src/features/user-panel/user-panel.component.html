@@ -126,6 +126,43 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <mat-card *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
+      <mat-card-header>
+        <mat-card-title>
+          <h3>Contador de edición de registros</h3>
+        </mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Área</th>
+                <th>Cantidad</th>
+                <th>Última Respuesta</th>
+                <th>Año</th>
+                <th>Folio</th>
+                <th>Num Oficio</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let estadistica of estadisticas">
+                <td>{{ estadistica.username }}</td>
+                <td>{{ estadistica.area }}</td>
+                <td>{{ estadistica.count }}</td>
+                <td>{{ estadistica.ultima_modificacion.fecha_respuesta | date }}</td>
+                <td>{{ estadistica.ultima_modificacion.anio }}</td>
+                <td>{{ estadistica.ultima_modificacion.folio }}</td>
+                <td>{{ estadistica.ultima_modificacion.num_oficio }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </section>
 
   <aside class="lateral">

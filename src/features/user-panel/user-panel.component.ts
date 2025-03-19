@@ -35,6 +35,7 @@ import { RouterLink } from '@angular/router';
 import { AlertService } from '../../core/services/alert.service';
 import { DateFormatService } from '../../core/services/date-format.service';
 import { StateService } from '../../core/services/state.service';
+import { EstadisticasUsuario } from '../../interfaces/estadisticas-usuario.interface';
 
 Chart.register(
   BarController,
@@ -83,6 +84,9 @@ interface ResumenTiempos {
 export class UserPanelComponent implements OnInit {
   reportesDiarios: any[] = [];
   fechaBusquedaDiaria: string = '';
+
+  estadisticas: EstadisticasUsuario[] = [];
+  loading = true;
 
   reporteTiempoRespuesta: ResumenTiempos = {
     promedio_dias: null,
@@ -135,6 +139,18 @@ export class UserPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadAreas();
+
+    this.reportesService.obtenerEstadisticasUsuarios().subscribe({
+      next: (estadisticas) => {
+        this.estadisticas = estadisticas;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al obtener estadísticas:', error);
+        this.loading = false;
+      }
+    });
   }
 
   ngAfterViewInit(): void {

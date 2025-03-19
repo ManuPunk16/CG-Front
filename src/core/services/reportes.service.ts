@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { catchError, map, Observable, throwError } from 'rxjs';
 import { Global } from '../models/global';
 import { Input } from '../models/input.model';
+import { EstadisticasUsuario } from '../../interfaces/estadisticas-usuario.interface';
 
 interface ApiResponse<T> {
   status: string;
@@ -186,5 +187,12 @@ export class ReportesService {
       return this.http.get<EstadisticasEstatusResponse>(`${this.apiUrl}estadisticas_estatus`, { params: params }).pipe(
         catchError(this.handleError)
       );
+    }
+
+    obtenerEstadisticasUsuarios(): Observable<EstadisticasUsuario[]> {
+      return this.http.get<EstadisticasUsuario[]>(`${this.apiUrl}inputs/ultima-modificacion-areas`)
+        .pipe(
+          catchError(this.handleError)
+        );
     }
 }
