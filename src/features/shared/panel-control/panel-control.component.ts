@@ -123,24 +123,24 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
   ngOnInit(): void {
     this.generateYears();
     this.selectedYear = this.years[0];
-    this.isLoggedIn = !!this._tokenStorage.getToken();
-    if (this.isLoggedIn) {
-      const user = this._tokenStorage.getUser();
-      this.roles = user.roles;
-      this.showAdmin = this.roles.includes('ROLE_ADMIN');
-      this.showLinker = this.roles.includes('ROLE_LINKER');
-      this.showModerator = this.roles.includes('ROLE_MODERATOR');
-      this.username = user.username;
-      if (this.showAdmin || this.showModerator) {
-        this.canEditAssignation = true;
-      } else {
-        this.canEditAssignation = false;
-      }
-    }
+    this.checkUserRoles();
     this.getInstitutions();
     this.getAreas();
     this.loadData();
     this.cdr.detectChanges();
+  }
+
+  private checkUserRoles(): void {
+    const user = this._tokenStorage.getUser();
+    this.roles = user.roles || [];
+    this.showAdmin = this.hasRole('ROLE_ADMIN');
+    this.showLinker = this.hasRole('ROLE_LINKER');
+    this.showModerator = this.hasRole('ROLE_MODERATOR');
+    this.canEditAssignation = this.showAdmin || this.showModerator;
+  }
+
+  private hasRole(role: string): boolean {
+    return this.roles.includes(role);
   }
 
   ngAfterViewInit(): void {
@@ -148,7 +148,7 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
     }
-}
+  }
 
   generateYears(): void {
     for (let year = this.currentYear - 1; year >= 2021; year--) {

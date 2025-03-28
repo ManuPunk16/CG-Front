@@ -116,24 +116,23 @@ export class MainComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadInputs();
-
-    this.isLoggedIn = !!this._tokenStorage.getToken();
-    if (this.isLoggedIn) {
-      const user = this._tokenStorage.getUser();
-      this.roles = user.roles;
-      this.showAdmin = this.roles.includes('ROLE_ADMIN');
-      this.showLinker = this.roles.includes('ROLE_LINKER');
-      this.showModerator = this.roles.includes('ROLE_MODERATOR');
-      this.username = user.username;
-      if (this.showAdmin || this.showModerator) {
-        this.canEditAssignation = true;
-      } else {
-        this.canEditAssignation = false;
-      }
-    }
+    this.checkUserRoles();
     this.getInstitutions();
     this.getAreas();
     this.cdr.detectChanges();
+  }
+
+  private checkUserRoles(): void {
+    const user = this._tokenStorage.getUser();
+    this.roles = user.roles || [];
+    this.showAdmin = this.hasRole('ROLE_ADMIN');
+    this.showLinker = this.hasRole('ROLE_LINKER');
+    this.showModerator = this.hasRole('ROLE_MODERATOR');
+    this.canEditAssignation = this.showAdmin || this.showModerator;
+  }
+
+  private hasRole(role: string): boolean {
+    return this.roles.includes(role);
   }
 
   openRegistrosAtendidosModal() {
@@ -175,10 +174,6 @@ export class MainComponent implements OnInit {
       width: '80%',
       heightAuto: false,
     });
-  }
-
-  getAtencionOtorgada(seguimientos: any): string {
-    return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
   }
 
   deleteById(row: Input) {
@@ -266,6 +261,10 @@ export class MainComponent implements OnInit {
         }
     });
     }
+  }
+
+  getAtencionOtorgada(seguimientos: any): string {
+    return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
   }
 
   announceSortChange(sortState: Sort) {
