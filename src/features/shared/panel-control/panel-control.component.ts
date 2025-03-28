@@ -165,6 +165,47 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
       this.getInputsByYear(this.selectedYear);
   }
 
+  openRegistrosAtendidosModal() {
+      const user = this._tokenStorage.getUser();
+      this.inputService.getRegistrosAtendidosEstatusAreaAnio(user.area).subscribe({
+        next: (response) => {
+          this.showRegistrosAtendidosModal(response.data);
+        },
+        error: (error) => {
+          console.error('Error al obtener registros atendidos:', error);
+        }
+      });
+    }
+
+    showRegistrosAtendidosModal(data: any[]) {
+      const nombresMeses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ];
+
+      let content = '';
+      data.forEach(item => {
+        content += `<h3>${item.direccion}</h3>`;
+        item.anios.forEach((anio: { anio: any; meses: any[]; }) => {
+          content += `<h4>Año ${anio.anio}</h4>`;
+          content += '<table><thead><tr><th>Mes</th><th>Atendido</th><th>No Atendido</th><th>Respuesta Registrada</th></tr></thead><tbody>';
+          anio.meses.forEach(mes => {
+            const nombreMes = nombresMeses[mes.mes - 1];
+            content += `<tr><td>${nombreMes}</td><td>${mes.atendido}</td><td>${mes.noAtendido}</td><td>${mes.respuestaRegistrada}</td></tr>`;
+          });
+          content += '</tbody></table>';
+        });
+      });
+
+      Swal.fire({
+        title: 'Registros Atendidos',
+        html: content,
+        confirmButtonText: 'Cerrar',
+        width: '80%',
+        heightAuto: false,
+      });
+    }
+
   getInputsByYear(year: number): void {
     const user = this._tokenStorage.getUser();
     if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {

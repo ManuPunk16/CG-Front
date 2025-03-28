@@ -41,6 +41,22 @@ interface UpdateInputResponse {
   input: Input;
 }
 
+interface RegistrosAtendidosResponse {
+  message: string;
+  data: {
+    direccion: string;
+    anios: {
+      anio: number;
+      meses: {
+        mes: number;
+        atendido: number;
+        noAtendido: number;
+        respuestaRegistrada: number;
+      }[];
+    }[];
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -168,6 +184,13 @@ export class InputService {
   getDuplicatedOficiosByNormalUsers(id: string, asignado: string): Observable<DuplicadosResponse> {
     const url = `${this.apiUrl}inputs_oficio_enlace/${id}/duplicados/${asignado}`;
     return this.http.get<DuplicadosResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getRegistrosAtendidosEstatusAreaAnio(asignado: string): Observable<RegistrosAtendidosResponse> {
+    let url = `${this.apiUrl}inputs/registros-estatus-atendidos-area/${asignado}`;
+    return this.http.get<RegistrosAtendidosResponse>(url).pipe(
       catchError(this.handleError)
     );
   }

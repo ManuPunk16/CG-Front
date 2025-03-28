@@ -68,10 +68,11 @@
       <br>
       <fieldset>
         <legend>Seleccion de acciones</legend>
-        <div>
+        <div class="button-container">
           <button mat-raised-button (click)="exportToExcelEnlace()">Exportar datos de enlace a Excel</button>
           <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll()">Exportar todos los datos a Excel</button>
           <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="newInput()">Nuevo Registro</button>
+          <button mat-raised-button (click)="openRegistrosAtendidosModal()">Ver Estadísticas de Registros Atendidos</button>
         </div>
       </fieldset>
       <br>

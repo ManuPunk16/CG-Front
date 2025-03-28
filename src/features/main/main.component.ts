@@ -136,6 +136,47 @@ export class MainComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  openRegistrosAtendidosModal() {
+    const user = this._tokenStorage.getUser();
+    this.inputService.getRegistrosAtendidosEstatusAreaAnio(user.area).subscribe({
+      next: (response) => {
+        this.showRegistrosAtendidosModal(response.data);
+      },
+      error: (error) => {
+        console.error('Error al obtener registros atendidos:', error);
+      }
+    });
+  }
+
+  showRegistrosAtendidosModal(data: any[]) {
+    const nombresMeses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    let content = '';
+    data.forEach(item => {
+      content += `<h3>${item.direccion}</h3>`;
+      item.anios.forEach((anio: { anio: any; meses: any[]; }) => {
+        content += `<h4>Año ${anio.anio}</h4>`;
+        content += '<table><thead><tr><th>Mes</th><th>Atendido</th><th>No Atendido</th><th>Respuesta Registrada</th></tr></thead><tbody>';
+        anio.meses.forEach(mes => {
+          const nombreMes = nombresMeses[mes.mes - 1];
+          content += `<tr><td>${nombreMes}</td><td>${mes.atendido}</td><td>${mes.noAtendido}</td><td>${mes.respuestaRegistrada}</td></tr>`;
+        });
+        content += '</tbody></table>';
+      });
+    });
+
+    Swal.fire({
+      title: 'Registros Atendidos',
+      html: content,
+      confirmButtonText: 'Cerrar',
+      width: '80%',
+      heightAuto: false,
+    });
+  }
+
   getAtencionOtorgada(seguimientos: any): string {
     return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
   }
@@ -194,8 +235,8 @@ export class MainComponent implements OnInit {
           this.totalInputs = response.totalInputs;
           this.totalPages = response.totalPages;
           this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-            ...input, // Mantén las propiedades existentes
-            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
+            ...input,
+            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
           })));
           // this.dataSource = new MatTableDataSource(this.inputs);
           this.dataSource.paginator = this.paginator;
@@ -214,8 +255,8 @@ export class MainComponent implements OnInit {
           this.totalPages = response.totalPages;
           // this.dataSource = new MatTableDataSource(this.inputs);
           this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-            ...input, // Mantén las propiedades existentes
-            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos) // Nueva propiedad para el valor visual
+            ...input,
+            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
           })));
           this.dataSource.paginator = this.paginator;
           this.dataSource.sort = this.sort;
@@ -244,24 +285,21 @@ export class MainComponent implements OnInit {
 
         if (searchTerm) {
           if (field === 'fecha_recepcion') {
-            // Lógica especial para 'fecha_recepcion': búsqueda en formato dd/MM/yyyy
             const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
             isValid = isValid && formattedDate.toLowerCase().includes(searchTerm);
           } else if (field === 'estatus') {
-            // Búsqueda EXACta para 'estatus'
-            isValid = isValid && dataValue === searchTerm; // Compara igualdad estricta
+            isValid = isValid && dataValue === searchTerm;
           } else if (dataValue) {
-            // Búsqueda PARCIAL para otros campos
             isValid = isValid && dataValue.includes(searchTerm);
           } else {
-            isValid = false; // Si no hay valor en los datos y se busca, no es válido
+            isValid = false;
           }
         }
       }
       return isValid;
     };
 
-    this.dataSource.filter = 'applied'; // Se usa un valor dummy para forzar el filtro
+    this.dataSource.filter = 'applied';
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
@@ -282,13 +320,9 @@ export class MainComponent implements OnInit {
       const filterNumber = Number(filter);
 
       if (!isNaN(filterNumber)) {
-        // Si el filtro es un número:
-        // 1. Busca coincidencia EXACTA en el folio.
-        // 2. Busca coincidencia (contiene) en fecha_recepcion (formateada).
         const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
         return data.folio === filterNumber || formattedDate.toLocaleLowerCase().includes(filter);
       } else {
-        // Si el filtro NO es un número:
         return this.displayedColumns.some(column => {
           if (column === 'fecha_recepcion') {
             const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
@@ -317,10 +351,10 @@ export class MainComponent implements OnInit {
         return rowDate >= this.startDate && rowDate <= this.endDate;
       });
       this.dataSource.data = filteredData;
-      this.dataSource.paginator?.firstPage(); // Reiniciar paginador
+      this.dataSource.paginator?.firstPage();
     } else {
-        this.dataSource.data = this.inputs; // Restablecer a los datos originales si no hay rango
-        this.dataSource.paginator?.firstPage(); // Reiniciar paginador
+        this.dataSource.data = this.inputs;
+        this.dataSource.paginator?.firstPage();
     }
   }
 
