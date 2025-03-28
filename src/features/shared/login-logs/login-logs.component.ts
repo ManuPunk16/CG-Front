@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { LogService } from '../../../core/services/log.service';
 import { LoginLog } from '../../../core/models/login-log.model';
 import { CommonModule, DatePipe, NgFor } from '@angular/common';
@@ -31,7 +31,10 @@ export class LoginLogsComponent implements OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private logService: LogService) {}
+  constructor(
+    private logService: LogService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     // this.loadUserLogs();
@@ -42,7 +45,6 @@ export class LoginLogsComponent implements OnInit {
     this.logService.getUserLoginLogs().subscribe({
       next: (logs) => {
         this.userLogs = logs;
-        this.aplicarFiltro();
       },
       error: (error) => {
         console.error('Error al cargar los logs del usuario:', error);
@@ -54,6 +56,8 @@ export class LoginLogsComponent implements OnInit {
     this.logService.getAllLoginLogs().subscribe({
       next: (logs) => {
         this.allLogs = logs;
+        this.aplicarFiltro();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error al cargar todos los logs:', error);
