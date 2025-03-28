@@ -279,5 +279,16 @@
         </div>
       </mat-card-content>
     </mat-card>
+
+    <mat-card class="card-three" *ngIf="tokenStorage.getUser().roles.includes('ROLE_MODERATOR') || tokenStorage.getUser().roles.includes('ROLE_ADMIN')">
+      <mat-card-title>
+        <h3>
+          Registros de inicio de sesion
+        </h3>
+      </mat-card-title>
+      <mat-card-content>
+        <app-login-logs></app-login-logs>
+      </mat-card-content>
+    </mat-card>
   </aside>
 </main>

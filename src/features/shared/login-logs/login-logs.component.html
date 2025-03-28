@@ -1,0 +1,30 @@
+<div>
+  <label for="nombreFilter">Filtrar por Nombre:</label>
+  <input type="text" id="nombreFilter" [(ngModel)]="nombreFilter" (input)="aplicarFiltro()">
+</div>
+
+<p>Nota: hay una hora de atraso, el registro se empezo a registrar desde el 14 de marzo</p>
+
+<table class="log-table">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let log of pagedLogs">
+      <td>{{ log.userName }}</td>
+      <td>{{ log.timestamp | date:'medium' }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<mat-paginator
+  [length]="logsFiltrados.length"
+  [pageSize]="pageSize"
+  [pageIndex]="pageIndex"
+  (page)="pageChanged($event)"
+  aria-label="Seleccione página"
+>
+</mat-paginator>

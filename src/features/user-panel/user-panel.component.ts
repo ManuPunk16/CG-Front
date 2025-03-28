@@ -36,6 +36,7 @@ import { AlertService } from '../../core/services/alert.service';
 import { DateFormatService } from '../../core/services/date-format.service';
 import { StateService } from '../../core/services/state.service';
 import { EstadisticasUsuario } from '../../interfaces/estadisticas-usuario.interface';
+import { LoginLogsComponent } from '../shared/login-logs/login-logs.component';
 
 Chart.register(
   BarController,
@@ -71,6 +72,7 @@ interface ResumenTiempos {
     MatInputModule,
     DatePipe,
     RouterLink,
+    LoginLogsComponent
   ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

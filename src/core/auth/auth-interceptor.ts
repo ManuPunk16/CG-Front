@@ -11,9 +11,7 @@ export const AuthInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const token = sessionStorage.getItem('auth-token');
   if (token) {
     req = req.clone({
-      setHeaders: {
-        'x-access-token': token
-      }
+      headers: req.headers.set('x-access-token', token)
     });
   }
 
