@@ -1,5 +1,5 @@
 import { InputService } from './../../../core/services/input.service';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { Input } from '../../../core/models/input.model';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -8,7 +8,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import { ReportesService } from '../../../core/services/reportes.service';
-import { concatMap, map, of } from 'rxjs';
+import { concatMap, map, of, Subject, takeUntil, tap, catchError } from 'rxjs';
 
 interface Duplicado {
   _id: string;
@@ -44,15 +44,13 @@ interface TiempoRespuesta {
     MatCardModule,
     DatePipe,
     MatButtonModule,
-    RouterModule
+    RouterModule,
   ],
   standalone: true,
   templateUrl: './ficha-tecnica.component.html',
-  styleUrl: './ficha-tecnica.component.scss'
+  styleUrl: './ficha-tecnica.component.scss',
 })
-export class FichaTecnicaComponent implements OnInit {
-
-  // input!: Input;
+export class FichaTecnicaComponent implements OnInit, OnDestroy {
   public id!: any;
   duplicados: { num_oficio: string; duplicados: Duplicado[] }[] | null = null;
   loading: boolean = true;
@@ -70,6 +68,8 @@ export class FichaTecnicaComponent implements OnInit {
   tiempoRespuesta: TiempoRespuesta | null = null;
   error: string | null = null;
 
+  private readonly destroy$ = new Subject<void>(); // Subject para desuscripción
+
   constructor(
     private _input: InputService,
     private route: ActivatedRoute,
@@ -78,31 +78,18 @@ export class FichaTecnicaComponent implements OnInit {
     private _tokenStorage: TokenStorageService,
     private router: Router,
     private _reportes: ReportesService
-  ) {
-
-  }
+  ) {}
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.id = params.get('id');
       if (this.id) {
-        this._input.getInputById(this.id).subscribe({
-          next: (res: any) => {
-            if (res.input) {
-              this.inputDetails = res.input;
-              // console.log(this.inputDetails);
-              this.loadPdfs();
-              this.cdr.detectChanges();
-            } else {
-              console.error("No se encontraron datos del input.");
-            }
-          },
-          error: err => {
-            console.log(err);
-          }
-        });
+        this.loadInputDetails();
         const user = this._tokenStorage.getUser();
-        if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
+        if (
+          user.roles.includes('ROLE_ADMIN') ||
+          user.roles.includes('ROLE_MODERATOR')
+        ) {
           this.loadDuplicated();
         } else {
           this.loadDuplicatedByNormalUsers();
@@ -113,70 +100,109 @@ export class FichaTecnicaComponent implements OnInit {
     this.loadCalcularTiemposRespuestaPorId();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next(); // Emitir señal de desuscripción
+    this.destroy$.complete(); // Completar el Subject
+  }
+
+  private loadInputDetails(): void {
+    this._input
+      .getInputById(this.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res: any) => {
+          if (res.input) {
+            this.inputDetails = res.input;
+            this.loadPdfs();
+            this.cdr.detectChanges();
+          } else {
+            console.error('No se encontraron datos del input.');
+          }
+        },
+        error: (err) => {
+          console.log(err);
+        },
+      });
+  }
+
   loadCalcularTiemposRespuestaPorId() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.id = params.get('id');
       if (this.id) {
-        this._reportes.getTiempoRespuestaPorId(this.id).subscribe({
-          next: (data: TiempoRespuesta) => {
-            this.tiempoRespuesta = data;
-            this.tiempoRespuesta.diferencia_dias = Math.floor(data.diferencia_dias);
-            // console.log(this.tiempoRespuesta);
-            this.cdr.detectChanges();
-          },
-          error: (error: any) => {
-            this.error = error.message;
-            console.error("Error desde el componente:", error);
-          }
-        });
+        this._reportes
+          .getTiempoRespuestaPorId(this.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (data: TiempoRespuesta) => {
+              this.tiempoRespuesta = data;
+              this.tiempoRespuesta.diferencia_dias = Math.floor(
+                data.diferencia_dias
+              );
+              // console.log(this.tiempoRespuesta);
+              this.cdr.detectChanges();
+            },
+            error: (error: any) => {
+              this.error = error.message;
+              console.error('Error desde el componente:', error);
+            },
+          });
       }
     });
   }
 
   loadDuplicated() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.id = params.get('id');
       if (this.id) {
-        this._input.getDuplicatedOficios(this.id).subscribe({
-          next: (res: DuplicadosResponse) => {
-            this.loading = false;
-            this.duplicados = (res && res.duplicados && res.duplicados.length > 0) ? res.duplicados : null; // Asignación condicional
-            this.cdr.detectChanges();
-          },
-          error: err => {
-            this.loading = false;
-            console.error(err);
-            this.duplicados = null;
-            this.cdr.detectChanges();
-          }
-        });
+        this._input
+          .getDuplicatedOficios(this.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (res: DuplicadosResponse) => {
+              this.loading = false;
+              this.duplicados =
+                res && res.duplicados && res.duplicados.length > 0
+                  ? res.duplicados
+                  : null; // Asignación condicional
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              this.loading = false;
+              console.error(err);
+              this.duplicados = null;
+              this.cdr.detectChanges();
+            },
+          });
       }
     });
   }
 
   loadDuplicatedByNormalUsers() {
-    this.route.paramMap.subscribe(params => {
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.id = params.get('id');
       if (this.id) {
         const user = this._tokenStorage.getUser();
         const areaUser = user.area;
-        this._input.getDuplicatedOficiosByNormalUsers(this.id, areaUser).subscribe({
-          next: (res: DuplicadosResponse) => {
-            this.loading = false;
-            if (res && res.duplicados && res.duplicados.length > 0) {
-              this.duplicados = res.duplicados;
-              this.cdr.detectChanges();
-            } else {
+        this._input
+          .getDuplicatedOficiosByNormalUsers(this.id, areaUser)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (res: DuplicadosResponse) => {
+              this.loading = false;
+              if (res && res.duplicados && res.duplicados.length > 0) {
+                this.duplicados = res.duplicados;
+                this.cdr.detectChanges();
+              } else {
+                this.duplicados = null;
+                console.log('No hay nada');
+              }
+            },
+            error: (err) => {
+              this.loading = false;
+              console.error(err);
               this.duplicados = null;
-              console.log("No hay nada");
-            }
-          },
-          error: err => {
-            this.loading = false;
-            console.error(err);
-            this.duplicados = null;
-          }
-        });
+            },
+          });
       }
     });
   }
@@ -194,113 +220,104 @@ export class FichaTecnicaComponent implements OnInit {
     this.errorPdfSeguimiento = null;
 
     if (this.inputDetails && this.inputDetails.archivosPdf) {
-      of(...this.inputDetails.archivosPdf).pipe(
+      of(...this.inputDetails.archivosPdf)
+        .pipe(
+          takeUntil(this.destroy$),
           concatMap((pdfPath, index) => {
-              const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
-              this.pdfFilenames.push(filename);
+            const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
+            this.pdfFilenames.push(filename);
 
-              return this._input.getPdfByIdInput(this.inputDetails._id, filename).pipe(
-                  map((blob: Blob) => ({ blob, index, filename }))
+            return this._input
+              .getPdfByIdInput(this.inputDetails._id, filename)
+              .pipe(
+                map((blob: Blob) => ({ blob, index, filename })),
+                catchError((error: any) => {
+                  console.error('Error obteniendo PDF:', error);
+                  this.errorPdfEntrada =
+                    'Error al cargar ' + '. Verificar nombre de archivo.';
+                  this.cdr.detectChanges();
+                  return of(null); // Retorna un observable que emite null para que la cadena continue
+                })
               );
           })
-      ).subscribe({
-          next: ({ blob, index, filename }) => {
+        )
+        .subscribe({
+          next: (result) => {
+            if (result && result.blob) {
+              const { blob, index, filename } = result;
               const urlCreator = window.URL || window.webkitURL;
               const blobUrl = urlCreator.createObjectURL(blob);
               const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
               this.pdfUrls[index] = safeUrl;
 
               if (index === this.inputDetails.archivosPdf.length - 1) {
-                  this.pdfsCargados = true;
+                this.pdfsCargados = true;
               }
-              this.cdr.detectChanges();
+            }
+            this.cdr.detectChanges();
           },
           error: (error: Error) => {
-            console.error('Error obteniendo PDF:', error); // Incluir filename en el error
-            this.errorPdfEntrada = "Error al cargar " + ". Verificar nombre de archivo."; // Mensaje de error específico
+            console.error('Error obteniendo PDF:', error);
+            this.errorPdfEntrada =
+              'Error al cargar ' + '. Verificar nombre de archivo.';
             this.cdr.detectChanges();
-          }
-      });
+          },
+        });
     }
-
-    // if (this.inputDetails && this.inputDetails.archivosPdf) {
-    //     this.inputDetails.archivosPdf.forEach((pdfPath, index) => { // Agregar index
-    //         const filename = pdfPath.substring(pdfPath.lastIndexOf('\\') + 1);
-    //         this.pdfFilenames.push(filename);
-
-    //         this._input.getPdfByIdInput(this.inputDetails._id, filename).subscribe({
-    //             next: (blob: Blob) => {
-    //                 const urlCreator = window.URL || window.webkitURL;
-    //                 const blobUrl = urlCreator.createObjectURL(blob);
-    //                 const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
-    //                 this.pdfUrls[index] = safeUrl; // Usar index para asignar la URL correcta
-    //                 if (index === this.inputDetails.archivosPdf.length - 1) { // <-- Verificar si es el último PDF
-    //                   this.pdfsCargados = true;
-    //                 }
-    //                 this.cdr.detectChanges();
-    //             },
-    //             error: (error: Error) => {
-    //                 console.error('Error obteniendo PDF:', error, filename); // Incluir filename en el error
-    //                 this.errorPdfEntrada = "Error al cargar " + filename + ". Verificar nombre de archivo."; // Mensaje de error específico
-    //                 this.cdr.detectChanges();
-    //             }
-    //         });
-    //     });
-    // }
-
-    // if (this.inputDetails && this.inputDetails.seguimientos && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
-    //     this.inputDetails.seguimientos.archivosPdf_seguimiento.forEach((pdfPathSeguimiento, index) => { // Agregar index
-    //         const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
-    //         this.pdfFilenamesSeguimiento.push(filename);
-
-    //         this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).subscribe({
-    //             next: (blob: Blob) => {
-    //                 const urlCreator = window.URL || window.webkitURL;
-    //                 const blobUrl = urlCreator.createObjectURL(blob);
-    //                 const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
-    //                 this.pdfUrlsSeguimiento[index] = safeUrl; // Usar index para asignar la URL correcta
-    //                 if (index === this.inputDetails.archivosPdf.length - 1) { // <-- Verificar si es el último PDF
-    //                   this.pdfsCargados = true;
-    //                 }
-    //                 this.cdr.detectChanges();
-    //             },
-    //             error: (error: Error) => {
-    //                 console.error('Error obteniendo PDF de seguimiento:', error, filename); // Incluir filename en el error
-    //                 this.errorPdfSeguimiento = "Error al cargar " + filename + ". Verificar nombre de archivo."; // Mensaje de error específico
-    //                 this.cdr.detectChanges();
-    //             }
-    //         });
-    //     });
-    // }
-
-    if (this.inputDetails && this.inputDetails.seguimientos && this.inputDetails.seguimientos.archivosPdf_seguimiento) {
-      of(...this.inputDetails.seguimientos.archivosPdf_seguimiento).pipe(
+    if (
+      this.inputDetails &&
+      this.inputDetails.seguimientos &&
+      this.inputDetails.seguimientos.archivosPdf_seguimiento
+    ) {
+      of(...this.inputDetails.seguimientos.archivosPdf_seguimiento)
+        .pipe(
+          takeUntil(this.destroy$),
           concatMap((pdfPathSeguimiento, index) => {
-              const filename = pdfPathSeguimiento.substring(pdfPathSeguimiento.lastIndexOf('\\') + 1);
-              this.pdfFilenamesSeguimiento.push(filename);
+            const filename = pdfPathSeguimiento.substring(
+              pdfPathSeguimiento.lastIndexOf('\\') + 1
+            );
+            this.pdfFilenamesSeguimiento.push(filename);
 
-              return this._input.getPdfByIdSeguimiento(this.inputDetails._id, filename).pipe(
-                  map((blob: Blob) => ({ blob, index, filename }))
+            return this._input
+              .getPdfByIdSeguimiento(this.inputDetails._id, filename)
+              .pipe(
+                map((blob: Blob) => ({ blob, index, filename })),
+                catchError((error: any) => {
+                  console.error('Error obteniendo PDF de seguimiento:', error);
+                  this.errorPdfSeguimiento =
+                    'Error al cargar ' + '. Verificar nombre de archivo.';
+                  this.cdr.detectChanges();
+                  return of(null); // Retorna un observable que emite null para que la cadena continue
+                })
               );
           })
-      ).subscribe({
-          next: ({ blob, index, filename }) => {
+        )
+        .subscribe({
+          next: (result) => {
+            if (result && result.blob) {
+              const { blob, index, filename } = result;
               const urlCreator = window.URL || window.webkitURL;
               const blobUrl = urlCreator.createObjectURL(blob);
               const safeUrl = this.sanitizer.bypassSecurityTrustUrl(blobUrl);
               this.pdfUrlsSeguimiento[index] = safeUrl;
 
-              if (index === this.inputDetails.seguimientos.archivosPdf_seguimiento.length - 1) {
-                  this.pdfsCargados = true;
+              if (
+                index ===
+                this.inputDetails.seguimientos.archivosPdf_seguimiento.length -
+                  1
+              ) {
+                this.pdfsCargados = true;
               }
-              this.cdr.detectChanges();
+            }
+            this.cdr.detectChanges();
           },
           error: (error: Error) => {
-              console.error('Error obteniendo PDF de seguimiento:', error);
-              this.errorPdfSeguimiento = "Error al cargar " + ". Verificar nombre de archivo.";
-              this.cdr.detectChanges();
-          }
-      });
+            console.error('Error obteniendo PDF de seguimiento:', error);
+            this.errorPdfSeguimiento =
+              'Error al cargar ' + '. Verificar nombre de archivo.';
+            this.cdr.detectChanges();
+          },
+        });
     }
   }
 }

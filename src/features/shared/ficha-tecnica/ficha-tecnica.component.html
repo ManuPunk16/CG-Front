@@ -37,35 +37,36 @@
 
     <mat-card>
       <mat-card-header>
-          <mat-card-title>
-              <h1>Registro de Respuesta</h1>
-          </mat-card-title>
+        <mat-card-title>
+          <h1>Registro de Respuesta</h1>
+        </mat-card-title>
       </mat-card-header>
 
       <mat-card-content *ngIf="inputDetails?.seguimientos">
-          <div *ngIf="inputDetails.seguimientos?.atencion_otorgada">
-              <div class="info-grid">
-                  <div class="info-column">
-                      <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida || 'No disponible'}}</p>
-                      <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente || 'No disponible'}}</p>
-                      <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido || 'No disponible' | date:'dd/MM/yyyy' }}</p>
-                      <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida || 'No disponible' | date:'dd/MM/yyyy' }}</p>
-                  </div>
-                  <div class="info-column">
-                      <p><strong>Destinatario:</strong> {{inputDetails.seguimientos.destinatario || 'No disponible'}}</p>
-                      <p><strong>Cargo:</strong> {{inputDetails.seguimientos.cargo || 'No disponible'}}</p>
-                      <p><strong>Firma:</strong> {{inputDetails.seguimientos.firma_visado || 'No disponible'}}</p>
-                      <p><strong>Atencion Otorgada:</strong> {{inputDetails.seguimientos.atencion_otorgada || 'No disponible'}}</p>
-                  </div>
-                  <div class="info-column">
-                      <p><strong>Anexo:</strong> {{inputDetails.seguimientos.anexo || 'No disponible'}}</p>
-                      <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios || 'No disponible'}}</p>
-                  </div>
-              </div>
+        <div *ngIf="inputDetails.seguimientos?.atencion_otorgada">
+          <div class="info-grid">
+            <div class="info-column">
+              <p><strong>Num. Oficio Salida:</strong> {{inputDetails.seguimientos.oficio_salida || 'No disponible'}}</p>
+              <p><strong>Num. Expediente:</strong> {{inputDetails.seguimientos.num_expediente || 'No disponible'}}</p>
+              <p><strong>Fecha Acuse Recibido:</strong> {{ inputDetails.seguimientos.fecha_acuse_recibido || 'No disponible' | date:'dd/MM/yyyy' }}</p>
+              <p><strong>Fecha Oficio Salida:</strong> {{inputDetails.seguimientos.fecha_oficio_salida || 'No disponible' | date:'dd/MM/yyyy' }}</p>
+            </div>
+            <div class="info-column">
+              <p><strong>Destinatario:</strong> {{inputDetails.seguimientos.destinatario || 'No disponible'}}</p>
+              <p><strong>Cargo:</strong> {{inputDetails.seguimientos.cargo || 'No disponible'}}</p>
+              <p><strong>Firma:</strong> {{inputDetails.seguimientos.firma_visado || 'No disponible'}}</p>
+              <p><strong>Atencion Otorgada:</strong> {{inputDetails.seguimientos.atencion_otorgada || 'No disponible'}}
+              </p>
+            </div>
+            <div class="info-column">
+              <p><strong>Anexo:</strong> {{inputDetails.seguimientos.anexo || 'No disponible'}}</p>
+              <p><strong>Observaciones:</strong> {{inputDetails.seguimientos.comentarios || 'No disponible'}}</p>
+            </div>
           </div>
-          <div *ngIf="!inputDetails.seguimientos?.atencion_otorgada">
-            <p><strong>No existe informacion en el campo atencion otorgada, favor de rectificar el registro</strong></p>
-          </div>
+        </div>
+        <div *ngIf="!inputDetails.seguimientos?.atencion_otorgada">
+          <p><strong>No existe informacion en el campo atencion otorgada, favor de rectificar el registro</strong></p>
+        </div>
       </mat-card-content>
 
       <mat-card-content *ngIf="!inputDetails?.seguimientos">
@@ -155,7 +156,7 @@
               Folio: {{ duplicado.folio }}<br>
               Fecha Recepcion: {{ duplicado.fecha_recepcion | date:'dd/MM/yyyy' }}<br>
               Asignado: {{ duplicado.asignado }} <br><br>
-          </li>
+            </li>
           </ul>
         </div>
       </mat-card-content>
