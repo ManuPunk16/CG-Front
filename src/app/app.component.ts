@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { RouterOutlet, RouterModule, Router } from '@angular/router';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { MediaMatcher } from '@angular/cdk/layout';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -8,108 +8,109 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { TokenStorageService } from '../core/auth/token-storage.service';
 import { NgIf } from '@angular/common';
-import { Subscription } from 'rxjs';
+import { Subscription, interval } from 'rxjs';
 import { AuthStateService } from '../core/auth/authstate.service';
 import { InactivityService } from '../core/services/inactivity.service';
+import { take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [
-    RouterOutlet,
+    RouterModule,
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
-    RouterModule,
     MatIconModule,
     MatButtonModule,
     NgIf
   ],
-  standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'ControlGestionFront';
-  isLoggedIn: boolean = false;
-  private authSubscription?: Subscription;
-
-  private roles: string[] = [];
-  // isLoggedIn = false;
+  isLoggedIn = false;
   showAdminBoard = false;
   showLinkerBoard = false;
   showModeratorBoard = false;
   username?: string;
-  public timeLeft: number = 3600;
-  public interval?: any;
+  mobileQuery: MediaQueryList;
+  private readonly _mobileQueryListener: () => void;
+  private authSubscription?: Subscription;
+  private readonly tokenStorageService = inject(TokenStorageService);
+  private readonly _router = inject(Router);
+  private readonly authStateService = inject(AuthStateService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  private readonly media = inject(MediaMatcher);
+  private readonly inactivityService = inject(InactivityService);
+  private readonly sessionTimeoutSeconds = 3600; // Tiempo en segundos (1 hora)
+  sessionTimeLeft: number = this.sessionTimeoutSeconds;
+  private sessionTimerSubscription?: Subscription;
 
-  mobileQuery!: MediaQueryList;
-
-  private _mobileQueryListener: () => void;
-
-  constructor (
-    private tokenStorageService: TokenStorageService,
-    private _router: Router,
-    private authStateService: AuthStateService,
-    private changeDetectorRef: ChangeDetectorRef,
-    private media: MediaMatcher,
-    private zone: NgZone,
-    private inactivityService: InactivityService
-  ) {
+  constructor() {
     this.mobileQuery = this.media.matchMedia('(max-width: 600px)');
-    this._mobileQueryListener = () => this.zone.run(() => {
+    this._mobileQueryListener = () => {
       this.changeDetectorRef.detectChanges();
-    });
-    this.mobileQuery.addListener(this._mobileQueryListener);
+    };
+    this.mobileQuery.addEventListener('change', this._mobileQueryListener);
   }
 
   ngOnInit(): void {
     this.authSubscription = this.authStateService.isLoggedIn$.subscribe(isLoggedIn => {
       this.isLoggedIn = isLoggedIn;
       if (this.isLoggedIn) {
-          const user = this.tokenStorageService.getUser();
-          if(user){
-              this.roles = user.roles || [];
-              this.showAdminBoard = this.roles.includes('ROLE_ADMIN');
-              this.showLinkerBoard = this.roles.includes('ROLE_LINKER');
-              this.showModeratorBoard = this.roles.includes('ROLE_MODERATOR');
-              this.username = user.username;
-              this.startTimer();
-          }
+        const user = this.tokenStorageService.getUser();
+        if (user) {
+          this.showAdminBoard = user.roles?.includes('ROLE_ADMIN') || false;
+          this.showLinkerBoard = user.roles?.includes('ROLE_LINKER') || false;
+          this.showModeratorBoard = user.roles?.includes('ROLE_MODERATOR') || false;
+          this.username = user.username;
+          this.startSessionTimer();
+        }
       } else {
-          clearInterval(this.interval);
-          this.username = undefined;
-          this.roles = [];
-          this.showAdminBoard = false;
-          this.showLinkerBoard = false;
+        this.stopSessionTimer();
+        this.clearSessionData();
       }
+      this.changeDetectorRef.detectChanges();
     });
     this.inactivityService.startWatching();
   }
 
-  startTimer() {
-    this.interval = setInterval(() => {
-      if(this.timeLeft > 0) {
-        this.timeLeft--;
-      } else {
-        this.timeLeft = 3600;
-        this.logout();
-      }
-    },1000)
+  ngOnDestroy(): void {
+    this.mobileQuery.removeEventListener('change', this._mobileQueryListener);
+    this.authSubscription?.unsubscribe();
+    this.stopSessionTimer();
+    this.inactivityService.stopWatching();
+  }
+
+  startSessionTimer(): void {
+    this.sessionTimeLeft = this.sessionTimeoutSeconds;
+    this.sessionTimerSubscription = interval(1000)
+      .pipe(take(this.sessionTimeoutSeconds))
+      .subscribe(() => {
+        this.sessionTimeLeft--;
+        if (this.sessionTimeLeft === 0) {
+          this.logout();
+        }
+        this.changeDetectorRef.detectChanges();
+      });
+  }
+
+  stopSessionTimer(): void {
+    this.sessionTimerSubscription?.unsubscribe();
+  }
+
+  clearSessionData(): void {
+    this.username = undefined;
+    this.showAdminBoard = false;
+    this.showLinkerBoard = false;
+    this.showModeratorBoard = false;
   }
 
   logout(): void {
     this.authStateService.logout();
-    this._router.navigate(['']);
-  }
-
-  ngOnDestroy(): void {
-    this.mobileQuery.removeListener(this._mobileQueryListener);
-
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
-      clearInterval(this.interval);
-    this.inactivityService.stopWatching();
+    this._router.navigate(['/login']);
   }
 }
