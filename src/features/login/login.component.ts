@@ -12,6 +12,7 @@ import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { Router } from '@angular/router';
 import { AuthStateService } from '../../core/auth/authstate.service';
 import Swal from 'sweetalert2';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -36,6 +37,7 @@ export class LoginComponent implements OnInit {
   isLoginFailed = false;
   errorMessage = '';
   roles: string[] = [];
+  loading = false; // Agrega un indicador de carga
 
   loginForm = new FormGroup({
     usuario: new FormControl(''),
@@ -64,19 +66,18 @@ export class LoginComponent implements OnInit {
 
   onSubmit() {
     if (this.loginForm.valid) {
-      // const { usuario, contrasena } = this.loginForm.value;
+      this.loading = true; // Activa el indicador de carga
       const usuario = this.loginForm.value.usuario!;
       const contrasena = this.loginForm.value.contrasena!;
 
-      this.authService.login(usuario, contrasena).subscribe({
+      this.authService.login(usuario, contrasena).pipe(
+        finalize(() => this.loading = false) // Desactiva el indicador de carga al finalizar
+      ).subscribe({
         next: data => {
           this.tokenStorage.saveToken(data.accessToken);
           this.tokenStorage.saveUser(data);
 
           this.isLoginFailed = false;
-          // this.isLoggedIn = true;
-          // this.roles = this.tokenStorage.getUser().roles;
-          // this.router.navigate(['/Entradas']);
           this.roles = this.tokenStorage.getUser()?.roles || []; // Manejo de null
           this.authStateService.login(); // Llama a authStateService.login() ANTES de navegar
           this.router.navigate(['/Entradas']);

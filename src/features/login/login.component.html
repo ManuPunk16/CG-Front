@@ -8,17 +8,26 @@
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <mat-form-field appearance="fill">
           <mat-label>Usuario</mat-label>
-          <input matInput formControlName="usuario">
+          <input matInput formControlName="usuario" required>
+          <mat-error *ngIf="loginForm.get('usuario')?.hasError('required')">
+            El usuario es requerido.
+          </mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="fill">
           <mat-label>Contraseña</mat-label>
-          <input matInput type="password" formControlName="contrasena">
+          <input matInput type="password" formControlName="contrasena" required>
+          <mat-error *ngIf="loginForm.get('contrasena')?.hasError('required')">
+            La contraseña es requerida.
+          </mat-error>
         </mat-form-field>
-        <button mat-raised-button color="primary">Ingresar</button>
+
+        <mat-progress-bar mode="indeterminate" *ngIf="loading"></mat-progress-bar>
+
+        <button mat-raised-button color="primary" [disabled]="loading">
+          Ingresar
+        </button>
       </form>
     </mat-card-content>
   </mat-card>
 </div>
-
-
