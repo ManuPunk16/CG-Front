@@ -1,7 +1,7 @@
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { InputService } from '../../core/services/input.service';
 import { Input } from '../../core/models/input.model';
 import { CommonModule, DatePipe, NgIf } from '@angular/common';
@@ -26,6 +26,7 @@ import { InstitutionsService } from '../../core/services/institutions.service';
 import { Institution } from '../../core/models/institution.model';
 import { Area } from '../../core/models/area.model';
 import { AreaService } from '../../core/services/areas.service';
+import { catchError, map, Observable, of, Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'app-main',
@@ -55,7 +56,7 @@ import { AreaService } from '../../core/services/areas.service';
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
-export class MainComponent implements OnInit {
+export class MainComponent implements OnInit, OnDestroy {
 
   public currentYear: number = new Date().getFullYear();
 
@@ -104,6 +105,8 @@ export class MainComponent implements OnInit {
   isEstadisticasButtonEnabled: boolean = false;
   areaSeleccionada: string = '';
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
@@ -117,6 +120,10 @@ export class MainComponent implements OnInit {
   ) {
     this.currentYear;
   }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ngOnInit(): void {
     this.loadInputs();
@@ -124,6 +131,17 @@ export class MainComponent implements OnInit {
     this.getInstitutions();
     this.getAreas();
     this.cdr.detectChanges();
+  }
+
+  getRowClass(element: Input): string {
+    switch (element.estatus) {
+      case 'NO ATENDIDO':
+        return 'badge badge-warning';
+      case 'ATENDIDO':
+        return 'badge badge-success';
+      default:
+        return 'badge badge-secondary';
+    }
   }
 
   private checkUserRoles(): void {
@@ -249,44 +267,41 @@ export class MainComponent implements OnInit {
 
   loadInputs() {
     const user = this._tokenStorage.getUser();
-    if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
-      this.inputService.getNoDeletedInputs().subscribe({
-        next: (response) => {
-          this.inputs = response.inputs;
-          this.totalInputs = response.totalInputs;
-          this.totalPages = response.totalPages;
-          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-            ...input,
-            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
-          })));
-          // this.dataSource = new MatTableDataSource(this.inputs);
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        error: (err) => {
-            console.error(err);
+    const isAdminOrModerator = user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR');
+    const data$ = isAdminOrModerator
+      ? this.inputService.getNoDeletedInputs()
+      : this.inputService.getNoDeletedInputsByNormalUsers(user.area);
+
+    data$.pipe(
+      map(response => {
+        if (!response || !response.inputs) {
+          console.warn('No se recibieron datos de entradas.');
+          return [];
         }
-      });
-    } else {
-      const areaUser = user.area;
-      this.inputService.getNoDeletedInputsByNormalUsers(areaUser).subscribe({
-        next: (response) => {
-          this.inputs = response.inputs;
-          this.totalInputs = response.totalInputs;
-          this.totalPages = response.totalPages;
-          // this.dataSource = new MatTableDataSource(this.inputs);
-          this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-            ...input,
-            atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
-          })));
-          this.dataSource.paginator = this.paginator;
-          this.dataSource.sort = this.sort;
-        },
-        error: (err) => {
-            console.error(err);
-        }
-    });
-    }
+        this.totalInputs = response.totalInputs;
+        this.totalPages = response.totalPages;
+        return response.inputs.map(input => ({
+          ...input,
+          atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
+        }));
+      }),
+      tap(inputs => {
+        this.inputs = inputs;
+        this.dataSource = new MatTableDataSource(this.inputs);
+        this.dataSource.paginator = this.paginator;
+        this.dataSource.sort = this.sort;
+        this.cdr.detectChanges();
+      }),
+      catchError(err => {
+        console.error('Error al cargar los inputs:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Ocurrió un error al cargar los registros.',
+        });
+        return of([]);
+      }),
+    ).subscribe();
   }
 
   getAtencionOtorgada(seguimientos: any): string {
@@ -367,7 +382,9 @@ export class MainComponent implements OnInit {
   }
 
   exportToExcelAll() {
-    this._reportes.exportarExcelTodosAnioActual().subscribe({
+    this._reportes.exportarExcelTodosAnioActual().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (blob) => {
         const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blobData, 'Registros_anio_actual.xlsx');
@@ -386,7 +403,9 @@ export class MainComponent implements OnInit {
   exportToExcelEnlace() {
     const user = this._tokenStorage.getUser();
     const areaUser = user.area;
-    this._reportes.exportarExcelEnlaceAnioActual(areaUser).subscribe({
+    this._reportes.exportarExcelEnlaceAnioActual(areaUser).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (blob) => {
         const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
         saveAs(blobData, 'Registros_enlace_anio_actual.xlsx');

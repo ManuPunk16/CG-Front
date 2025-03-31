@@ -1,203 +1,228 @@
 <div>
   <mat-card>
     <mat-card-header>
-      <mat-card-title><h2>Registros de Entradas</h2></mat-card-title>
-      <mat-card-subtitle>Informacion del año en curso <strong>{{ currentYear }}</strong></mat-card-subtitle>
+      <mat-card-title>
+        <h2>Registros de Entradas</h2>
+      </mat-card-title>
+      <mat-card-subtitle>
+        Información del año en curso
+        <strong>{{ currentYear }}</strong>
+      </mat-card-subtitle>
     </mat-card-header>
-    <br>
-    <div class="filtros">
-      <fieldset>
-        <legend>Filtros de busqueda</legend>
-        <form (ngSubmit)="applyFilters()">
-          <div *ngFor="let field of searchFields" class="search-field">
-            <mat-form-field appearance="outline" class="field-folio"
-              *ngIf="field !== 'estatus' &&
-                field !== 'institucion_origen' &&
-                field !== 'asignado' &&
-                field !== 'fecha_recepcion' &&
-                field !== 'atencion_otorgada_visual'"
-              >
-              <mat-label>{{ field | titlecase }}</mat-label>
-              <input matInput type="text" [(ngModel)]="searchTerms[field]" name="{{ field }}">
-            </mat-form-field>
 
-            <mat-form-field appearance="outline" class="field-fecha" *ngIf="field === 'fecha_recepcion'">
-              <mat-label>Fecha de Recepción</mat-label>
-              <input matInput type="text" placeholder="dd/mm/yyyy" [(ngModel)]="searchTerms['fecha_recepcion']" name="fecha_recepcion">
-            </mat-form-field>
+    <mat-card-content>
+      <section class="filtros">
+        <fieldset>
+          <legend>Filtros de busqueda</legend>
+          <form (ngSubmit)="applyFilters()" class="filter-form">
+            <div *ngFor="let field of searchFields; let i = index" class="search-field" [attr.data-index]="i">
+              <ng-container [ngSwitch]="field">
+                <mat-form-field *ngSwitchCase="'fecha_recepcion'" appearance="outline" class="field-fecha">
+                  <mat-label>Fecha de Recepción</mat-label>
+                  <input matInput type="text" placeholder="dd/mm/yyyy" [(ngModel)]="searchTerms['fecha_recepcion']"
+                    name="fecha_recepcion" [attr.aria-label]="'Fecha de Recepción ' + (i + 1)">
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="field-institucion" *ngIf="field === 'institucion_origen'">
-              <mat-label>Institucion de Origen</mat-label>
-              <mat-select [(ngModel)]="searchTerms['institucion_origen']" name="institucion_origen">
-                <mat-option *ngFor="let item of institutions" [value]="item.name">
-                  {{ item.name }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+                <mat-form-field *ngSwitchCase="'institucion_origen'" appearance="outline" class="field-institucion">
+                  <mat-label>Institución de Origen</mat-label>
+                  <mat-select [(ngModel)]="searchTerms['institucion_origen']" name="institucion_origen"
+                    [attr.aria-label]="'Institución de Origen ' + (i + 1)">
+                    <mat-option *ngFor="let item of institutions" [value]="item.name">
+                      {{ item.name }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="field-asignado" *ngIf="field === 'asignado'">
-              <mat-label>Asignado</mat-label>
-              <mat-select [(ngModel)]="searchTerms['asignado']" name="asignado" [disabled]="!canEditAssignation" (selectionChange)="onAsignadoChange()">
-                <mat-option *ngFor="let item of areas" [value]="item.direccion">
-                  {{ item.direccion }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
+                <mat-form-field *ngSwitchCase="'asignado'" appearance="outline" class="field-asignado">
+                  <mat-label>Asignado</mat-label>
+                  <mat-select [(ngModel)]="searchTerms['asignado']" name="asignado" [disabled]="!canEditAssignation"
+                    (selectionChange)="onAsignadoChange()" [attr.aria-label]="'Asignado ' + (i + 1)">
+                    <mat-option *ngFor="let item of areas" [value]="item.direccion">
+                      {{ item.direccion }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="field-atencion_otorgada_visual" *ngIf="field === 'atencion_otorgada_visual'">
-              <mat-label>Atencion</mat-label>
-              <input matInput type="text" [(ngModel)]="searchTerms['atencion_otorgada_visual']" name="atencion_otorgada_visual">
-            </mat-form-field>
+                <mat-form-field *ngSwitchCase="'atencion_otorgada_visual'" appearance="outline"
+                  class="field-atencion_otorgada_visual">
+                  <mat-label>Atención Otorgada</mat-label>
+                  <input matInput type="text" [(ngModel)]="searchTerms['atencion_otorgada_visual']"
+                    name="atencion_otorgada_visual" [attr.aria-label]="'Atención Otorgada ' + (i + 1)">
+                </mat-form-field>
 
-            <mat-form-field appearance="outline" class="field-estatus" *ngIf="field === 'estatus'">
-              <mat-label>Estatus</mat-label>
-              <mat-select [(ngModel)]="searchTerms['estatus']" name="estatus">
-                <mat-option *ngFor="let status of statusOptions" [value]="status">
-                  {{ status }}
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
+                <mat-form-field *ngSwitchCase="'estatus'" appearance="outline" class="field-estatus">
+                  <mat-label>Estatus</mat-label>
+                  <mat-select [(ngModel)]="searchTerms['estatus']" name="estatus"
+                    [attr.aria-label]="'Estatus ' + (i + 1)">
+                    <mat-option *ngFor="let status of statusOptions" [value]="status">
+                      {{ status }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field *ngSwitchDefault appearance="outline" class="field-default">
+                  <mat-label>{{ field | titlecase }}</mat-label>
+                  <input matInput type="text" [(ngModel)]="searchTerms[field]" name="{{ field }}"
+                    [attr.aria-label]="field + ' ' + (i + 1)">
+                </mat-form-field>
+              </ng-container>
+            </div>
+            <div class="button-container">
+              <button mat-raised-button color="primary" type="submit" aria-label="Buscar">
+                Buscar
+              </button>
+              <button mat-button (click)="clearFilter()" aria-label="Limpiar filtros">
+                Limpiar
+              </button>
+              <button mat-raised-button (click)="openRegistrosAtendidosModalFilter()" *ngIf="showEstadisticasButton"
+                [disabled]="!isEstadisticasButtonEnabled" aria-label="Ver estadísticas de registros atendidos">
+                Ver Estadísticas de Registros Atendidos
+              </button>
+            </div>
+          </form>
+        </fieldset>
+      </section>
+
+      <section class="actions">
+        <fieldset>
+          <legend>Selección de acciones</legend>
           <div class="button-container">
-            <button mat-raised-button color="primary" type="submit">Buscar</button>
-            <button mat-button (click)="clearFilter()">Limpiar</button>
-            <button mat-raised-button (click)="openRegistrosAtendidosModalFilter()" *ngIf="showEstadisticasButton" [disabled]="!isEstadisticasButtonEnabled">
+            <button mat-raised-button (click)="exportToExcelEnlace()" aria-label="Exportar datos de enlace a Excel">
+              Exportar datos de enlace a Excel
+            </button>
+            <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll()"
+              aria-label="Exportar todos los datos a Excel">
+              Exportar todos los datos a Excel
+            </button>
+            <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="newInput()"
+              aria-label="Crear nuevo registro">
+              Nuevo Registro
+            </button>
+            <button mat-raised-button (click)="openRegistrosAtendidosModal()"
+              aria-label="Ver estadísticas de registros atendidos">
               Ver Estadísticas de Registros Atendidos
             </button>
           </div>
-        </form>
-      </fieldset>
-      <br>
-      <fieldset>
-        <legend>Seleccion de acciones</legend>
-        <div class="button-container">
-          <button mat-raised-button (click)="exportToExcelEnlace()">Exportar datos de enlace a Excel</button>
-          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="exportToExcelAll()">Exportar todos los datos a Excel</button>
-          <button mat-raised-button *ngIf="showModerator || showAdmin" (click)="newInput()">Nuevo Registro</button>
-          <button mat-raised-button (click)="openRegistrosAtendidosModal()">Ver Estadísticas de Registros Atendidos</button>
-        </div>
-      </fieldset>
-      <br>
-    </div>
+        </fieldset>
+      </section>
 
-    <mat-card-content>
-      <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
+      <section class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort (matSortChange)="announceSortChange($event)"
           class="mat-elevation-z8">
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>
+              Acciones
+            </th>
+            <td mat-cell *matCellDef="let row">
+              <button mat-button (click)="tecnicalView(row)" aria-label="Ver detalles técnicos">
+                <mat-icon> remove_red_eye </mat-icon>
+              </button>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>
-            Acciones
-          </th>
-          <td mat-cell *matCellDef="let row">
-            <button mat-button (click)="tecnicalView(row)">
-              <mat-icon> remove_red_eye </mat-icon>
-            </button>
+              <button mat-button *ngIf="showModerator || showAdmin" (click)="editInput(row)"
+                aria-label="Editar entrada">
+                <mat-icon> border_color </mat-icon>
+              </button>
 
-            <button mat-button *ngIf="showModerator || showAdmin" (click)="editInput(row)">
-              <mat-icon> border_color </mat-icon>
-            </button>
+              <button mat-button *ngIf="showLinker || showModerator || showAdmin" (click)="editSeguimiento(row)"
+                aria-label="Editar seguimiento">
+                <mat-icon> border_color </mat-icon>
+              </button>
 
-            <button mat-button *ngIf="showLinker || showModerator || showAdmin" (click)="editSeguimiento(row)">
-              <mat-icon> border_color </mat-icon>
-            </button>
+              <button mat-button disabled *ngIf="showModerator || showAdmin" (click)="deleteById(row)"
+                aria-label="Borrar entrada">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
 
-            <button mat-button disabled *ngIf="showModerator || showAdmin" (click)="deleteById(row)">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by folio">
+              Folio
+            </th>
+            <td mat-cell *matCellDef="let element" [ngClass]="getRowClass(element)">
+              {{element.folio}}
+            </td>
+          </ng-container>
 
-        <ng-container matColumnDef="folio">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by folio">
-            Folio
-          </th>
-          <td mat-cell *matCellDef="let element"
-            [ngClass]="element.estatus === 'NO ATENDIDO' ? 'badge badge-warning' :
-            element.estatus === 'ATENDIDO' ? 'badge badge-success' : 'badge badge-secondary'">
-            {{element.folio}}
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="fecha_recepcion">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by fecha_recepcion">
+              Fecha Recepcion
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.fecha_recepcion | date:'dd/MM/yyyy' }} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="fecha_recepcion">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by fecha_recepcion">
-            Fecha Recepcion
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.fecha_recepcion | date:'dd/MM/yyyy' }} </td>
-        </ng-container>
-
-        <ng-container matColumnDef="diasAtraso">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by diasAtraso">
+          <ng-container matColumnDef="diasAtraso">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by diasAtraso">
               Días Para Responder
-          </th>
-          <td mat-cell *matCellDef="let element">
-            <div style="display: flex; align-items: center;">
-              <ng-container *ngIf="element.diasAtraso !== null; else mensajeAtraso">
-                <span [style.backgroundColor]="element.colorSemaforo"
-                      style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
-                {{ element.diasAtraso }}
-              </ng-container>
-              <ng-template #mensajeAtraso>
-                <span [style.backgroundColor]="element.colorSemaforo"
-                      style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
-                {{ element.mensajeAtraso }}
-              </ng-template>
-            </div>
-          </td>
-        </ng-container>
+            </th>
+            <td mat-cell *matCellDef="let element">
+              <div style="display: flex; align-items: center;">
+                <ng-container *ngIf="element.diasAtraso !== null; else mensajeAtraso">
+                  <span [style.backgroundColor]="element.colorSemaforo"
+                    style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
+                  {{ element.diasAtraso }}
+                </ng-container>
+                <ng-template #mensajeAtraso>
+                  <span [style.backgroundColor]="element.colorSemaforo"
+                    style="width: 20px; height: 20px; border-radius: 50%; margin-right: 8px;"></span>
+                  {{ element.mensajeAtraso }}
+                </ng-template>
+              </div>
+            </td>
+          </ng-container>
 
-        <ng-container matColumnDef="num_oficio">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by num_oficio">
-            Num. Oficio
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.num_oficio}} </td>
-        </ng-container>
+          <ng-container matColumnDef="num_oficio">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by num_oficio">
+              Num. Oficio
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.num_oficio}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="institucion_origen">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by institucion_origen">
-            Institucion de Origen
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.institucion_origen}} </td>
-        </ng-container>
+          <ng-container matColumnDef="institucion_origen">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by institucion_origen">
+              Institucion de Origen
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.institucion_origen}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="remitente">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by remitente">
-            Remitente
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.remitente}} </td>
-        </ng-container>
+          <ng-container matColumnDef="remitente">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by remitente">
+              Remitente
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.remitente}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="asunto">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asunto">
-            Asunto
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.asunto}} </td>
-        </ng-container>
+          <ng-container matColumnDef="asunto">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asunto">
+              Asunto
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.asunto}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="asignado">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asignado">
-            Asignado
-          </th>
-          <td mat-cell *matCellDef="let element"> {{element.asignado}} </td>
-        </ng-container>
+          <ng-container matColumnDef="asignado">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by asignado">
+              Asignado
+            </th>
+            <td mat-cell *matCellDef="let element"> {{element.asignado}} </td>
+          </ng-container>
 
-        <ng-container matColumnDef="atencion_otorgada_visual">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by atencion_otorgada_visual">
-            Atencion Otorgada
-          </th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.atencion_otorgada_visual }}
-          </td>
-        </ng-container>
+          <ng-container matColumnDef="atencion_otorgada_visual">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header
+              sortActionDescription="Sort by atencion_otorgada_visual">
+              Atencion Otorgada
+            </th>
+            <td mat-cell *matCellDef="let element">
+              {{ element.atencion_otorgada_visual }}
+            </td>
+          </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-      <mat-paginator #paginator
-          [length]="totalInputs"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="pageSizeOptions"
-          aria-label="Select page">
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+        <mat-paginator #paginator [length]="totalInputs" [pageSize]="pageSize" [pageSizeOptions]="pageSizeOptions"
+          aria-label="Seleccionar página">
         </mat-paginator>
+      </section>
     </mat-card-content>
   </mat-card>
 </div>
