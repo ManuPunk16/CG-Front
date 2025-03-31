@@ -1,4 +1,3 @@
-
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { RouterOutlet, RouterModule, Router } from '@angular/router';
 import { MediaMatcher } from '@angular/cdk/layout';
@@ -11,6 +10,7 @@ import { TokenStorageService } from '../core/auth/token-storage.service';
 import { NgIf } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { AuthStateService } from '../core/auth/authstate.service';
+import { InactivityService } from '../core/services/inactivity.service';
 
 @Component({
   selector: 'app-root',
@@ -27,10 +27,10 @@ import { AuthStateService } from '../core/auth/authstate.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
-
+  title = 'ControlGestionFront';
   isLoggedIn: boolean = false;
   private authSubscription?: Subscription;
 
@@ -53,7 +53,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private authStateService: AuthStateService,
     private changeDetectorRef: ChangeDetectorRef,
     private media: MediaMatcher,
-    private zone: NgZone
+    private zone: NgZone,
+    private inactivityService: InactivityService
   ) {
     this.mobileQuery = this.media.matchMedia('(max-width: 600px)');
     this._mobileQueryListener = () => this.zone.run(() => {
@@ -83,6 +84,7 @@ export class AppComponent implements OnInit, OnDestroy {
           this.showLinkerBoard = false;
       }
     });
+    this.inactivityService.startWatching();
   }
 
   startTimer() {
@@ -108,5 +110,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.authSubscription.unsubscribe();
     }
       clearInterval(this.interval);
+    this.inactivityService.stopWatching();
   }
 }
