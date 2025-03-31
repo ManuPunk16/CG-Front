@@ -4,7 +4,6 @@
       <mat-card-title><h2>Registros de Entradas</h2></mat-card-title>
       <mat-card-subtitle>Informacion del año en curso <strong>{{ currentYear }}</strong></mat-card-subtitle>
     </mat-card-header>
-    <!-- <mat-divider></mat-divider> -->
     <br>
     <div class="filtros">
       <fieldset>
@@ -38,7 +37,7 @@
 
             <mat-form-field appearance="outline" class="field-asignado" *ngIf="field === 'asignado'">
               <mat-label>Asignado</mat-label>
-              <mat-select [(ngModel)]="searchTerms['asignado']" name="asignado" [disabled]="!canEditAssignation">
+              <mat-select [(ngModel)]="searchTerms['asignado']" name="asignado" [disabled]="!canEditAssignation" (selectionChange)="onAsignadoChange()">
                 <mat-option *ngFor="let item of areas" [value]="item.direccion">
                   {{ item.direccion }}
                 </mat-option>
@@ -62,6 +61,9 @@
           <div class="button-container">
             <button mat-raised-button color="primary" type="submit">Buscar</button>
             <button mat-button (click)="clearFilter()">Limpiar</button>
+            <button mat-raised-button (click)="openRegistrosAtendidosModalFilter()" *ngIf="showEstadisticasButton" [disabled]="!isEstadisticasButtonEnabled">
+              Ver Estadísticas de Registros Atendidos
+            </button>
           </div>
         </form>
       </fieldset>

@@ -100,6 +100,10 @@ export class MainComponent implements OnInit {
   statusOptions = Object.values(EstatusEntrada);
   canEditAssignation: boolean = false;
 
+  showEstadisticasButton: boolean = false;
+  isEstadisticasButtonEnabled: boolean = false;
+  areaSeleccionada: string = '';
+
   constructor(
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
@@ -174,6 +178,28 @@ export class MainComponent implements OnInit {
       width: '80%',
       heightAuto: false,
     });
+  }
+
+  openRegistrosAtendidosModalFilter() {
+    this.inputService.getRegistrosAtendidosEstatusAreaAnio(this.areaSeleccionada).subscribe({ // Usa areaSeleccionada
+      next: (response) => {
+        this.showRegistrosAtendidosModal(response.data);
+      },
+      error: (error) => {
+        console.error('Error al obtener registros atendidos:', error);
+      }
+    });
+  }
+
+  onAsignadoChange() {
+    this.areaSeleccionada = this.searchTerms['asignado'] || ''; // Actualiza areaSeleccionada
+    if (this.areaSeleccionada) {
+      this.showEstadisticasButton = true;
+      this.isEstadisticasButtonEnabled = true;
+    } else {
+      this.showEstadisticasButton = false;
+      this.isEstadisticasButtonEnabled = false;
+    }
   }
 
   deleteById(row: Input) {
@@ -309,51 +335,6 @@ export class MainComponent implements OnInit {
     this.dataSource.filter = '';
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
-    }
-  }
-
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value.trim().toLocaleLowerCase();
-
-    this.dataSource.filterPredicate = (data: Input, filter: string): boolean => {
-      const filterNumber = Number(filter);
-
-      if (!isNaN(filterNumber)) {
-        const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
-        return data.folio === filterNumber || formattedDate.toLocaleLowerCase().includes(filter);
-      } else {
-        return this.displayedColumns.some(column => {
-          if (column === 'fecha_recepcion') {
-            const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
-            return formattedDate.toLocaleLowerCase().includes(filter);
-          } else if (column === 'folio') {
-            return data.folio?.toString().toLocaleLowerCase().includes(filter);
-          } else if (data[column as keyof Input]) {
-            return data[column as keyof Input]?.toString().toLocaleLowerCase().includes(filter);
-          }
-          return false;
-        });
-      }
-    };
-
-    this.dataSource.filter = filterValue;
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-
-  filterByDateRange() {
-    console.log(this.startDate, this.endDate)
-    if (this.startDate && this.endDate) {
-      const filteredData = this.inputs.filter(row => {
-        const rowDate = new Date(row.fecha_recepcion);
-        return rowDate >= this.startDate && rowDate <= this.endDate;
-      });
-      this.dataSource.data = filteredData;
-      this.dataSource.paginator?.firstPage();
-    } else {
-        this.dataSource.data = this.inputs;
-        this.dataSource.paginator?.firstPage();
     }
   }
 
