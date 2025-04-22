@@ -7,7 +7,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
-import { TokenStorageService } from '../../core/auth/token-storage.service';
+// import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { ReportesService } from '../../core/services/reportes.service';
 import { NgFor, NgIf, DatePipe } from '@angular/common';
 import {
@@ -130,7 +130,7 @@ export class UserPanelComponent implements OnInit {
   chartEstatus!: Chart;
 
   constructor(
-    public tokenStorage: TokenStorageService,
+    // public tokenStorage: TokenStorageService,
     private reportesService: ReportesService,
     private areaService: AreaService,
     private cdr: ChangeDetectorRef,
@@ -207,36 +207,36 @@ export class UserPanelComponent implements OnInit {
       });
   }
 
-  loadReporteTiempoRespuestaEnlace(): void {
-    if (!this.fechaInicioTiempoRespuesta) {
-      console.error('Fecha de inicio es requerida.');
-      return;
-    }
+  // loadReporteTiempoRespuestaEnlace(): void {
+  //   if (!this.fechaInicioTiempoRespuesta) {
+  //     console.error('Fecha de inicio es requerida.');
+  //     return;
+  //   }
 
-    const user = this.tokenStorage.getUser();
-    this.areaConsultada = user.area;
+  //   const user = this.tokenStorage.getUser();
+  //   this.areaConsultada = user.area;
 
-    this.reportesService
-      .calcularTiempoRespuestaTotal(
-        user.area,
-        this.fechaInicioTiempoRespuesta,
-        this.fechaFinTiempoRespuesta
-      )
-      .subscribe({
-        next: (data: ResumenTiempos) => {
-          this.reporteTiempoRespuesta = data;
-          this.createTiempoRespuestaChart();
-          this.graficaTiempoRespuestaActivada = true;
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          this.handleReportError(
-            error,
-            'Error al generar el reporte de tiempo de respuesta.'
-          );
-        },
-      });
-  }
+  //   this.reportesService
+  //     .calcularTiempoRespuestaTotal(
+  //       user.area,
+  //       this.fechaInicioTiempoRespuesta,
+  //       this.fechaFinTiempoRespuesta
+  //     )
+  //     .subscribe({
+  //       next: (data: ResumenTiempos) => {
+  //         this.reporteTiempoRespuesta = data;
+  //         this.createTiempoRespuestaChart();
+  //         this.graficaTiempoRespuestaActivada = true;
+  //         this.cdr.detectChanges();
+  //       },
+  //       error: (error) => {
+  //         this.handleReportError(
+  //           error,
+  //           'Error al generar el reporte de tiempo de respuesta.'
+  //         );
+  //       },
+  //     });
+  // }
 
   loadReporteEstatusModerador(): void {
     if (!this.fechaInicioEstatus || !this.selectedAreaEstatus) {
@@ -267,35 +267,35 @@ export class UserPanelComponent implements OnInit {
       });
   }
 
-  loadReporteEstatusEnlace(): void {
-    if (!this.fechaInicioEstatus) {
-      console.error('Fecha de inicio es requerida.');
-      return;
-    }
+  // loadReporteEstatusEnlace(): void {
+  //   if (!this.fechaInicioEstatus) {
+  //     console.error('Fecha de inicio es requerida.');
+  //     return;
+  //   }
 
-    const user = this.tokenStorage.getUser();
-    this.areaConsultada = user.area;
+  //   const user = this.tokenStorage.getUser();
+  //   this.areaConsultada = user.area;
 
-    this.reportesService
-      .obtenerEstadisticas(
-        this.fechaInicioEstatus,
-        this.fechaFinEstatus,
-        user.area
-      )
-      .subscribe({
-        next: (res) => {
-          this.reporteEstatus = res.estadisticas;
-          this.cdr.detectChanges();
-          this.createEstatusChart();
-        },
-        error: (error) => {
-          this.handleReportError(
-            error,
-            'Error al obtener estadísticas de estatus.'
-          );
-        },
-      });
-  }
+  //   this.reportesService
+  //     .obtenerEstadisticas(
+  //       this.fechaInicioEstatus,
+  //       this.fechaFinEstatus,
+  //       user.area
+  //     )
+  //     .subscribe({
+  //       next: (res) => {
+  //         this.reporteEstatus = res.estadisticas;
+  //         this.cdr.detectChanges();
+  //         this.createEstatusChart();
+  //       },
+  //       error: (error) => {
+  //         this.handleReportError(
+  //           error,
+  //           'Error al obtener estadísticas de estatus.'
+  //         );
+  //       },
+  //     });
+  // }
 
   debeHabilitarBuscar(): boolean {
     return !!this.fechaInicioEstatus && !!this.fechaFinEstatus;
@@ -400,33 +400,33 @@ export class UserPanelComponent implements OnInit {
       });
   }
 
-  downloadReporteEstatusEnlace(): void {
-    const area = this.tokenStorage.getUser().area; // Usa el área del perfil del usuario
+  // downloadReporteEstatusEnlace(): void {
+  //   const area = this.tokenStorage.getUser().area; // Usa el área del perfil del usuario
 
-    this.reportesService
-      .exportarDatosExcelPorEstatusFechaPorArea(
-        this.estatusFiltro,
-        area,
-        this.fechaInicioEstatus,
-        this.fechaFinEstatus
-      )
-      .subscribe({
-        next: (blob) => {
-          this.downloadFile(
-            blob,
-            `Reporte_por_${
-              this.estatusFiltro
-            }_${this.dateFormatService.formatDate(new Date())}.xlsx`
-          );
-        },
-        error: (error) => {
-          this.handleReportError(
-            error,
-            'Error al generar el reporte de estatus.'
-          );
-        },
-      });
-  }
+  //   this.reportesService
+  //     .exportarDatosExcelPorEstatusFechaPorArea(
+  //       this.estatusFiltro,
+  //       area,
+  //       this.fechaInicioEstatus,
+  //       this.fechaFinEstatus
+  //     )
+  //     .subscribe({
+  //       next: (blob) => {
+  //         this.downloadFile(
+  //           blob,
+  //           `Reporte_por_${
+  //             this.estatusFiltro
+  //           }_${this.dateFormatService.formatDate(new Date())}.xlsx`
+  //         );
+  //       },
+  //       error: (error) => {
+  //         this.handleReportError(
+  //           error,
+  //           'Error al generar el reporte de estatus.'
+  //         );
+  //       },
+  //     });
+  // }
 
   createTiempoRespuestaChart(): void {
     if (this.chartTiempoRespuesta) {

@@ -1,60 +1,76 @@
-import { NuevaEntradaAntiguosComponent } from '../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component';
 import { Routes } from '@angular/router';
-import { AuthGuard } from '../core/auth/auth.guard';
+import { authGuard } from '../core/guards/auth.guard';
+import { areaAccessGuard } from '../core/guards/area-access.guard';
 
 export const routes: Routes = [
+  // Rutas públicas
   {
     path: 'login',
     loadComponent: () => import('../features/login/login.component').then(c => c.LoginComponent),
-    pathMatch: 'full' // Importante para evitar conflictos con rutas hijas
+    pathMatch: 'full'
   },
-  {
-    path: 'Entradas',
-    loadComponent: () => import('../features/main/main.component').then(c => c.MainComponent),
-    canActivate:[AuthGuard] //Guarda para proteger la ruta
-  },
-  {
-    path: 'editar-entrada/:id',
-    loadComponent: () => import('../features/shared/editar-entrada/editar-entrada.component').then(c => c.EditarEntradaComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'nueva-entrada',
-    loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'nueva-entrada-antiguos',
-    loadComponent: () => import('../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component').then(c => c.NuevaEntradaAntiguosComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'editar-seguimiento/:id',
-    loadComponent: () => import('../features/shared/editar-seguimiento/editar-seguimiento.component').then(c => c.EditarSeguimientoComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'ficha_tecnica/:id',
-    loadComponent: () => import('../features/shared/ficha-tecnica/ficha-tecnica.component').then(c => c.FichaTecnicaComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'Entradas/panel-control',
-    loadComponent: () => import('../features/shared/panel-control/panel-control.component').then(c => c.PanelControlComponent),
-    canActivate:[AuthGuard]
-  },
-  {
-    path: 'Perfil',
-    loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
-    canActivate:[AuthGuard]
-  },
+
+  // Rutas protegidas (requieren autenticación)
   {
     path: '',
-    redirectTo: 'login', // Redirige a /login por defecto
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'Entradas',
+        loadComponent: () => import('../features/main/main.component').then(c => c.MainComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'editar-entrada/:id',
+        loadComponent: () => import('../features/shared/editar-entrada/editar-entrada.component').then(c => c.EditarEntradaComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'nueva-entrada',
+        loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'nueva-entrada-antiguos',
+        loadComponent: () => import('../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component').then(c => c.NuevaEntradaAntiguosComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'editar-seguimiento/:id',
+        loadComponent: () => import('../features/shared/editar-seguimiento/editar-seguimiento.component').then(c => c.EditarSeguimientoComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'ficha_tecnica/:id',
+        loadComponent: () => import('../features/shared/ficha-tecnica/ficha-tecnica.component').then(c => c.FichaTecnicaComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'Entradas/panel-control',
+        loadComponent: () => import('../features/shared/panel-control/panel-control.component').then(c => c.PanelControlComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: 'Perfil',
+        loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
+        canActivate: [areaAccessGuard]
+      },
+      {
+        path: '',
+        redirectTo: 'Entradas', // Redirige a /Entradas cuando está autenticado
+        pathMatch: 'full'
+      }
+    ]
+  },
+
+  // Rutas de falback y error
+  {
+    path: '',
+    redirectTo: 'login',
     pathMatch: 'full'
   },
   {
-    path: '**', // Ruta comodín para manejar rutas no encontradas (404)
-    redirectTo: 'login' // Redirige a /login en caso de error
+    path: '**',
+    redirectTo: 'login'
   }
 ];

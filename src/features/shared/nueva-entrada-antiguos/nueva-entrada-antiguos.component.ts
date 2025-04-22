@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormGroup, FormControl, Validators, FormBuilder, F
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { formatDate, NgFor, NgIf } from '@angular/common';
-import { TokenStorageService } from '../../../core/auth/token-storage.service';
+// import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import { Input } from '../../../core/models/input.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -67,7 +67,7 @@ export class NuevaEntradaAntiguosComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private _tokenStorageService: TokenStorageService,
+    // private _tokenStorageService: TokenStorageService,
     private _area: AreaService,
     private _institution: InstitutionsService,
     private _instrument: InstrumentsService,
@@ -75,19 +75,19 @@ export class NuevaEntradaAntiguosComponent implements OnInit {
     private _inputService: InputService,
     private router: Router,
   ){
-    this.currentUser = this._tokenStorageService.getUser();
+    // this.currentUser = this._tokenStorageService.getUser();
   }
 
   ngOnInit(): void {
-    this.isLoggedIn = !!this._tokenStorageService.getToken();
-    if (this.isLoggedIn) {
-      const user = this._tokenStorageService.getUser();
-      this.roles = user.roles;
-      this.showAdmin = this.roles.includes('ROLE_ADMIN');
-      this.showLinker = this.roles.includes('ROLE_LINKER');
-      this.showModerator = this.roles.includes('ROLE_MODERATOR');
-      this.username = user.username;
-    }
+    // this.isLoggedIn = !!this._tokenStorageService.getToken();
+    // if (this.isLoggedIn) {
+    //   const user = this._tokenStorageService.getUser();
+    //   this.roles = user.roles;
+    //   this.showAdmin = this.roles.includes('ROLE_ADMIN');
+    //   this.showLinker = this.roles.includes('ROLE_LINKER');
+    //   this.showModerator = this.roles.includes('ROLE_MODERATOR');
+    //   this.username = user.username;
+    // }
 
     this.getAreas();
     this.getInstitutions();

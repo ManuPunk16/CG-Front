@@ -1,67 +1,76 @@
-<div class="example-container" [class.example-is-mobile]="mobileQuery.matches">
-  <mat-toolbar class="example-toolbar horizontal-margin-line">
-    <button *ngIf="isLoggedIn" mat-icon-button (click)="snav.toggle()" [hidden]="!mobileQuery.matches"><mat-icon>menu</mat-icon></button>
-    <h1 class="example-app-name" *ngIf="isLoggedIn">
-      <a mat-button [routerLink]="['Entradas']">Gestion Documental</a>
-    </h1>
+<div class="app-container" [class.app-is-mobile]="mobileQuery.matches">
+  <!-- Barra de navegación superior -->
+  <mat-toolbar color="primary" class="app-toolbar">
+    <button mat-icon-button (click)="sidenav.toggle()" *ngIf="currentUser()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <h1 class="app-name">{{ title }}</h1>
     <span class="spacer"></span>
-    <!-- <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['']">Inicio</a> -->
-    <!-- <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['Entradas']">Entradas</a> -->
-    <!-- <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['about']">Sobre mi</a>
-    <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['contact']">Contacto</a> -->
-    <div *ngIf="isLoggedIn">
-      <a mat-button [hidden]="mobileQuery.matches" [routerLink]="['Perfil']">{{username}}</a>
-      <button mat-button [routerLink]="['Entradas/panel-control']">
-        <svg width="22px" height="22px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M1 5V3L8 0L15 3V5L8 8L1 5Z" fill="#000000"/>
-          <path d="M8 16L1 13V11L8 14L15 11V13L8 16Z" fill="#000000"/>
-          <path d="M1 9L8 12L15 9V7L8 10L1 7V9Z" fill="#000000"/>
-        </svg>
+
+    <!-- Sección de usuario -->
+    <div *ngIf="currentUser()" class="user-section">
+      <span class="mr-3 session-timer" [class.session-warning]="sessionTimeLeft() < 300">
+        Sesión: {{ formatSessionTime() }}
+      </span>
+
+      <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
+        <mat-icon>account_circle</mat-icon>
+        <span class="ml-1">{{ currentUser()?.username }}</span>
       </button>
-      <a mat-button (click)="logout()">
-        <svg width="22px" height="22px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M3 0H13V14H15V16H1V14H3V0ZM11 8C11 8.55229 10.5523 9 10 9C9.44772 9 9 8.55229 9 8C9 7.44772 9.44772 7 10 7C10.5523 7 11 7.44772 11 8Z" fill="#000000"/>
-        </svg>
-      </a>
+
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item routerLink="/Perfil">
+          <mat-icon>person</mat-icon>
+          <span>Mi Perfil</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>exit_to_app</mat-icon>
+          <span>Cerrar Sesión</span>
+        </button>
+      </mat-menu>
     </div>
   </mat-toolbar>
 
-  <mat-sidenav-container class="example-sidenav-container"
-                        [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
-    <mat-sidenav #snav [mode]="mobileQuery.matches ? 'over' : 'side'"
-                [fixedInViewport]="mobileQuery.matches" fixedTopGap="56">
-      <mat-nav-list>
-        <!-- <a mat-list-item [routerLink]="['']">Inicio</a> -->
-        <a mat-list-item [routerLink]="['Entradas']">Entradas</a>
-        <!-- <a mat-list-item [routerLink]="['about']">Sobre mi</a>
-        <a mat-list-item [routerLink]="['contact']">Contacto</a> -->
-        <div *ngIf="isLoggedIn">
-          <a mat-button [routerLink]="['Perfil']">{{username}}</a>
-          <button mat-button [routerLink]="['Entradas/panel-control']">
-            <svg width="22px" height="22px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 5V3L8 0L15 3V5L8 8L1 5Z" fill="#000000"/>
-              <path d="M8 16L1 13V11L8 14L15 11V13L8 16Z" fill="#000000"/>
-              <path d="M1 9L8 12L15 9V7L8 10L1 7V9Z" fill="#000000"/>
-            </svg>
-            Panel Control
-          </button>
-          <a mat-button (click)="logout()">
-            <svg width="22px" height="22px" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M3 0H13V14H15V16H1V14H3V0ZM11 8C11 8.55229 10.5523 9 10 9C9.44772 9 9 8.55229 9 8C9 7.44772 9.44772 7 10 7C10.5523 7 11 7.44772 11 8Z" fill="#000000"/>
-            </svg>
-            Cerrar Sesión
-          </a>
-        </div>
+  <!-- Contenedor principal con sidenav -->
+  <mat-sidenav-container class="app-container-inner"
+      [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
+
+    <!-- Menú lateral -->
+    <mat-sidenav #sidenav
+        [mode]="mobileQuery.matches ? 'over' : 'side'"
+        [fixedInViewport]="mobileQuery.matches"
+        [opened]="!mobileQuery.matches && !!currentUser()"
+        [disableClose]="!mobileQuery.matches && !!currentUser()">
+
+      <mat-nav-list *ngIf="currentUser()">
+        <a mat-list-item routerLink="/Entradas" routerLinkActive="active">
+          <mat-icon>inbox</mat-icon>
+          <span class="ml-2">Entradas</span>
+        </a>
+
+        <a mat-list-item routerLink="/Entradas/panel-control" routerLinkActive="active"
+           *ngIf="isAdmin() || isDirectorGeneral()">
+          <mat-icon>dashboard</mat-icon>
+          <span class="ml-2">Panel de Control</span>
+        </a>
+
+        <a mat-list-item routerLink="/Perfil" routerLinkActive="active">
+          <mat-icon>person</mat-icon>
+          <span class="ml-2">Mi Perfil</span>
+        </a>
+
+        <a mat-list-item (click)="logout()">
+          <mat-icon>exit_to_app</mat-icon>
+          <span class="ml-2">Cerrar Sesión</span>
+        </a>
       </mat-nav-list>
     </mat-sidenav>
 
+    <!-- Contenido principal -->
     <mat-sidenav-content>
-      <div class="vertical-margin-line">
+      <div class="content-wrapper">
         <router-outlet></router-outlet>
       </div>
-      <!-- <div class="footer vertical-margin-line">
-        <app-footer></app-footer>
-      </div> -->
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>

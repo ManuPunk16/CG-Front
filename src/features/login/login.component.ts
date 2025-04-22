@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -6,13 +6,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-import { AuthService } from '../../core/auth/auth.service';
-import { TokenStorageService } from '../../core/auth/token-storage.service';
-import { Router } from '@angular/router';
-import { AuthStateService } from '../../core/auth/authstate.service';
-import Swal from 'sweetalert2';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../core/services/api/auth.service';
+import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { NgClass, NgIf } from '@angular/common';
+import { AlertService } from '../../core/services/ui/alert.service';
 
 @Component({
   selector: 'app-login',
@@ -24,7 +23,9 @@ import { finalize } from 'rxjs/operators';
     MatInputModule,
     MatIconModule,
     MatButtonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgIf,
+    NgClass
   ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,66 +33,102 @@ import { finalize } from 'rxjs/operators';
   styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
+  // Inyección de dependencias usando la nueva sintaxis
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute); // Añadir ActivatedRoute
+  private fb = inject(FormBuilder);
+  private alertService = inject(AlertService);
 
-  isLoggedIn = false;
-  isLoginFailed = false;
+  loading = false;
+  showPassword = false;
   errorMessage = '';
-  roles: string[] = [];
-  loading = false; // Agrega un indicador de carga
-
-  loginForm = new FormGroup({
-    usuario: new FormControl(''),
-    contrasena: new FormControl('')
-  });
-
-  constructor (
-    private authService: AuthService,
-    private tokenStorage: TokenStorageService,
-    private router: Router,
-    private authStateService: AuthStateService
-  ) {
-
-  }
+  loginForm!: FormGroup;
 
   ngOnInit(): void {
-    if (this.tokenStorage.getToken()) {
-      this.authStateService.login();
-      this.router.navigate(['/Entradas']); // Redirige si ya está logueado
+    // Verificar si ya hay sesión activa
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/Entradas']);
+      return;
     }
-    this.loginForm = new FormGroup({
-      usuario: new FormControl('', [Validators.required]),
-      contrasena: new FormControl('', [Validators.required])
+
+    // Inicializar formulario
+    this.loginForm = this.fb.group({
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]]
     });
   }
 
-  onSubmit() {
-    if (this.loginForm.valid) {
-      this.loading = true; // Activa el indicador de carga
-      const usuario = this.loginForm.value.usuario!;
-      const contrasena = this.loginForm.value.contrasena!;
+  /**
+   * Muestra u oculta la contraseña
+   */
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
-      this.authService.login(usuario, contrasena).pipe(
-        finalize(() => this.loading = false) // Desactiva el indicador de carga al finalizar
-      ).subscribe({
-        next: data => {
-          this.tokenStorage.saveToken(data.accessToken);
-          this.tokenStorage.saveUser(data);
+  /**
+   * Procesa el envío del formulario
+   */
+  onSubmit(): void {
+    // Limpiar mensaje de error previo
+    this.errorMessage = '';
 
-          this.isLoginFailed = false;
-          this.roles = this.tokenStorage.getUser()?.roles || []; // Manejo de null
-          this.authStateService.login(); // Llama a authStateService.login() ANTES de navegar
-          this.router.navigate(['/Entradas']);
+    // Validar formulario
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+    const { username, password } = this.loginForm.value;
+
+    // Verificar que username y password no sean undefined
+    if (!username || !password) {
+      this.errorMessage = 'Usuario y contraseña son requeridos';
+      this.loading = false;
+      return;
+    }
+
+    this.authService.login(username, password)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          console.log('Login exitoso, intentando guardar...');
+
+          // Guardar el token manualmente como backup
+          if (response.accessToken) {
+            try {
+              window.localStorage.setItem('manual-token-test', response.accessToken);
+              console.log('Token backup guardado:', !!window.localStorage.getItem('manual-token-test'));
+            } catch (e) {
+              console.error('Error al guardar backup:', e);
+            }
+          }
+
+          // Verificar almacenamiento después de un breve retraso
+          setTimeout(() => {
+            // Verificar directamente en window.localStorage
+            const tokenInStorage = window.localStorage.getItem('token');
+            console.log('¿Token en localStorage después de timeout?', !!tokenInStorage);
+
+            // Usar los datos guardados manualmente si es necesario
+            if (!tokenInStorage && response.accessToken) {
+              console.log('Usando datos guardados manualmente');
+              window.localStorage.setItem('token', response.accessToken);
+              window.localStorage.setItem('user', JSON.stringify(response.user));
+              this.authService.reloadAuthState();
+            }
+
+            // Navegar a la ruta adecuada
+            const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') || '/Entradas';
+            this.router.navigate([returnUrl]);
+          }, 300);
         },
-        error: err => {
-          this.errorMessage = err.error.message;
-          this.isLoginFailed = true;
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Usuario o contraseña incorrectos!",
-          });
+        error: (error) => {
+          console.error('Error en login:', error);
+          this.errorMessage = error.error?.message || 'Usuario o contraseña incorrectos';
+          this.alertService.error(this.errorMessage);
         }
       });
-    }
   }
 }

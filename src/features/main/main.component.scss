@@ -69,9 +69,9 @@ form {
   word-break: break-all;
 }
 
-.mat-column-diasAtraso {
+.mat-column-diasAtraso, .mat-column-fecha_recepcion, .mat-column-folio {
   min-width: 80px;
-  max-width: 120px;
+  max-width: 110px;
 }
 
 // /* Estilos específicos para cada campo de filtro */

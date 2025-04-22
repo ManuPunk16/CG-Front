@@ -1,0 +1,60 @@
+/**
+ * Enumeración de todas las áreas disponibles en el sistema.
+ * Basado en la configuración del backend.
+ */
+export enum AreasEnum {
+  ASUNTO_LIMITROFE = 'ASUNTO LIMITROFE',
+  CONSEJERO_JURIDICO = 'CONSEJERO JURÍDICO',
+  DIRECCION_ADMINISTRATIVA = 'DIRECCIÓN ADMINISTRATIVA',
+  DIRECCION_DE_ASISTENCIA_TECNICA_Y_COMBATE_A_LA_CORRUPCION = 'DIRECCIÓN DE ASISTENCIA TÉCNICA Y COMBATE A LA CORRUPCIÓN',
+  DIRECCION_DE_COMPILACION_NORMATIVA_ARCHIVO_E_IGUALDAD_DE_GENERO = 'DIRECCIÓN DE COMPILACIÓN NORMATIVA, ARCHIVO E IGUALDAD DE GÉNERO',
+  DIRECCION_DE_COORDINACION_Y_CONTROL_DE_GESTION = 'DIRECCIÓN DE COORDINACIÓN Y CONTROL DE GESTIÓN',
+  DIRECCION_DE_ESTUDIOS_JURIDICOS = 'DIRECCIÓN DE ESTUDIOS JURÍDICOS',
+  DIRECCION_DE_ESTUDIOS_LEGISLATIVOS = 'DIRECCIÓN DE ESTUDIOS LEGISLATIVOS',
+  DIRECCION_DE_SERVICIOS_LEGALES = 'DIRECCIÓN DE SERVICIOS LEGALES',
+  DIRECCION_GENERAL_CONSULTIVA = 'DIRECCIÓN GENERAL CONSULTIVA',
+  DIRECCION_GENERAL_DE_LO_CONTENCIOSO = 'DIRECCIÓN GENERAL DE LO CONTENCIOSO',
+  SECRETARIA_PARTICULAR_Y_DE_COMUNICACION_SOCIAL = 'SECRETARÍA PARTICULAR Y DE COMUNICACIÓN SOCIAL',
+  UNIDAD_DE_TRANSPARENCIA = 'UNIDAD DE TRANSPARENCIA'
+}
+
+/**
+ * Mapa con las áreas agrupadas por dirección general para filtraciones y permisos.
+ */
+export const AreasByDireccion: Record<string, string[]> = {
+  'DIRECCIÓN GENERAL CONSULTIVA': [
+    AreasEnum.DIRECCION_DE_ESTUDIOS_JURIDICOS,
+    AreasEnum.DIRECCION_DE_ESTUDIOS_LEGISLATIVOS,
+    AreasEnum.DIRECCION_DE_COMPILACION_NORMATIVA_ARCHIVO_E_IGUALDAD_DE_GENERO
+  ],
+  'DIRECCIÓN GENERAL DE LO CONTENCIOSO': [
+    AreasEnum.DIRECCION_DE_SERVICIOS_LEGALES,
+    AreasEnum.DIRECCION_GENERAL_DE_LO_CONTENCIOSO,
+    AreasEnum.DIRECCION_DE_ASISTENCIA_TECNICA_Y_COMBATE_A_LA_CORRUPCION
+  ],
+  // 'DIRECCIÓN ADMINISTRATIVA': [
+  //   AreasEnum.DIRECCION_ADMINISTRATIVA
+  // ],
+  // 'CONSEJERÍA': [
+  //   AreasEnum.CONSEJERO_JURIDICO,
+  //   AreasEnum.SECRETARIA_PARTICULAR_Y_DE_COMUNICACION_SOCIAL,
+  //   AreasEnum.DIRECCION_DE_COORDINACION_Y_CONTROL_DE_GESTION,
+  //   AreasEnum.UNIDAD_DE_TRANSPARENCIA,
+  //   AreasEnum.ASUNTO_LIMITROFE
+  // ]
+};
+
+/**
+ * Obtiene todas las áreas en un array para usos en componentes (como select, dropdown)
+ */
+export const getAllAreas = (): string[] => {
+  return Object.values(AreasEnum);
+};
+
+/**
+ * Obtiene las áreas correspondientes a una dirección general específica
+ * @param direccionGeneral Nombre de la dirección general
+ */
+export const getAreasByDireccion = (direccionGeneral: string): string[] => {
+  return AreasByDireccion[direccionGeneral] || [];
+};

@@ -1,0 +1,261 @@
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { BaseApiService } from './base-api.service';
+import { ApiResponse } from '../../models/api-response.model';
+import { Input } from '../../models/input/input.model';
+
+export interface InputQueryParams {
+  year?: number;
+  area?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  search?: string;
+  estatus?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface TimeStatsParams {
+  area: string;
+  fechaInicio: string;
+  fechaFin?: string;
+  forceRefresh?: boolean;
+}
+
+export interface TimeStatsResponse {
+  estadisticas: {
+    total_oficios: number;
+    total_atendidos: number;
+    total_no_atendidos: number;
+    promedio_dias: number | null;
+    mediana_dias: number | null;
+    percentil25_dias: number | null;
+    percentil75_dias: number | null;
+    desviacion_estandar_dias: number | null;
+  };
+  distribucion_por_categoria: {
+    rapido: number;
+    normal: number;
+    lento: number;
+    muy_lento: number;
+  };
+  datos_oficios: Array<{
+    _id: string;
+    num_oficio: string;
+    anio: number;
+    folio: number;
+    fecha_recepcion: Date;
+    tiempo_respuesta: Date | null;
+    asignado: string;
+    estatus: string;
+    diferencia_dias: number | null;
+    categoria_tiempo: 'rapido' | 'normal' | 'lento' | 'muy_lento';
+  }>;
+}
+
+export interface StatusStatsResponse {
+  resumenEstatus: Array<{
+    estatus: string;
+    count: number;
+    oficios: Array<{ id: string; num_oficio: string; folio: number }>;
+    porcentaje: number;
+  }>;
+  distribucionMensual: Array<{
+    anio: number;
+    mes: number;
+    count: number;
+    atendidos: number;
+    no_atendidos: number;
+  }>;
+  distribucionEstatus: {
+    labels: string[];
+    data: number[];
+    porcentajes: number[];
+  };
+}
+
+export interface DuplicateResponse {
+  num_oficio: string;
+  duplicados: Array<{
+    _id: string;
+    num_oficio: string;
+    folio: number;
+    asignado: string;
+    fecha_recepcion: Date;
+    anio: number;
+  }>;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InputService extends BaseApiService {
+  private endpoint = 'inputs';
+
+  /**
+   * Obtiene la lista de inputs con paginación y filtros
+   */
+  getInputs(params: InputQueryParams): Observable<ApiResponse<Input[]>> {
+    return this.get<ApiResponse<Input[]>>(this.endpoint, params);
+  }
+
+  /**
+   * Obtiene un input por ID
+   */
+  getInputById(id: string): Observable<ApiResponse<Input>> {
+    return this.get<ApiResponse<Input>>(`${this.endpoint}/${id}`);
+  }
+
+  /**
+   * Crea un nuevo input
+   */
+  createInput(input: Partial<Input>): Observable<ApiResponse<Input>> {
+    return this.post<ApiResponse<Input>>(this.endpoint, input);
+  }
+
+  /**
+   * Actualiza un input existente
+   */
+  updateInput(id: string, input: Partial<Input>): Observable<ApiResponse<Input>> {
+    return this.put<ApiResponse<Input>>(`${this.endpoint}/${id}`, input);
+  }
+
+  /**
+   * Elimina un input (soft delete)
+   */
+  deleteInput(id: string): Observable<ApiResponse<void>> {
+    return this.delete<ApiResponse<void>>(`${this.endpoint}/${id}`);
+  }
+
+  /**
+   * Verifica si existe un folio para un año específico
+   */
+  existeFolio(anio: number, folio: number): Observable<boolean> {
+    return this.get<boolean>(`${this.endpoint}/existe-folio/${anio}/${folio}`);
+  }
+
+  /**
+   * Obtiene el último folio de un año específico
+   */
+  getUltimoFolio(anio: number): Observable<number> {
+    return this.get<number>(`${this.endpoint}/ultimo-folio/${anio}`);
+  }
+
+  /**
+   * Genera reporte diario en Excel
+   */
+  generarReporteDiario(params: { area: string, fecha?: string }): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${this.endpoint}/reporte-diario`, {
+      params: this.buildHttpParams(params),
+      responseType: 'blob'
+    });
+  }
+
+  /**
+   * Calcula el tiempo de respuesta de un registro específico
+   */
+  calcularTiempoRespuesta(id: string): Observable<ApiResponse<{
+    _id: string;
+    num_oficio: string;
+    anio: number;
+    folio: number;
+    asunto: string;
+    remitente: string;
+    asignado: string;
+    estatus: string;
+    fecha_recepcion: Date;
+    fecha_vencimiento: Date;
+    diferencia_dias: number | null;
+    tiempo_transcurrido_dias: number | null;
+    estado_semaforo: string | null;
+    color_semaforo: string | null;
+    estado_tramite: 'FINALIZADO' | 'ATENDIDO SIN ACUSE' | 'EN TRÁMITE';
+    tiene_respuesta: boolean;
+    dias_efectivos: number | null;
+  }>> {
+    return this.get<ApiResponse<any>>(`${this.endpoint}/tiempo-respuesta/${id}`);
+  }
+
+  /**
+   * Obtiene estadísticas de tiempos de respuesta para un área
+   */
+  calcularTiempoRespuestaTotal(params: TimeStatsParams): Observable<ApiResponse<TimeStatsResponse>> {
+    const { area, ...otherParams } = params;
+    return this.get<ApiResponse<TimeStatsResponse>>(`${this.endpoint}/tiempos-respuesta/area/${encodeURIComponent(area)}`, otherParams);
+  }
+
+  /**
+   * Obtiene estadísticas de estatus para un área
+   */
+  obtenerEstadisticasEstatus(params: TimeStatsParams): Observable<ApiResponse<StatusStatsResponse>> {
+    const { area, ...otherParams } = params;
+    return this.get<ApiResponse<StatusStatsResponse>>(`${this.endpoint}/estadisticas/estatus/area/${encodeURIComponent(area)}`, otherParams);
+  }
+
+  /**
+   * Obtiene registros duplicados por número de oficio
+   */
+  getDuplicatedOficios(id: string, area?: string): Observable<ApiResponse<DuplicateResponse>> {
+    if (area) {
+      return this.get<ApiResponse<DuplicateResponse>>(`${this.endpoint}/duplicados/${id}/area/${encodeURIComponent(area)}`);
+    }
+    return this.get<ApiResponse<DuplicateResponse>>(`${this.endpoint}/duplicados/${id}`);
+  }
+
+  /**
+   * Obtiene estadísticas para el dashboard
+   */
+  getRegistrosEstadisticas(params?: { area?: string }): Observable<ApiResponse<{
+    direccion: string;
+    anios: Array<{
+      anio: number;
+      meses: Array<{
+        mes: number;
+        atendido: number;
+        noAtendido: number;
+        respuestaRegistrada: number;
+      }>;
+    }>;
+  }[]>> {
+    return this.get<ApiResponse<any>>(`${this.endpoint}/estadisticas/registros`, params);
+  }
+
+  /**
+   * Obtiene la última modificación de un usuario específico
+   */
+  obtenerUltimaModificacionUsuario(usuarioId: string): Observable<ApiResponse<{
+    usuario: {
+      id: string;
+      username: string;
+    };
+    ultimaModificacion: {
+      inputId: string;
+      anio: number;
+      folio: number;
+      timestamp: Date;
+    } | null;
+  }>> {
+    return this.get<ApiResponse<any>>(`${this.endpoint}/usuario/${usuarioId}/ultima-modificacion`);
+  }
+
+  /**
+   * Obtiene las últimas modificaciones según permisos del usuario
+   */
+  obtenerUltimasModificaciones(): Observable<ApiResponse<{
+    usuario: {
+      id: string;
+      username: string;
+    };
+    ultimaModificacion: {
+      inputId: string;
+      anio: number;
+      folio: number;
+      timestamp: Date;
+    } | null;
+  }[]>> {
+    return this.get<ApiResponse<any>>(`${this.endpoint}/usuarios/ultimas-modificaciones`);
+  }
+}

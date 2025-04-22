@@ -14,7 +14,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
-import { TokenStorageService } from '../../../core/auth/token-storage.service';
+// import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
@@ -110,7 +110,7 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
     private inputService: InputService,
     private _liveAnnouncer: LiveAnnouncer,
     private datePipe: DatePipe,
-    private _tokenStorage: TokenStorageService,
+    // private _tokenStorage: TokenStorageService,
     private router: Router,
     private _reportes: ReportesService,
     private cdr: ChangeDetectorRef,
@@ -123,21 +123,21 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
   ngOnInit(): void {
     this.generateYears();
     this.selectedYear = this.years[0];
-    this.checkUserRoles();
+    // this.checkUserRoles();
     this.getInstitutions();
     this.getAreas();
     this.loadData();
     this.cdr.detectChanges();
   }
 
-  private checkUserRoles(): void {
-    const user = this._tokenStorage.getUser();
-    this.roles = user.roles || [];
-    this.showAdmin = this.hasRole('ROLE_ADMIN');
-    this.showLinker = this.hasRole('ROLE_LINKER');
-    this.showModerator = this.hasRole('ROLE_MODERATOR');
-    this.canEditAssignation = this.showAdmin || this.showModerator;
-  }
+  // private checkUserRoles(): void {
+  //   const user = this._tokenStorage.getUser();
+  //   this.roles = user.roles || [];
+  //   this.showAdmin = this.hasRole('ROLE_ADMIN');
+  //   this.showLinker = this.hasRole('ROLE_LINKER');
+  //   this.showModerator = this.hasRole('ROLE_MODERATOR');
+  //   this.canEditAssignation = this.showAdmin || this.showModerator;
+  // }
 
   private hasRole(role: string): boolean {
     return this.roles.includes(role);
@@ -162,19 +162,19 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
 
   loadData(): void {
       this.dataLoaded = false;
-      this.getInputsByYear(this.selectedYear);
+      // this.getInputsByYear(this.selectedYear);
   }
 
   openRegistrosAtendidosModal() {
-      const user = this._tokenStorage.getUser();
-      this.inputService.getRegistrosAtendidosEstatusAreaAnio(user.area).subscribe({
-        next: (response) => {
-          this.showRegistrosAtendidosModal(response.data);
-        },
-        error: (error) => {
-          console.error('Error al obtener registros atendidos:', error);
-        }
-      });
+      // const user = this._tokenStorage.getUser();
+      // this.inputService.getRegistrosAtendidosEstatusAreaAnio(user.area).subscribe({
+      //   next: (response) => {
+      //     this.showRegistrosAtendidosModal(response.data);
+      //   },
+      //   error: (error) => {
+      //     console.error('Error al obtener registros atendidos:', error);
+      //   }
+      // });
     }
 
     showRegistrosAtendidosModal(data: any[]) {
@@ -206,99 +206,99 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
       });
     }
 
-  getInputsByYear(year: number): void {
-    const user = this._tokenStorage.getUser();
-    if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
-      this.inputService.getInputsByYear(year).subscribe({
-        next: (response) => {
-            this.inputs = response.inputs;
-            this.totalInputs = response.totalInputs;
-            this.totalPages = response.totalPages;
+  // getInputsByYear(year: number): void {
+  //   const user = this._tokenStorage.getUser();
+  //   if (user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR')) {
+  //     this.inputService.getInputsByYear(year).subscribe({
+  //       next: (response) => {
+  //           this.inputs = response.inputs;
+  //           this.totalInputs = response.totalInputs;
+  //           this.totalPages = response.totalPages;
 
-            if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
-                this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-                    ...input,
-                    atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
-                })));
-                this.dataSource.paginator = this.paginator;
-                this.dataSource.sort = this.sort;
-                this.dataLoaded = true;
-                this.cdr.detectChanges();
-                this.ngAfterViewInit();
-            } else { // Datos vacíos: mostrar Swal
-                this.inputs = [];
-                this.totalInputs = 0;
-                this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
-                this.dataLoaded = true;
-                Swal.fire({
-                    icon: "info",
-                    title: "Sin resultados",
-                    text: "No se encontraron registros para los parámetros seleccionados."
-                });
-                this.cdr.detectChanges();
-            }
-        },
-        error: (err) => {
-            console.error('Error al obtener los registros:', err);
-            this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
-            this.inputs = [];
-            this.totalInputs = 0;
-            this.dataLoaded = true;
-            Swal.fire({
-                icon: "info",
-                title: "Sin resultados",
-                text: "No se encontraron registros para los parámetros seleccionados."
-            });
-            this.cdr.detectChanges();
-        }
-      });
-    } else {
-      const areaUser = user.area;
-      this.inputService.getInputsByYearByNormalUser(year, areaUser).subscribe({
-        next: (response) => {
-          this.inputs = response.inputs;
-          this.totalInputs = response.totalInputs;
-          this.totalPages = response.totalPages;
+  //           if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
+  //               this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+  //                   ...input,
+  //                   atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
+  //               })));
+  //               this.dataSource.paginator = this.paginator;
+  //               this.dataSource.sort = this.sort;
+  //               this.dataLoaded = true;
+  //               this.cdr.detectChanges();
+  //               this.ngAfterViewInit();
+  //           } else { // Datos vacíos: mostrar Swal
+  //               this.inputs = [];
+  //               this.totalInputs = 0;
+  //               this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
+  //               this.dataLoaded = true;
+  //               Swal.fire({
+  //                   icon: "info",
+  //                   title: "Sin resultados",
+  //                   text: "No se encontraron registros para los parámetros seleccionados."
+  //               });
+  //               this.cdr.detectChanges();
+  //           }
+  //       },
+  //       error: (err) => {
+  //           console.error('Error al obtener los registros:', err);
+  //           this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
+  //           this.inputs = [];
+  //           this.totalInputs = 0;
+  //           this.dataLoaded = true;
+  //           Swal.fire({
+  //               icon: "info",
+  //               title: "Sin resultados",
+  //               text: "No se encontraron registros para los parámetros seleccionados."
+  //           });
+  //           this.cdr.detectChanges();
+  //       }
+  //     });
+  //   } else {
+  //     const areaUser = user.area;
+  //     this.inputService.getInputsByYearByNormalUser(year, areaUser).subscribe({
+  //       next: (response) => {
+  //         this.inputs = response.inputs;
+  //         this.totalInputs = response.totalInputs;
+  //         this.totalPages = response.totalPages;
 
-          if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
-              this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
-                  ...input,
-                  atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
-              })));
-              this.dataSource.paginator = this.paginator;
-              this.dataSource.sort = this.sort;
-              this.dataLoaded = true;
-              this.cdr.detectChanges();
-              this.ngAfterViewInit();
-          } else { // Datos vacíos: mostrar Swal
-              this.inputs = [];
-              this.totalInputs = 0;
-              this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
-              this.dataLoaded = true;
-              Swal.fire({
-                  icon: "info",
-                  title: "Sin resultados",
-                  text: "No se encontraron registros para los parámetros seleccionados."
-              });
-              this.cdr.detectChanges();
-          }
-        },
-        error: (err) => {
-          console.error('Error al obtener los registros:', err);
-          this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
-          this.inputs = [];
-          this.totalInputs = 0;
-          this.dataLoaded = true;
-          Swal.fire({
-              icon: "info",
-              title: "Sin resultados",
-              text: "No se encontraron registros para los parámetros seleccionados."
-          });
-          this.cdr.detectChanges();
-        }
-      });
-    }
-  }
+  //         if (this.inputs && this.inputs.length > 0) { // Validación de datos no vacíos
+  //             this.dataSource = new MatTableDataSource(this.inputs.map(input => ({
+  //                 ...input,
+  //                 atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
+  //             })));
+  //             this.dataSource.paginator = this.paginator;
+  //             this.dataSource.sort = this.sort;
+  //             this.dataLoaded = true;
+  //             this.cdr.detectChanges();
+  //             this.ngAfterViewInit();
+  //         } else { // Datos vacíos: mostrar Swal
+  //             this.inputs = [];
+  //             this.totalInputs = 0;
+  //             this.dataSource = new MatTableDataSource<Input>([]); // Limpiar dataSource
+  //             this.dataLoaded = true;
+  //             Swal.fire({
+  //                 icon: "info",
+  //                 title: "Sin resultados",
+  //                 text: "No se encontraron registros para los parámetros seleccionados."
+  //             });
+  //             this.cdr.detectChanges();
+  //         }
+  //       },
+  //       error: (err) => {
+  //         console.error('Error al obtener los registros:', err);
+  //         this.error = 'Error al obtener los registros. Inténtalo de nuevo.';
+  //         this.inputs = [];
+  //         this.totalInputs = 0;
+  //         this.dataLoaded = true;
+  //         Swal.fire({
+  //             icon: "info",
+  //             title: "Sin resultados",
+  //             text: "No se encontraron registros para los parámetros seleccionados."
+  //         });
+  //         this.cdr.detectChanges();
+  //       }
+  //     });
+  //   }
+  // }
 
   getAtencionOtorgada(seguimientos: any): string {
     return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
@@ -489,21 +489,21 @@ export class PanelControlComponent implements OnInit, AfterViewInit  {
     }
 
   exportToExcelEnlace(year: number) {
-    const user = this._tokenStorage.getUser();
-    const areaUser = user.area;
-    this._reportes.exportarExcelEnlaceAniosPosteriores(areaUser, year).subscribe({
-      next: (blob) => {
-        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blobData, `Registros_${areaUser}_${year}.xlsx`);
-      },
-      error: (error) => {
-        console.error(error);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Algo salio mal!",
-        });
-      }
-    });
+    // const user = this._tokenStorage.getUser();
+    // const areaUser = user.area;
+    // this._reportes.exportarExcelEnlaceAniosPosteriores(areaUser, year).subscribe({
+    //   next: (blob) => {
+    //     const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    //     saveAs(blobData, `Registros_${areaUser}_${year}.xlsx`);
+    //   },
+    //   error: (error) => {
+    //     console.error(error);
+    //     Swal.fire({
+    //       icon: "error",
+    //       title: "Oops...",
+    //       text: "Algo salio mal!",
+    //     });
+    //   }
+    // });
   }
 }

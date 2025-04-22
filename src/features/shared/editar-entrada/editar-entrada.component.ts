@@ -21,7 +21,7 @@ import { Instrument } from '../../../core/models/instrument.model';
 import { EstatusEntrada } from '../../../core/models/estatus.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { TokenStorageService } from '../../../core/auth/token-storage.service';
+// import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -74,9 +74,9 @@ export class EditarEntradaComponent implements OnInit {
     private route: ActivatedRoute,
     private changeDetectorRef: ChangeDetectorRef,
     private router: Router,
-    private _tokenStorageService: TokenStorageService
+    // private _tokenStorageService: TokenStorageService
   ) {
-    this.currentUser = this._tokenStorageService.getUser();
+    // this.currentUser = this._tokenStorageService.getUser();
     this.inputForm = new FormGroup({
       // anio: new FormControl(),
       folio: new FormControl(),
@@ -101,15 +101,15 @@ export class EditarEntradaComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.isLoggedIn = !!this._tokenStorageService.getToken();
-    if (this.isLoggedIn) {
-      const user = this._tokenStorageService.getUser();
-      this.roles = user.roles;
-      this.showAdmin = this.roles.includes('ROLE_ADMIN');
-      this.showLinker = this.roles.includes('ROLE_LINKER');
-      this.showModerator = this.roles.includes('ROLE_MODERATOR');
-      this.username = user.username;
-    }
+    // this.isLoggedIn = !!this._tokenStorageService.getToken();
+    // if (this.isLoggedIn) {
+    //   const user = this._tokenStorageService.getUser();
+    //   this.roles = user.roles;
+    //   this.showAdmin = this.roles.includes('ROLE_ADMIN');
+    //   this.showLinker = this.roles.includes('ROLE_LINKER');
+    //   this.showModerator = this.roles.includes('ROLE_MODERATOR');
+    //   this.username = user.username;
+    // }
 
     this.route.paramMap.subscribe(params => {
       this.id = params.get('id');

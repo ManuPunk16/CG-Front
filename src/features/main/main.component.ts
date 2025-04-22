@@ -1,423 +1,466 @@
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, AfterViewInit, inject } from '@angular/core';
+import { CommonModule, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { InputService } from '../../core/services/input.service';
-import { Input } from '../../core/models/input.model';
-import { CommonModule, DatePipe, NgIf } from '@angular/common';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { RouterModule, Router } from '@angular/router';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
-import { FormsModule } from '@angular/forms';
-import { TokenStorageService } from '../../core/auth/token-storage.service';
 import { MatButtonModule } from '@angular/material/button';
-import { Router } from '@angular/router';
-import Swal from 'sweetalert2';
-import { ReportesService } from '../../core/services/reportes.service';
-import saveAs from 'file-saver';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
-import { EstatusEntrada } from '../../core/models/estatus.model';
-import { InstitutionsService } from '../../core/services/institutions.service';
-import { Institution } from '../../core/models/institution.model';
-import { Area } from '../../core/models/area.model';
-import { AreaService } from '../../core/services/areas.service';
-import { catchError, map, Observable, of, Subject, takeUntil, tap } from 'rxjs';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { Subject, catchError, finalize, of, takeUntil, tap } from 'rxjs';
+import { map, startWith, debounceTime, switchMap } from 'rxjs/operators';
+
+// Modelos y servicios
+import { Input } from '../../core/models/input/input.model';
+import { InputService, InputQueryParams } from '../../core/services/api/input.service';
+import { CatalogService } from '../../core/services/api/catalog.service';
+import { CatalogType } from '../../core/models/catalog.model';
+import { EstatusEnum } from '../../core/models/enums/estatus.enum';
+import { AreasEnum } from '../../core/models/enums/areas.enum';
+// import { ReportesService } from '../../core/services/api/reportes.service';
+import { AlertService } from '../../core/services/ui/alert.service';
+import { AuthStateService } from '../../core/services/utility/auth-state.service';
+import { PermissionsService } from '../../core/services/utility/permissions.service';
+import { RolesEnum } from '../../core/models/enums/roles.enum';
+import { DateFormatService } from '../../core/services/utility/date-format.service';
 
 @Component({
   selector: 'app-main',
+  standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    FormsModule,
     MatTableModule,
     MatSortModule,
-    MatIconModule,
     MatPaginatorModule,
-    MatCardModule,
-    MatDividerModule,
-    DatePipe,
-    MatInputModule,
     MatFormFieldModule,
-    MatDatepickerModule,
-    FormsModule,
-    NgIf,
+    MatInputModule,
     MatButtonModule,
-    MatSelectModule
+    MatIconModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatChipsModule,
+    MatAutocompleteModule,
+    NgIf,
+    NgFor,
+    NgClass,
+    DatePipe
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
-    provideNativeDateAdapter(),
-    { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
+    DatePipe,
+    provideNativeDateAdapter()
   ],
-  standalone: true,
   templateUrl: './main.component.html',
-  styleUrl: './main.component.scss'
+  styleUrl: './main.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MainComponent implements OnInit, OnDestroy {
+export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
+  // Inyección de servicios
+  private inputService = inject(InputService);
+  private catalogService = inject(CatalogService);
+  // private reportesService = inject(ReportesService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private liveAnnouncer = inject(LiveAnnouncer);
+  private datePipe = inject(DatePipe);
+  private alertService = inject(AlertService);
+  private authStateService = inject(AuthStateService);
+  private permissionsService = inject(PermissionsService);
+  private dateFormatService = inject(DateFormatService);
 
-  public currentYear: number = new Date().getFullYear();
+  // Referencias a elementos del DOM
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
 
-  isLoggedIn = false;
-  private roles: string[] = [];
-  username?: string;
-  showAdmin = false;
-  showLinker = false;
-  showModerator = false;
-
-  @ViewChild(MatPaginator)
-  paginator!: MatPaginator;
-
-  @ViewChild(MatSort)
-  sort!: MatSort;
-
+  // Configuración de la tabla
   displayedColumns: string[] = [
     'actions', 'folio', 'fecha_recepcion', 'diasAtraso', 'num_oficio',
-    'institucion_origen', 'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual'
+    'institucion_origen', 'remitente', 'asunto', 'asignado', 'atencion_otorgada'
   ];
-  dataSource!: MatTableDataSource<Input>;
-  inputs: Input[] = [];
-  totalInputs: number = 0;
-  totalPages: number = 0;
-  currentPage: number = 1;
-  pageSize: number = 25;
-  pageSizeOptions: number[] = [25, 50, 100, 300, 500];
-  startDate!: Date;
-  endDate!: Date;
+  dataSource = new MatTableDataSource<Input>([]);
+  isLoadingResults = false;
 
-  reportes: any[] = [];
-  fechaBusqueda: string = '';
+  // Propiedades de paginación y ordenamiento
+  totalItems = 0;
+  currentPage = 0;
+  pageSize = 25;
+  pageSizeOptions = [25, 50, 100, 500];
 
-  institutions: Institution[] = [];
-  areas: Area[] = [];
-
+  // Año actual y filtros
+  currentYear: number = new Date().getFullYear();
   searchFields: string[] = [
     'folio', 'fecha_recepcion', 'num_oficio', 'institucion_origen',
-    'remitente', 'asunto', 'asignado', 'atencion_otorgada_visual', 'estatus'
+    'remitente', 'asunto', 'asignado', 'atencion_otorgada', 'estatus'
   ];
-  searchTerms: { [key: string]: string } = {};
-  statusOptions = Object.values(EstatusEntrada);
-  canEditAssignation: boolean = false;
+  filterValues: {[key: string]: string} = {};
 
-  showEstadisticasButton: boolean = false;
-  isEstadisticasButtonEnabled: boolean = false;
-  areaSeleccionada: string = '';
+  // Catálogos para selects
+  institutions: string[] = [];
+  areas: string[] = [];
+  statusOptions = Object.values(EstatusEnum);
 
-  private readonly destroy$ = new Subject<void>();
+  // Control de permisos
+  isAdmin = false;
+  isDirector = false;
+  isDirectorGeneral = false;
+  userArea = '';
 
-  constructor(
-    private inputService: InputService,
-    private _liveAnnouncer: LiveAnnouncer,
-    private datePipe: DatePipe,
-    private _tokenStorage: TokenStorageService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private _reportes: ReportesService,
-    private _institution: InstitutionsService,
-    private _area: AreaService
-  ) {
-    this.currentYear;
+  // Control del ciclo de vida
+  private destroy$ = new Subject<void>();
+
+  // Propiedades para el autocomplete
+  institutionFilterControl = new FormControl('');
+  filteredInstitutions: any[] = [];  // Usará el formato completo para mantener el _id y otros datos
+  isLoadingInstitutions = false;
+  rawInstitutionsData: any[] = []; // Almacena los datos crudos de la API
+
+  ngOnInit(): void {
+    this.loadUserPermissions();
+    this.loadCatalogs();
+
+    this.dataSource.sortingDataAccessor = (item: Input, property: string) => {
+      switch (property) {
+        case 'fecha_recepcion':
+          return item.fecha_recepcion ? new Date(item.fecha_recepcion).getTime() : 0;
+        default:
+          const value = item[property as keyof Input];
+          if (typeof value === 'string') {
+            return value.toLowerCase();
+          } else if (typeof value === 'number') {
+            return value;
+          } else if (value === undefined || value === null) {
+            return '';
+          } else {
+            // For other types (boolean, object, etc.), convert to string
+            return String(value).toLowerCase();
+          }
+      }
+    };
+
+    // Configurar el filtro de autocompletado para instituciones
+    this.institutionFilterControl.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        startWith(''),
+        debounceTime(300),  // Esperar 300ms después de que el usuario deje de escribir
+      )
+      .subscribe(value => {
+        this.filterInstitutions(value || '');
+      });
   }
+
+  ngAfterViewInit(): void {
+    // Configurar los manejadores de eventos para sort y paginación después de que las vistas estén inicializadas
+    this.dataSource.sort = this.sort;
+
+    // No asignamos this.dataSource.paginator porque haremos paginación del lado del servidor
+
+    // Suscripción a eventos de ordenamiento
+    this.sort.sortChange.subscribe(() => {
+      this.paginator.pageIndex = 0;
+      this.loadInputs();
+    });
+
+    // Suscripción a eventos de paginación
+    this.paginator.page.subscribe(() => {
+      this.loadInputs();
+    });
+
+    // Carga inicial de datos
+    this.loadInputs();
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  ngOnInit(): void {
-    this.loadInputs();
-    this.checkUserRoles();
-    this.getInstitutions();
-    this.getAreas();
+  /**
+   * Carga los permisos del usuario actual
+   */
+  loadUserPermissions(): void {
+    const currentUser = this.authStateService.currentUser();
+    if (currentUser) {
+      this.isAdmin = currentUser.roles === RolesEnum.ADMIN;
+      this.isDirector = currentUser.roles === RolesEnum.DIRECTOR;
+      this.isDirectorGeneral = currentUser.roles === RolesEnum.DIRECTOR_GENERAL;
+      this.userArea = currentUser.area || '';
+    }
+  }
+
+  /**
+   * Carga los catálogos de áreas e instituciones
+   */
+  loadCatalogs(): void {
+    // Cargar instituciones desde CatalogService con el formato completo
+    this.isLoadingInstitutions = true;
+    this.catalogService.getRawCatalogItems(CatalogType.INSTITUTION)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.isLoadingInstitutions = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          // Almacenar los datos crudos de instituciones
+          this.rawInstitutionsData = response.institution || [];
+          // Extraer los nombres para el antiguo formato (por compatibilidad)
+          this.institutions = this.rawInstitutionsData.map(item => item.name);
+          // Inicializar el filtrado de instituciones
+          this.filterInstitutions('');
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          this.alertService.error('Error al cargar instituciones');
+          console.error('Error cargando instituciones:', error);
+        }
+      });
+
+    // Usar enumerado de áreas en lugar de cargar desde servicio
+    this.areas = Object.values(AreasEnum);
     this.cdr.detectChanges();
   }
 
-  getRowClass(element: Input): string {
-    switch (element.estatus) {
-      case 'NO ATENDIDO':
-        return 'badge badge-warning';
-      case 'ATENDIDO':
-        return 'badge badge-success';
-      default:
-        return 'badge badge-secondary';
-    }
-  }
+  /**
+   * Filtra las instituciones según lo que escribe el usuario
+   */
+  filterInstitutions(value: string): void {
+    const filterValue = value.toLowerCase();
 
-  private checkUserRoles(): void {
-    const user = this._tokenStorage.getUser();
-    this.roles = user.roles || [];
-    this.showAdmin = this.hasRole('ROLE_ADMIN');
-    this.showLinker = this.hasRole('ROLE_LINKER');
-    this.showModerator = this.hasRole('ROLE_MODERATOR');
-    this.canEditAssignation = this.showAdmin || this.showModerator;
-  }
+    this.filteredInstitutions = this.rawInstitutionsData.filter(item =>
+      item.name.toLowerCase().includes(filterValue)
+    );
 
-  private hasRole(role: string): boolean {
-    return this.roles.includes(role);
-  }
-
-  openRegistrosAtendidosModal() {
-    const user = this._tokenStorage.getUser();
-    this.inputService.getRegistrosAtendidosEstatusAreaAnio(user.area).subscribe({
-      next: (response) => {
-        this.showRegistrosAtendidosModal(response.data);
-      },
-      error: (error) => {
-        console.error('Error al obtener registros atendidos:', error);
-      }
-    });
-  }
-
-  showRegistrosAtendidosModal(data: any[]) {
-    const nombresMeses = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-
-    let content = '';
-    data.forEach(item => {
-      content += `<h3>${item.direccion}</h3>`;
-      item.anios.forEach((anio: { anio: any; meses: any[]; }) => {
-        content += `<h4>Año ${anio.anio}</h4>`;
-        content += '<table><thead><tr><th>Mes</th><th>Atendido</th><th>No Atendido</th><th>Respuesta Registrada</th></tr></thead><tbody>';
-        anio.meses.forEach(mes => {
-          const nombreMes = nombresMeses[mes.mes - 1];
-          content += `<tr><td>${nombreMes}</td><td>${mes.atendido}</td><td>${mes.noAtendido}</td><td>${mes.respuestaRegistrada}</td></tr>`;
-        });
-        content += '</tbody></table>';
-      });
-    });
-
-    Swal.fire({
-      title: 'Registros Atendidos',
-      html: content,
-      confirmButtonText: 'Cerrar',
-      width: '80%',
-      heightAuto: false,
-    });
-  }
-
-  openRegistrosAtendidosModalFilter() {
-    this.inputService.getRegistrosAtendidosEstatusAreaAnio(this.areaSeleccionada).subscribe({ // Usa areaSeleccionada
-      next: (response) => {
-        this.showRegistrosAtendidosModal(response.data);
-      },
-      error: (error) => {
-        console.error('Error al obtener registros atendidos:', error);
-      }
-    });
-  }
-
-  onAsignadoChange() {
-    this.areaSeleccionada = this.searchTerms['asignado'] || ''; // Actualiza areaSeleccionada
-    if (this.areaSeleccionada) {
-      this.showEstadisticasButton = true;
-      this.isEstadisticasButtonEnabled = true;
+    // Actualizar el valor en filterValues cuando se selecciona una institución
+    if (this.institutionFilterControl.value) {
+      this.filterValues['institucion_origen'] = this.institutionFilterControl.value;
     } else {
-      this.showEstadisticasButton = false;
-      this.isEstadisticasButtonEnabled = false;
+      delete this.filterValues['institucion_origen'];
     }
   }
 
-  deleteById(row: Input) {
-    console.log(row._id);
-    Swal.fire({
-      title: "Estas seguro de borrar el registro?",
-      text: "No podras revertir esto!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Si, borrar!"
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: "Borrado!",
-          text: "Tu archivo ha sido borrado con exito.",
-          icon: "success"
-        });
-      }
-    });
+  /**
+   * Función para mostrar la institución seleccionada
+   */
+  displayInstitution = (value: string): string => {
+    return value || '';
   }
 
-  getInstitutions() {
-    this._institution.getAllNoDeletedInstitutions().subscribe({
-      next: (res) => {
-        this.institutions = res;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al obtener las instituciones:', error);
-      }
-    });
-  }
+  /**
+   * Carga los inputs con paginación y filtros
+   */
+  loadInputs(): void {
+    this.isLoadingResults = true;
 
-  getAreas() {
-    this._area.getAllAreas().subscribe({
-      next: (areas) => {
-        this.areas = areas;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error('Error al obtener las áreas:', error);
-      }
-    });
-  }
-
-  loadInputs() {
-    const user = this._tokenStorage.getUser();
-    const isAdminOrModerator = user.roles.includes('ROLE_ADMIN') || user.roles.includes('ROLE_MODERATOR');
-    const data$ = isAdminOrModerator
-      ? this.inputService.getNoDeletedInputs()
-      : this.inputService.getNoDeletedInputsByNormalUsers(user.area);
-
-    data$.pipe(
-      map(response => {
-        if (!response || !response.inputs) {
-          console.warn('No se recibieron datos de entradas.');
-          return [];
-        }
-        this.totalInputs = response.totalInputs;
-        this.totalPages = response.totalPages;
-        return response.inputs.map(input => ({
-          ...input,
-          atencion_otorgada_visual: this.getAtencionOtorgada(input.seguimientos)
-        }));
-      }),
-      tap(inputs => {
-        this.inputs = inputs;
-        this.dataSource = new MatTableDataSource(this.inputs);
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
-        this.cdr.detectChanges();
-      }),
-      catchError(err => {
-        console.error('Error al cargar los inputs:', err);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error!',
-          text: 'Ocurrió un error al cargar los registros.',
-        });
-        return of([]);
-      }),
-    ).subscribe();
-  }
-
-  getAtencionOtorgada(seguimientos: any): string {
-    return seguimientos?.atencion_otorgada ? (seguimientos.atencion_otorgada.trim() === '' ? '-' : seguimientos.atencion_otorgada) : '-';
-  }
-
-  announceSortChange(sortState: Sort) {
-    if (sortState.direction) {
-      this._liveAnnouncer.announce(`Sorted ${sortState.direction}ending`);
-    } else {
-      this._liveAnnouncer.announce('Sorting cleared');
-    }
-  }
-
-  applyFilters() {
-    this.dataSource.filterPredicate = (data: Input, filter: string) => {
-      let isValid = true;
-      for (const field of this.searchFields) {
-        const searchTerm = this.searchTerms[field]?.toLowerCase();
-        const dataValue = data[field as keyof Input]?.toString().toLowerCase();
-
-        if (searchTerm) {
-          if (field === 'fecha_recepcion') {
-            const formattedDate = this.datePipe.transform(data.fecha_recepcion, 'dd/MM/yyyy') || '';
-            isValid = isValid && formattedDate.toLowerCase().includes(searchTerm);
-          } else if (field === 'estatus') {
-            isValid = isValid && dataValue === searchTerm;
-          } else if (dataValue) {
-            isValid = isValid && dataValue.includes(searchTerm);
-          } else {
-            isValid = false;
-          }
-        }
-      }
-      return isValid;
+    const params: InputQueryParams = {
+      year: this.currentYear,
+      page: this.paginator?.pageIndex || 0,
+      limit: this.paginator?.pageSize || this.pageSize,
+      sortBy: this.sort?.active || 'fecha_recepcion',
+      sortOrder: this.sort?.direction || 'asc',
     };
 
-    this.dataSource.filter = 'applied';
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+    // Agregar filtros si existen
+    Object.keys(this.filterValues).forEach(key => {
+      if (this.filterValues[key]) {
+        params[key] = this.filterValues[key];
+      }
+    });
+
+    // Aplicar filtro por área si el usuario no es admin o director general
+    if (!this.isAdmin && !this.isDirectorGeneral && this.userArea) {
+      params.area = this.userArea;
     }
+
+    this.inputService.getInputs(params)
+      .pipe(
+        takeUntil(this.destroy$),
+        tap(response => {
+          if (response && response.data) {
+            // Acceder directamente a los datos (la interfaz debe actualizarse en InputService)
+            const inputs = Array.isArray(response.data) ? response.data :
+                          (response.data as any).inputs || [];
+
+            this.dataSource.data = inputs.map((input: Input) => ({
+              ...input,
+              atencion_otorgada_visual: this.getAtencionOtorgada(input),
+              diasAtraso: this.calcularDiasAtraso(input),
+              colorSemaforo: this.getColorSemaforo(input)
+            }));
+
+            // Acceder a la información de paginación si existe
+            const pagination = (response.data as any).pagination;
+            if (pagination) {
+              this.totalItems = pagination.totalItems || 0;
+              this.currentPage = pagination.currentPage || 0;
+
+              // Actualizamos la información del paginador sin recurrir a su evento interno
+              if (this.paginator) {
+                this.paginator.length = this.totalItems;
+                this.paginator.pageIndex = this.currentPage;
+              }
+            }
+          } else {
+            console.error('Error: respuesta sin datos', response);
+            this.dataSource.data = [];
+            this.totalItems = 0;
+            this.alertService.error('La respuesta del servidor no tiene el formato esperado');
+          }
+        }),
+        catchError(error => {
+          this.alertService.error('Error al cargar los registros');
+          console.error('Error cargando inputs:', error);
+          return of(null);
+        }),
+        finalize(() => {
+          this.isLoadingResults = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe();
   }
 
-  clearFilter() {
-    this.searchTerms = {};
-    this.dataSource.filter = '';
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+  /**
+   * Aplica los filtros de búsqueda
+   */
+  applyFilters(): void {
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
     }
+    this.loadInputs();
   }
 
-  editInput(row: Input) {
-    if (row._id) {
-      this.router.navigate(['/editar-entrada', row._id]);
+  /**
+   * Limpia todos los filtros (modificar para incluir el control de institución)
+   */
+  clearFilters(): void {
+    this.filterValues = {};
+    this.institutionFilterControl.setValue('');
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+    this.loadInputs();
+  }
+
+  /**
+   * Anuncia el cambio en la ordenación para lectores de pantalla
+   */
+  announceSortChange(sortState: Sort): void {
+    if (sortState.direction) {
+      this.liveAnnouncer.announce(`Ordenado ${sortState.direction === 'asc' ? 'ascendente' : 'descendente'}`);
     } else {
-      console.error('El ID del registro es inválido');
+      this.liveAnnouncer.announce('Ordenación eliminada');
     }
   }
 
-  editSeguimiento(row: Input) {
-    if (row._id) {
-      this.router.navigate(['/editar-seguimiento', row._id]);
-    } else {
-      console.error('El ID del registro es inválido');
+  /**
+   * Devuelve el texto de atención otorgada
+   */
+  getAtencionOtorgada(input: Input): string {
+    if (!input.seguimientos) return '-';
+    return input.seguimientos.atencion_otorgada?.trim() || '-';
+  }
+
+  /**
+   * Calcula los días de atraso para el semáforo
+   */
+  calcularDiasAtraso(input: Input): number {
+    if (input.estatus === EstatusEnum.ATENDIDO) return 0;
+    if (!input.fecha_recepcion) return -1; // Usando -1 para "N/A"
+
+    const hoy = new Date();
+    const fechaRecepcion = new Date(input.fecha_recepcion);
+    const diff = Math.floor((hoy.getTime() - fechaRecepcion.getTime()) / (1000 * 60 * 60 * 24));
+
+    return diff;
+  }
+
+  /**
+   * Muestra el texto para días de atraso
+   */
+  getDiasAtrasoText(input: Input): string {
+    const dias = input.diasAtraso;
+    if (dias === -1) return 'N/A';
+    return dias?.toString() || '';
+  }
+
+  /**
+   * Devuelve el color del semáforo basado en los días de atraso
+   */
+  getColorSemaforo(input: Input): string {
+    if (input.estatus === EstatusEnum.ATENDIDO) return 'bg-green-500';
+
+    const dias = this.calcularDiasAtraso(input);
+    if (dias === -1) return 'bg-gray-500';
+
+    if (dias <= 15) return 'bg-green-500';
+    if (dias <= 30) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  /**
+   * Devuelve la clase CSS para una fila basada en su estatus
+   */
+  getRowClass(input: Input): string {
+    switch (input.estatus) {
+      case EstatusEnum.ATENDIDO:
+        return 'bg-green-50 hover:bg-green-100';
+      case EstatusEnum.NO_ATENDIDO:
+        return 'bg-yellow-50 hover:bg-yellow-100';
+      default:
+        return 'hover:bg-gray-100';
     }
   }
 
-  newInput() {
+  /**
+   * Navega a la vista detallada de un registro
+   */
+  verDetalles(input: Input): void {
+    if (input._id) {
+      window.open(`/ficha_tecnica/${input._id}`, '_blank');
+    }
+  }
+
+  /**
+   * Navega a la pantalla de edición de un registro
+   */
+  editarRegistro(input: Input): void {
+    if (input._id) {
+      this.router.navigate(['/editar-entrada', input._id]);
+    }
+  }
+
+  /**
+   * Navega a la pantalla de edición de seguimiento
+   */
+  editarSeguimiento(input: Input): void {
+    if (input._id) {
+      this.router.navigate(['/editar-seguimiento', input._id]);
+    }
+  }
+
+  /**
+   * Navega a la pantalla de creación de nuevo registro
+   */
+  crearNuevoRegistro(): void {
     this.router.navigate(['/nueva-entrada']);
   }
 
-  tecnicalView(row: Input) {
-    if (row._id) {
-      window.open(`/ficha_tecnica/${row._id}`, '_blank');
-    } else {
-      console.error('El ID del registro es inválido');
-    }
-  }
-
-  exportToExcelAll() {
-    this._reportes.exportarExcelTodosAnioActual().pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (blob) => {
-        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blobData, 'Registros_anio_actual.xlsx');
-      },
-      error: (error) => {
-        console.error(error);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Algo salio mal!",
-        });
-      }
-    });
-  }
-
-  exportToExcelEnlace() {
-    const user = this._tokenStorage.getUser();
-    const areaUser = user.area;
-    this._reportes.exportarExcelEnlaceAnioActual(areaUser).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: (blob) => {
-        const blobData = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blobData, 'Registros_enlace_anio_actual.xlsx');
-      },
-      error: (error) => {
-        console.error(error);
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Algo salio mal!",
-        });
-      }
-    });
-  }
+  // No necesitamos los métodos de paginación personalizados ya que usamos MatPaginator
 }

@@ -6,7 +6,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { NgFor, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
-import { TokenStorageService } from '../../../core/auth/token-storage.service';
+// import { TokenStorageService } from '../../../core/auth/token-storage.service';
 import { ReportesService } from '../../../core/services/reportes.service';
 import { concatMap, map, of, Subject, takeUntil, tap, catchError } from 'rxjs';
 
@@ -75,7 +75,7 @@ export class FichaTecnicaComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
-    private _tokenStorage: TokenStorageService,
+    // private _tokenStorage: TokenStorageService,
     private router: Router,
     private _reportes: ReportesService
   ) {}
@@ -83,18 +83,18 @@ export class FichaTecnicaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       this.id = params.get('id');
-      if (this.id) {
-        this.loadInputDetails();
-        const user = this._tokenStorage.getUser();
-        if (
-          user.roles.includes('ROLE_ADMIN') ||
-          user.roles.includes('ROLE_MODERATOR')
-        ) {
-          this.loadDuplicated();
-        } else {
-          this.loadDuplicatedByNormalUsers();
-        }
-      }
+      // if (this.id) {
+      //   this.loadInputDetails();
+      //   const user = this._tokenStorage.getUser();
+      //   if (
+      //     user.roles.includes('ROLE_ADMIN') ||
+      //     user.roles.includes('ROLE_MODERATOR')
+      //   ) {
+      //     this.loadDuplicated();
+      //   } else {
+      //     this.loadDuplicatedByNormalUsers();
+      //   }
+      // }
     });
 
     this.loadCalcularTiemposRespuestaPorId();
@@ -177,35 +177,35 @@ export class FichaTecnicaComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadDuplicatedByNormalUsers() {
-    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      this.id = params.get('id');
-      if (this.id) {
-        const user = this._tokenStorage.getUser();
-        const areaUser = user.area;
-        this._input
-          .getDuplicatedOficiosByNormalUsers(this.id, areaUser)
-          .pipe(takeUntil(this.destroy$))
-          .subscribe({
-            next: (res: DuplicadosResponse) => {
-              this.loading = false;
-              if (res && res.duplicados && res.duplicados.length > 0) {
-                this.duplicados = res.duplicados;
-                this.cdr.detectChanges();
-              } else {
-                this.duplicados = null;
-                console.log('No hay nada');
-              }
-            },
-            error: (err) => {
-              this.loading = false;
-              console.error(err);
-              this.duplicados = null;
-            },
-          });
-      }
-    });
-  }
+  // loadDuplicatedByNormalUsers() {
+  //   this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+  //     this.id = params.get('id');
+  //     if (this.id) {
+  //       const user = this._tokenStorage.getUser();
+  //       const areaUser = user.area;
+  //       this._input
+  //         .getDuplicatedOficiosByNormalUsers(this.id, areaUser)
+  //         .pipe(takeUntil(this.destroy$))
+  //         .subscribe({
+  //           next: (res: DuplicadosResponse) => {
+  //             this.loading = false;
+  //             if (res && res.duplicados && res.duplicados.length > 0) {
+  //               this.duplicados = res.duplicados;
+  //               this.cdr.detectChanges();
+  //             } else {
+  //               this.duplicados = null;
+  //               console.log('No hay nada');
+  //             }
+  //           },
+  //           error: (err) => {
+  //             this.loading = false;
+  //             console.error(err);
+  //             this.duplicados = null;
+  //           },
+  //         });
+  //     }
+  //   });
+  // }
 
   trackByIndex(index: number, obj: any): any {
     return index;
