@@ -11,10 +11,6 @@
               <mat-option *ngFor="let year of availableYears" [value]="year">
                 {{ year }}
               </mat-option>
-              <!-- <mat-divider></mat-divider> -->
-              <!-- <mat-option [value]="'all'" class="text-blue-600">
-                <mat-icon class="text-blue-600">search</mat-icon> Todos los años
-              </mat-option> -->
             </mat-select>
           </mat-form-field>
         </div>
@@ -92,6 +88,11 @@
               <mat-option *ngFor="let area of areas" [value]="area">{{ area }}</mat-option>
             </mat-select>
           </mat-form-field>
+
+          <!-- Añadir después del filtro de área -->
+          <div *ngIf="isDirectorGeneral && userAllowedAreas.length > 1" class="mt-1 text-xs text-blue-600">
+            Mostrando todas las áreas a su cargo ({{ userAllowedAreas.length }})
+          </div>
 
           <!-- Filtro por estatus -->
           <mat-form-field class="w-full">
@@ -239,22 +240,6 @@
             {{item.atencion_otorgada_visual}}
           </td>
         </ng-container>
-
-        <!-- Columna de estatus -->
-        <!-- <ng-container matColumnDef="estatus">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-28 sm:w-32"> Estatus </th>
-          <td mat-cell *matCellDef="let item">
-            <mat-chip-row color="primary" highlighted *ngIf="item.estatus === 'ATENDIDO'">
-              Atendido
-            </mat-chip-row>
-            <mat-chip-row color="warn" highlighted *ngIf="item.estatus === 'NO ATENDIDO'">
-              No atendido
-            </mat-chip-row>
-            <mat-chip-row *ngIf="item.estatus !== 'ATENDIDO' && item.estatus !== 'NO ATENDIDO'">
-              {{ item.estatus }}
-            </mat-chip-row>
-          </td>
-        </ng-container> -->
 
         <!-- Filas con estilos condicionales -->
         <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>

@@ -36,6 +36,7 @@ import { DateFormatService } from '../../core/services/utility/date-format.servi
 import { MatDividerModule } from '@angular/material/divider';
 // Agrega la importación de la nueva interfaz
 import { ApiResponse, PaginatedResponse } from '../../core/models/api-response.model';
+import { AuthService } from '../../core/services';
 
 @Component({
   selector: 'app-main',
@@ -85,6 +86,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   private authStateService = inject(AuthStateService);
   private permissionsService = inject(PermissionsService);
   private dateFormatService = inject(DateFormatService);
+  private authService = inject(AuthService);
 
   // Referencias a elementos del DOM
   @ViewChild(MatPaginator) paginator!: MatPaginator;
@@ -137,11 +139,20 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   isAllYearsSelected: boolean = false;
   totalAllYearsItems: number = 0;
 
+  // Areas disponibles para mostrar en el filtro
+  userAllowedAreas: string[] = [];
+
   ngOnInit(): void {
+    // Primero cargar permisos de usuario - esto configura userAllowedAreas
     this.loadUserPermissions();
+
+    // Luego cargar catálogos
     this.loadCatalogs();
+
+    // Finalmente cargar años disponibles
     this.loadAvailableYears();
 
+    // Configuración del sortingDataAccessor
     this.dataSource.sortingDataAccessor = (item: Input, property: string) => {
       switch (property) {
         case 'fecha_recepcion':
@@ -212,7 +223,46 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       this.isDirector = currentUser.roles === RolesEnum.DIRECTOR;
       this.isDirectorGeneral = currentUser.roles === RolesEnum.DIRECTOR_GENERAL;
       this.userArea = currentUser.area || '';
+
+      // Obtener áreas permitidas usando el servicio de permisos
+      const allowedAreas = this.permissionsService.getCurrentUserAllowedAreas();
+
+      if (allowedAreas === null) {
+        // El usuario es administrador, puede ver todas las áreas
+        this.userAllowedAreas = Object.values(AreasEnum);
+      } else {
+        this.userAllowedAreas = allowedAreas;
+      }
+
+      console.log('Áreas permitidas para el usuario:', {
+        userRole: currentUser.roles,
+        userArea: this.userArea,
+        allowedAreas: this.userAllowedAreas
+      });
+
+      // Actualizar las áreas disponibles en el filtro
+      this.updateAvailableAreas();
     }
+  }
+
+  /**
+   * Actualiza la lista de áreas disponibles en el filtro según los permisos
+   */
+  updateAvailableAreas(): void {
+    // Asignar las áreas permitidas al selector
+    this.areas = [...this.userAllowedAreas];
+
+    console.log(`Áreas disponibles para filtrar (${this.areas.length}):`, this.areas);
+
+    // Si ya hay un área seleccionada pero no está en las áreas permitidas, limpiarla
+    if (this.filterValues['asignado'] &&
+        !this.userAllowedAreas.includes(this.filterValues['asignado'])) {
+      delete this.filterValues['asignado'];
+      console.warn('Se eliminó el área seleccionada porque no está entre las permitidas');
+    }
+
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   /**
@@ -245,8 +295,8 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
-    // Usar enumerado de áreas en lugar de cargar desde servicio
-    this.areas = Object.values(AreasEnum);
+    // Lógica actualizada: las áreas disponibles se basan en los permisos del usuario
+    // En lugar de usar Object.values(AreasEnum) directamente
     this.cdr.detectChanges();
   }
 
@@ -327,12 +377,16 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   loadInputs(): void {
     this.isLoadingResults = true;
 
+    // Construir parámetros base
     const params: InputQueryParams = {
       year: this.isAllYearsSelected ? null : (this.currentYear === 'all' ? null : this.currentYear),
       page: this.paginator?.pageIndex || 0,
       limit: this.paginator?.pageSize || this.pageSize,
       sortBy: this.sort?.active || 'fecha_recepcion',
       sortOrder: this.sort?.direction || 'asc',
+      // Siempre enviar rol y área para permitir decisiones en el backend
+      userRole: this.authService.getCurrentUser()?.roles,
+      userArea: this.userArea
     };
 
     // Agregar filtros no vacíos al objeto de parámetros
@@ -343,14 +397,9 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // Aplicar filtro por área según permisos de usuario
-    if (!this.isAdmin && !this.isDirectorGeneral && this.userArea) {
-      params['asignado'] = this.userArea;
-      console.log(`Aplicando filtro automático de área: asignado = ${this.userArea}`);
-    }
-
     console.log('Parámetros de búsqueda completos:', params);
 
+    // Llamar al servicio...
     this.inputService.getInputs(params)
       .pipe(
         takeUntil(this.destroy$),

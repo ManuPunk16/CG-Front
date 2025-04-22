@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { AuthService } from '../api/auth.service';
 import { RolesEnum } from '../../models/enums/roles.enum';
 import { User } from '../../models/user/user.model';
+import { AreasEnum, AreasByDireccion } from '../../models/enums/areas.enum';
 
 @Injectable({
   providedIn: 'root'
@@ -10,43 +11,40 @@ export class PermissionsService {
   private authService = inject(AuthService);
 
   /**
-   * Mapa de áreas por dirección general
-   */
-  private readonly AREAS_POR_DIRECCION: Record<string, string[]> = {
-    'DIRECCIÓN GENERAL CONSULTIVA': [
-      'DIRECCIÓN DE ESTUDIOS JURÍDICOS',
-      'DIRECCIÓN DE ESTUDIOS LEGISLATIVOS',
-      'DIRECCIÓN DE COMPILACIÓN NORMATIVA, ARCHIVO E IGUALDAD DE GÉNERO'
-    ],
-    'DIRECCIÓN GENERAL DE LO CONTENCIOSO': [
-      'DIRECCIÓN GENERAL DE LO CONTENCIOSO',
-      'DIRECCIÓN DE SERVICIOS LEGALES',
-      'DIRECCIÓN DE ASISTENCIA TÉCNICA Y COMBATE A LA CORRUPCIÓN',
-    ]
-  };
-
-  /**
    * Obtiene las áreas permitidas según el rol del usuario
    * @param userRole Rol del usuario
    * @param userArea Área asignada al usuario
    * @returns Array de áreas permitidas o null si tiene acceso a todas
    */
   getAreasByRole(userRole: string, userArea: string): string[] | null {
-    switch (userRole) {
-      case RolesEnum.ADMIN:
+    // Normalizar el rol para hacer la comparación insensible a mayúsculas/minúsculas
+    const normalizedRole = userRole?.toLowerCase();
+
+    console.log('Evaluando áreas permitidas:', { userRole, normalizedRole, roleEnum: RolesEnum });
+
+    switch (normalizedRole) {
+      case RolesEnum.ADMIN.toLowerCase():
         return null; // Acceso total
 
-      case RolesEnum.DIRECTOR_GENERAL:
-        // Buscar las áreas que corresponden a la dirección general
-        const areasAsignadas = this.AREAS_POR_DIRECCION[userArea] || [];
-        // Incluir su propia área en las áreas permitidas
-        return [...new Set([userArea, ...areasAsignadas])];
+      case RolesEnum.DIRECTOR_GENERAL.toLowerCase():
+      case 'director general': // Añadir esta alternativa para mayor robustez
+        // Usar el mapeo oficial de AreasByDireccion de areas.enum.ts
+        const areasSubordinadas = AreasByDireccion[userArea] || [];
 
-      case RolesEnum.DIRECTOR:
-      case RolesEnum.ENLACE:
+        console.log('Áreas permitidas para director general:', {
+          userArea,
+          areasSubordinadas
+        });
+
+        // Devolver un conjunto único de áreas (para evitar duplicados)
+        return [...new Set([userArea, ...areasSubordinadas])];
+
+      case RolesEnum.DIRECTOR.toLowerCase():
+      case RolesEnum.ENLACE.toLowerCase():
         return [userArea];
 
       default:
+        console.warn(`⚠️ Rol no reconocido: "${userRole}". No se asignaron áreas permitidas.`);
         return [];
     }
   }
@@ -92,7 +90,14 @@ export class PermissionsService {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) return [];
 
-    return this.getAreasByRole(currentUser.roles as string, currentUser.area);
+    const areas = this.getAreasByRole(currentUser.roles as string, currentUser.area);
+    console.log('getCurrentUserAllowedAreas', {
+      currentUser: currentUser.username,
+      role: currentUser.roles,
+      area: currentUser.area,
+      result: areas
+    });
+    return areas;
   }
 
   /**
