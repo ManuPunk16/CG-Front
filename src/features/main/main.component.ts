@@ -146,6 +146,9 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       switch (property) {
         case 'fecha_recepcion':
           return item.fecha_recepcion ? new Date(item.fecha_recepcion).getTime() : 0;
+        case 'atencion_otorgada':
+          // Utilizar el valor procesado para ordenamiento
+          return item.atencion_otorgada_visual || '';
         default:
           const value = item[property as keyof Input];
           if (typeof value === 'string') {
@@ -449,7 +452,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Procesar campos de texto para eliminar espacios extras
-    ['num_oficio', 'remitente', 'asunto', 'institucion_origen'].forEach(field => {
+    ['num_oficio', 'remitente', 'asunto', 'institucion_origen', 'atencion_otorgada'].forEach(field => {
       if (this.filterValues[field]) {
         this.filterValues[field] = this.filterValues[field].trim();
       }

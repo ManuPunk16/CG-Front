@@ -101,6 +101,11 @@
               <mat-option *ngFor="let status of statusOptions" [value]="status">{{ status }}</mat-option>
             </mat-select>
           </mat-form-field>
+
+          <mat-form-field class="w-full">
+            <mat-label>Atención Otorgada</mat-label>
+            <input matInput [(ngModel)]="filterValues['atencion_otorgada']" placeholder="Buscar por atención">
+          </mat-form-field>
         </div>
 
         <div class="flex flex-wrap gap-2 mt-2">
@@ -229,7 +234,7 @@
 
         <!-- Columna de atención otorgada -->
         <ng-container matColumnDef="atencion_otorgada">
-          <th mat-header-cell *matHeaderCellDef class="w-40 sm:w-48"> Atención </th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-40 sm:w-48"> Atención </th>
           <td mat-cell *matCellDef="let item" class="break-words whitespace-normal py-4">
             {{item.atencion_otorgada_visual}}
           </td>
