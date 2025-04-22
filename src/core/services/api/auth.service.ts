@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, of } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { ApiResponse } from '../../models/api-response.model';
 import { AuthResponse, AuthRequest } from '../../models/user/auth.model';
@@ -41,14 +41,30 @@ export class AuthService extends BaseApiService {
    * Cerrar sesión
    */
   logout(): Observable<ApiResponse<void>> {
+    // Verificar si hay un token válido antes de intentar logout en el servidor
+    const token = localStorage.getItem('token');
+
+    // Si no hay token, simplemente limpiamos la sesión local sin llamar al API
+    if (!token) {
+      this.clearSession();
+      return of({ status: 'success', message: 'Sesión local terminada' } as ApiResponse<void>);
+    }
+
     return this.post<ApiResponse<void>>(`${this.endpoint}/logout`, {})
       .pipe(
         tap(() => {
           this.clearSession();
         }),
         catchError(error => {
-          // Incluso si hay error, eliminamos la sesión local
+          // Siempre limpiar la sesión local, independientemente del error
           this.clearSession();
+
+          // Si es error 401, no propagar el error
+          if (error?.status === 401) {
+            console.log('Token expirado durante logout, sesión limpiada localmente');
+            return of({ status: 'success', message: 'Sesión local terminada' } as ApiResponse<void>);
+          }
+
           return throwError(() => error);
         })
       );

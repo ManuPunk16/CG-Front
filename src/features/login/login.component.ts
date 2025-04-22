@@ -12,6 +12,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { NgClass, NgIf } from '@angular/common';
 import { AlertService } from '../../core/services/ui/alert.service';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -44,6 +46,7 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   errorMessage = '';
   loginForm!: FormGroup;
+  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     // Verificar si ya hay sesión activa
@@ -57,6 +60,15 @@ export class LoginComponent implements OnInit {
       username: ['', [Validators.required]],
       password: ['', [Validators.required]]
     });
+
+    // Verificar si venimos de una sesión expirada
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        if (params['expired'] === 'true') {
+          this.loginForm.reset();
+        }
+      });
   }
 
   /**
