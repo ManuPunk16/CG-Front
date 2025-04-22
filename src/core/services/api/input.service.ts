@@ -304,4 +304,24 @@ export class InputService extends BaseApiService {
         })
       );
   }
+
+  /**
+   * Exporta datos a Excel
+   * @param params Parámetros para la exportación
+   * @returns Observable con el archivo Blob
+   */
+  exportToExcel(params: any): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${this.endpoint}/export`, {
+      params: this.buildHttpParams(params),
+      responseType: 'blob'
+    });
+  }
+
+  /**
+   * Obtiene estadísticas de registros por área
+   * @returns Observable con los datos estadísticos
+   */
+  getEstadisticasRegistros(): Observable<any> {
+    return this.get<any>(`${this.endpoint}/estadisticas/registros`);
+  }
 }

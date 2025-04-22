@@ -68,3 +68,55 @@ export interface DuplicateResponse {
     anio: number;
   }>;
 }
+
+/**
+ * Modelo para estadísticas de áreas
+ */
+export interface AreaStats {
+  area: string;
+  total: number;
+  atendidos: number;
+  no_atendidos: number;
+  pendientes?: number;
+}
+
+/**
+ * Modelo para datos de mes en estadísticas
+ */
+export interface MesStats {
+  mes: number;
+  atendido: number;
+  noAtendido: number;
+  respuestaRegistrada: number;
+}
+
+/**
+ * Modelo para datos de año en estadísticas
+ */
+export interface AnioStats {
+  anio: number;
+  meses: MesStats[];
+}
+
+/**
+ * Modelo para estadísticas por dirección
+ */
+export interface DireccionStats {
+  direccion: string;
+  anios: AnioStats[];
+}
+
+/**
+ * Respuesta de la API para estadísticas de áreas
+ */
+export interface AreasStatsResponse {
+  status: string;
+  message: string;
+  metadata: {
+    userRole: string;
+    userArea: string;
+    filtroArea: any;
+    totalDirecciones: number;
+  };
+  data: DireccionStats[];
+}

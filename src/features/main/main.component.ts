@@ -38,6 +38,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ApiResponse, PaginatedResponse } from '../../core/models/api-response.model';
 import { AuthService } from '../../core/services';
 
+// Importaciones necesarias
+import Swal from 'sweetalert2';
+import { saveAs } from 'file-saver';
+import { AreaStats, AreasStatsResponse } from '../../core/models/input/input-stats.model';
+
 @Component({
   selector: 'app-main',
   standalone: true,
@@ -141,6 +146,9 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Areas disponibles para mostrar en el filtro
   userAllowedAreas: string[] = [];
+
+  // Agregar propiedades de control para exportaciones
+  isExporting = false;
 
   ngOnInit(): void {
     // Primero cargar permisos de usuario - esto configura userAllowedAreas
@@ -707,5 +715,411 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return Object.values(filtersCopy).filter(value =>
       value !== null && value !== undefined && value !== '').length;
+  }
+
+  /**
+   * Exporta todos los registros a Excel
+   */
+  exportarTodos(): void {
+    Swal.fire({
+      title: 'Exportar registros',
+      text: '¿Deseas exportar todos los registros? Esto puede tardar varios minutos dependiendo del volumen de datos.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isExporting = true;
+
+        // Parámetros para la exportación
+        const params: any = {
+          year: this.currentYear === 'all' ? null : this.currentYear
+        };
+
+        // Si es admin o director general, no filtrar por área
+        if (!this.isAdmin && !this.isDirectorGeneral) {
+          params.area = this.userArea;
+        }
+
+        // Usar el servicio en lugar de llamada HTTP directa
+        this.inputService.exportToExcel(params).pipe(
+          finalize(() => {
+            this.isExporting = false;
+            this.cdr.detectChanges();
+          })
+        ).subscribe({
+          next: (blob: Blob) => {
+            const fileName = `Control_Gestion_${this.currentYear === 'all' ? 'Todos' : this.currentYear}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            saveAs(blob, fileName);
+
+            Swal.fire({
+              title: 'Exportación completada',
+              text: 'Los datos han sido exportados exitosamente',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          },
+          error: (error) => {
+            console.error('Error al exportar:', error);
+            this.alertService.error('Ha ocurrido un error al exportar los datos');
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Exporta los registros filtrados a Excel
+   */
+  exportarFiltrados(): void {
+    if (!this.hasActiveFilters()) {
+      this.alertService.warning('No hay filtros activos. Por favor aplica algún filtro antes de exportar');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Exportar registros filtrados',
+      text: '¿Deseas exportar los registros con los filtros actuales?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isExporting = true;
+
+        // Usar los mismos parámetros que en la búsqueda actual
+        const params: any = {
+          year: this.currentYear === 'all' ? null : this.currentYear,
+          ...this.filterValues
+        };
+
+        // Usar el servicio en lugar de llamada HTTP directa
+        this.inputService.exportToExcel(params).pipe(
+          finalize(() => {
+            this.isExporting = false;
+            this.cdr.detectChanges();
+          })
+        ).subscribe({
+          next: (blob: Blob) => {
+            const fileName = `Control_Gestion_Filtrado_${new Date().toISOString().split('T')[0]}.xlsx`;
+            saveAs(blob, fileName);
+
+            Swal.fire({
+              title: 'Exportación completada',
+              text: 'Los datos filtrados han sido exportados exitosamente',
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          },
+          error: (error) => {
+            console.error('Error al exportar filtrados:', error);
+            this.alertService.error('Ha ocurrido un error al exportar los datos filtrados');
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Exporta registros por área seleccionada
+   */
+  exportarPorArea(): void {
+    // Si el usuario no es admin o director general, solo puede exportar su área
+    if (!this.isAdmin && !this.isDirectorGeneral) {
+      this.exportarAreaEspecifica(this.userArea);
+      return;
+    }
+
+    // Para admin o director general, mostrar selector de áreas
+    Swal.fire({
+      title: 'Seleccionar área',
+      text: 'Selecciona el área para exportar',
+      input: 'select',
+      inputOptions: this.areasToObject(),
+      inputPlaceholder: 'Selecciona un área',
+      showCancelButton: true,
+      confirmButtonText: 'Exportar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes seleccionar un área';
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.exportarAreaEspecifica(result.value);
+      }
+    });
+  }
+
+  /**
+   * Exporta datos de un área específica
+   */
+  private exportarAreaEspecifica(area: string): void {
+    this.isExporting = true;
+
+    const params: any = {
+      year: this.currentYear === 'all' ? null : this.currentYear,
+      area: area
+    };
+
+    // Usar el servicio en lugar de llamada HTTP directa
+    this.inputService.exportToExcel(params).pipe(
+      finalize(() => {
+        this.isExporting = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (blob: Blob) => {
+        const fileName = `Control_Gestion_${area.replace(/\s+/g, '_')}_${this.currentYear === 'all' ? 'Todos' : this.currentYear}.xlsx`;
+        saveAs(blob, fileName);
+
+        Swal.fire({
+          title: 'Exportación completada',
+          text: `Los datos del área "${area}" han sido exportados exitosamente`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      },
+      error: (error) => {
+        console.error('Error al exportar área específica:', error);
+        this.alertService.error('Ha ocurrido un error al exportar los datos del área');
+      }
+    });
+  }
+
+  /**
+   * Convierte el array de áreas a un objeto para el select de SweetAlert2
+   */
+  private areasToObject(): {[key: string]: string} {
+    const result: {[key: string]: string} = {};
+
+    // Para admin mostrar todas las áreas disponibles
+    const areasToShow = this.isAdmin ? Object.values(AreasEnum) : this.userAllowedAreas;
+
+    areasToShow.forEach(area => {
+      result[area] = area;
+    });
+
+    return result;
+  }
+
+  /**
+   * Muestra las estadísticas de las áreas
+   */
+  verEstadisticasAreas(): void {
+    // Usar el año seleccionado o el actual si es "all"
+    const yearToShow = this.currentYear === 'all' ? new Date().getFullYear() : this.currentYear;
+
+    Swal.fire({
+      title: 'Cargando estadísticas',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+
+        // Usar el servicio
+        this.inputService.getEstadisticasRegistros().subscribe({
+          next: (response: AreasStatsResponse) => {
+            Swal.close();
+            // Pasar también el año seleccionado
+            this.mostrarEstadisticas(response.data, yearToShow as number);
+          },
+          error: (error) => {
+            console.error('Error al obtener estadísticas:', error);
+            Swal.fire({
+              title: 'Error',
+              text: 'Ha ocurrido un error al obtener las estadísticas',
+              icon: 'error'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Muestra las estadísticas en un modal Swal con formato
+   */
+  private mostrarEstadisticas(datos: any[], selectedYear: number): void {
+    // Crear tabla HTML para mostrar estadísticas
+    let htmlContent = '<div class="estadisticas-container" style="max-width: 100%; overflow-x: auto;">';
+
+    // Título y subtítulo
+    htmlContent += `<h3 style="margin-bottom:15px;">Estadísticas de Registros por Área</h3>`;
+    htmlContent += `<p style="margin-bottom:20px;">Año seleccionado: ${selectedYear}</p>`;
+
+    // Tabla de estadísticas - Ajustando ancho para usar espacio disponible
+    htmlContent += '<table class="stats-table" style="width:100%; border-collapse:collapse; min-width:700px;">';
+
+    // Encabezados con más espacio y mejor alineación
+    htmlContent += `
+      <tr style="background-color:#f3f4f6; font-weight:bold;">
+        <th style="padding:12px 16px; text-align:left; border:1px solid #ddd;">Área</th>
+        <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:80px;">Total</th>
+        <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:100px;">Atendidos</th>
+        <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:120px;">No Atendidos</th>
+        <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:100px;">% Atención</th>
+      </tr>
+    `;
+
+    // Procesar los datos para el año actual
+    if (Array.isArray(datos)) {
+      datos.forEach(direccion => {
+        // Obtener datos para el año actual
+        const datosAnioActual = this.obtenerDatosAnioActual(direccion, selectedYear);
+
+        // Calcular totales
+        const total = datosAnioActual.atendido + datosAnioActual.noAtendido;
+        const porcentajeAtencion = total > 0
+          ? Math.round((datosAnioActual.atendido / total) * 100)
+          : 0;
+
+        // Determinar el color según el porcentaje
+        const color = porcentajeAtencion >= 75
+          ? 'green'
+          : porcentajeAtencion >= 50
+            ? '#f59e0b'
+            : 'red';
+
+        htmlContent += `
+          <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:10px 16px; border:1px solid #ddd;">${direccion.direccion}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${total}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.atendido}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.noAtendido}</td>
+            <td style="padding:10px 16px; text-align:center; font-weight:bold; border:1px solid #ddd; color:${color};">
+              ${porcentajeAtencion}%
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      htmlContent += `
+        <tr>
+          <td colspan="5" style="padding:8px; text-align:center;">No hay datos disponibles</td>
+        </tr>
+      `;
+    }
+
+    htmlContent += '</table>';
+
+    // Resumen anual
+    const resumenAnual = this.calcularResumenAnual(datos, selectedYear);
+
+    htmlContent += `
+      <div style="margin-top:20px; padding:15px; background-color:#f9fafb; border-radius:5px; border:1px solid #e5e7eb;">
+        <h4 style="margin-top:0;">Resumen Anual ${selectedYear}</h4>
+        <div style="display:flex; justify-content:space-around; text-align:center; margin-top:10px;">
+          <div>
+            <strong style="display:block; font-size:18px;">${resumenAnual.total}</strong>
+            <span>Total</span>
+          </div>
+          <div>
+            <strong style="display:block; font-size:18px; color:green;">${resumenAnual.atendidos}</strong>
+            <span>Atendidos</span>
+          </div>
+          <div>
+            <strong style="display:block; font-size:18px; color:red;">${resumenAnual.noAtendidos}</strong>
+            <span>No Atendidos</span>
+          </div>
+          <div>
+            <strong style="display:block; font-size:18px; color:${
+              resumenAnual.porcentaje >= 75 ? 'green' : resumenAnual.porcentaje >= 50 ? '#f59e0b' : 'red'
+            };">${resumenAnual.porcentaje}%</strong>
+            <span>Atención Global</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    htmlContent += `
+      <p style="margin-top:20px; font-style:italic; color:#6b7280;">
+        Las estadísticas muestran el porcentaje de oficios atendidos por cada área en el año ${selectedYear}.
+      </p>
+    `;
+
+    htmlContent += '</div>';
+
+    // Mostrar estadísticas
+    Swal.fire({
+      title: 'Estadísticas de Áreas',
+      html: htmlContent,
+      width: 1000, // Aumentar de 800 a 1000px
+      confirmButtonText: 'Cerrar',
+      confirmButtonColor: '#3085d6',
+      // Permite que el modal sea aún más grande en pantallas grandes
+      customClass: {
+        container: 'swal-wide-container',
+        popup: 'swal-wide-popup'
+      }
+    });
+  }
+
+  /**
+   * Obtiene los datos consolidados para el año actual
+   */
+  private obtenerDatosAnioActual(direccion: any, currentYear: number): { atendido: number, noAtendido: number } {
+    // Valores por defecto
+    const resultado = { atendido: 0, noAtendido: 0 };
+
+    // Buscar los datos del año actual
+    if (direccion.anios && Array.isArray(direccion.anios)) {
+      const anioActual = direccion.anios.find((a: any) => a.anio === currentYear);
+
+      if (anioActual && Array.isArray(anioActual.meses)) {
+        // Sumar los valores de todos los meses del año actual
+        anioActual.meses.forEach((mes: any) => {
+          resultado.atendido += mes.atendido || 0;
+          resultado.noAtendido += mes.noAtendido || 0;
+        });
+      }
+    }
+
+    return resultado;
+  }
+
+  /**
+   * Calcula el resumen anual de todas las áreas
+   */
+  private calcularResumenAnual(datos: any[], currentYear: number): {
+    total: number,
+    atendidos: number,
+    noAtendidos: number,
+    porcentaje: number
+  } {
+    let totalAtendidos = 0;
+    let totalNoAtendidos = 0;
+
+    if (Array.isArray(datos)) {
+      datos.forEach(direccion => {
+        const datosAnio = this.obtenerDatosAnioActual(direccion, currentYear);
+        totalAtendidos += datosAnio.atendido;
+        totalNoAtendidos += datosAnio.noAtendido;
+      });
+    }
+
+    const total = totalAtendidos + totalNoAtendidos;
+    const porcentaje = total > 0 ? Math.round((totalAtendidos / total) * 100) : 0;
+
+    return {
+      total,
+      atendidos: totalAtendidos,
+      noAtendidos: totalNoAtendidos,
+      porcentaje
+    };
   }
 }

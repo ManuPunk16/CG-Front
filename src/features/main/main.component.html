@@ -126,6 +126,42 @@
     </div>
   </div>
 
+  <!-- Panel de acciones rápidas -->
+  <div class="bg-white shadow-md rounded-lg overflow-hidden mb-4">
+    <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+      <h2 class="text-md font-semibold text-gray-800">Acciones rápidas</h2>
+    </div>
+
+    <div class="px-4 py-3 bg-white">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        <!-- Botón para exportar todos los registros -->
+        <button mat-raised-button color="primary" (click)="exportarTodos()" [disabled]="isExporting">
+          <mat-icon>file_download</mat-icon>
+          Exportar todos
+          <mat-spinner *ngIf="isExporting" diameter="20" class="ml-2"></mat-spinner>
+        </button>
+
+        <!-- Botón para exportar registros filtrados -->
+        <button mat-raised-button color="accent" (click)="exportarFiltrados()" [disabled]="isExporting || !hasActiveFilters()">
+          <mat-icon>filter_list</mat-icon>
+          Exportar filtrados
+        </button>
+
+        <!-- Botón para exportar por área -->
+        <button mat-raised-button color="primary" (click)="exportarPorArea()" [disabled]="isExporting">
+          <mat-icon>business</mat-icon>
+          Por área
+        </button>
+
+        <!-- Botón para estadísticas -->
+        <button mat-raised-button color="warn" (click)="verEstadisticasAreas()">
+          <mat-icon>bar_chart</mat-icon>
+          Estadísticas de áreas
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Advertencia cuando se seleccionan todos los años -->
   <div *ngIf="isAllYearsSelected" class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4 rounded-md">
     <div class="flex items-start">

@@ -74,12 +74,44 @@ form {
   max-width: 110px;
 }
 
-// /* Estilos específicos para cada campo de filtro */
-// .search-field[data-index="0"] {
-//   /* Estilos para el primer campo de filtro */
-// }
+// Estilos para el modal de estadísticas
+::ng-deep {
 
-// .search-field[data-index="1"] {
-//   /* Estilos para el segundo campo de filtro */
-// }
+  .swal-wide-popup {
+    width: auto !important;
+    max-width: 1200px !important;
+  }
+
+  .swal2-html-container {
+    // Mejorar la legibilidad de la tabla
+    .stats-table {
+      th {
+        white-space: nowrap;
+        padding: 10px 12px !important;
+      }
+
+      td {
+        padding: 10px 12px !important;
+      }
+    }
+
+    // Mejorar el diseño responsivo
+    @media (max-width: 768px) {
+      .estadisticas-container {
+        margin: -15px -20px;
+      }
+    }
+  }
+
+  // Mejorar la visualización en pantallas pequeñas
+  @media (max-width: 640px) {
+    .swal2-popup {
+      padding: 0.5em !important;
+    }
+
+    .swal2-html-container {
+      padding: 0.5em !important;
+    }
+  }
+}
 
