@@ -33,6 +33,9 @@ import { AuthStateService } from '../../core/services/utility/auth-state.service
 import { PermissionsService } from '../../core/services/utility/permissions.service';
 import { RolesEnum } from '../../core/models/enums/roles.enum';
 import { DateFormatService } from '../../core/services/utility/date-format.service';
+import { MatDividerModule } from '@angular/material/divider';
+// Agrega la importación de la nueva interfaz
+import { ApiResponse, PaginatedResponse } from '../../core/models/api-response.model';
 
 @Component({
   selector: 'app-main',
@@ -58,7 +61,8 @@ import { DateFormatService } from '../../core/services/utility/date-format.servi
     NgIf,
     NgFor,
     NgClass,
-    DatePipe
+    DatePipe,
+    MatDividerModule
   ],
   providers: [
     DatePipe,
@@ -101,7 +105,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   pageSizeOptions = [25, 50, 100, 500];
 
   // Año actual y filtros
-  currentYear: number = new Date().getFullYear();
+  currentYear: number | 'all' = new Date().getFullYear();
   searchFields: string[] = [
     'folio', 'fecha_recepcion', 'num_oficio', 'institucion_origen',
     'remitente', 'asunto', 'asignado', 'atencion_otorgada', 'estatus'
@@ -128,9 +132,15 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoadingInstitutions = false;
   rawInstitutionsData: any[] = []; // Almacena los datos crudos de la API
 
+  // Añadir estas propiedades
+  availableYears: number[] = [];
+  isAllYearsSelected: boolean = false;
+  totalAllYearsItems: number = 0;
+
   ngOnInit(): void {
     this.loadUserPermissions();
     this.loadCatalogs();
+    this.loadAvailableYears();
 
     this.dataSource.sortingDataAccessor = (item: Input, property: string) => {
       switch (property) {
@@ -263,39 +273,96 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Cargar los años disponibles con registros
+   */
+  loadAvailableYears(): void {
+    this.inputService.getAvailableYears()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (years) => {
+          this.availableYears = years;
+          // Seleccionar año actual por defecto si existe, o el más reciente
+          if (this.currentYear !== 'all' && !this.availableYears.includes(this.currentYear as number)) {
+            this.currentYear = Math.max(...this.availableYears);
+          }
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Error al cargar años disponibles:', error);
+          this.alertService.error('Error al cargar los años disponibles');
+        }
+      });
+  }
+
+  /**
+   * Maneja el cambio de año seleccionado
+   */
+  onYearChange(): void {
+    // Resetear paginación
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+
+    // Manejar selección de "Todos los años"
+    if (this.currentYear === 'all') {
+      this.isAllYearsSelected = true;
+      this.inputService.getTotalCount().subscribe(total => {
+        this.totalAllYearsItems = total;
+        this.cdr.detectChanges();
+      });
+    } else {
+      this.isAllYearsSelected = false;
+    }
+
+    // Recargar datos
+    this.loadInputs();
+  }
+
+  /**
    * Carga los inputs con paginación y filtros
    */
   loadInputs(): void {
     this.isLoadingResults = true;
 
     const params: InputQueryParams = {
-      year: this.currentYear,
+      year: this.isAllYearsSelected ? null : (this.currentYear === 'all' ? null : this.currentYear),
       page: this.paginator?.pageIndex || 0,
       limit: this.paginator?.pageSize || this.pageSize,
       sortBy: this.sort?.active || 'fecha_recepcion',
       sortOrder: this.sort?.direction || 'asc',
     };
 
-    // Agregar filtros si existen
+    // Agregar filtros no vacíos al objeto de parámetros
     Object.keys(this.filterValues).forEach(key => {
-      if (this.filterValues[key]) {
-        params[key] = this.filterValues[key];
+      const value = this.filterValues[key];
+      if (value !== null && value !== undefined && value !== '') {
+        params[key] = value;
       }
     });
 
-    // Aplicar filtro por área si el usuario no es admin o director general
+    // Aplicar filtro por área según permisos de usuario
     if (!this.isAdmin && !this.isDirectorGeneral && this.userArea) {
-      params.area = this.userArea;
+      params['asignado'] = this.userArea;
+      console.log(`Aplicando filtro automático de área: asignado = ${this.userArea}`);
     }
+
+    console.log('Parámetros de búsqueda completos:', params);
 
     this.inputService.getInputs(params)
       .pipe(
         takeUntil(this.destroy$),
         tap(response => {
+          console.log('Respuesta del servidor:', response);
+
+          // Agrega esta línea para comparar (ahora correctamente tipada)
+          console.log('Filtros aplicados vs. filtros devueltos:', {
+            enviados: params,
+            recibidos: response.data.filters
+          });
+
           if (response && response.data) {
-            // Acceder directamente a los datos (la interfaz debe actualizarse en InputService)
-            const inputs = Array.isArray(response.data) ? response.data :
-                          (response.data as any).inputs || [];
+            // Acceder directamente a los inputs
+            const inputs = response.data.inputs || [];
 
             this.dataSource.data = inputs.map((input: Input) => ({
               ...input,
@@ -304,13 +371,13 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
               colorSemaforo: this.getColorSemaforo(input)
             }));
 
-            // Acceder a la información de paginación si existe
-            const pagination = (response.data as any).pagination;
+            // Acceder a la información de paginación
+            const pagination = response.data.pagination;
             if (pagination) {
               this.totalItems = pagination.totalItems || 0;
               this.currentPage = pagination.currentPage || 0;
 
-              // Actualizamos la información del paginador sin recurrir a su evento interno
+              // Actualizamos la información del paginador
               if (this.paginator) {
                 this.paginator.length = this.totalItems;
                 this.paginator.pageIndex = this.currentPage;
@@ -340,22 +407,94 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Aplica los filtros de búsqueda
    */
   applyFilters(): void {
+    // Procesar formato de fecha (convertir de dd/mm/yyyy a formato ISO)
+    if (this.filterValues['fecha_recepcion']) {
+      const dateParts = this.filterValues['fecha_recepcion'].split('/');
+      if (dateParts.length === 3) {
+        try {
+          const day = parseInt(dateParts[0], 10);
+          const month = parseInt(dateParts[1], 10) - 1;
+          const year = parseInt(dateParts[2], 10);
+
+          if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+            // Crear fecha para el día específico
+            const date = new Date(year, month, day);
+
+            // Establecer la fecha de inicio como el día seleccionado a las 00:00:00
+            this.filterValues['fecha_recepcion_start'] =
+              `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            // Establecer la fecha de fin como el mismo día a las 23:59:59
+            this.filterValues['fecha_recepcion_end'] =
+              `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            // Eliminar el filtro original
+            delete this.filterValues['fecha_recepcion'];
+
+            console.log('Filtros de fecha ajustados:', {
+              startDate: this.filterValues['fecha_recepcion_start'],
+              endDate: this.filterValues['fecha_recepcion_end']
+            });
+          }
+        } catch (error) {
+          console.error('Error al procesar fecha:', error);
+          delete this.filterValues['fecha_recepcion'];
+        }
+      }
+    }
+
+    // Asegurar que el valor del autocompletado de institución se sincronice
+    if (this.institutionFilterControl.value) {
+      this.filterValues['institucion_origen'] = this.institutionFilterControl.value;
+    }
+
+    // Procesar campos de texto para eliminar espacios extras
+    ['num_oficio', 'remitente', 'asunto', 'institucion_origen'].forEach(field => {
+      if (this.filterValues[field]) {
+        this.filterValues[field] = this.filterValues[field].trim();
+      }
+    });
+
+    // Procesar campo folio (puede ser número o cadena)
+    if (this.filterValues['folio']) {
+      // Mantenerlo como string para permitir búsquedas parciales
+      this.filterValues['folio'] = this.filterValues['folio'].trim();
+    }
+
+    // Reiniciar la paginación al aplicar filtros
     if (this.paginator) {
       this.paginator.pageIndex = 0;
     }
+
+    // Cargar datos con los filtros aplicados
     this.loadInputs();
   }
 
   /**
-   * Limpia todos los filtros (modificar para incluir el control de institución)
+   * Limpia todos los filtros
    */
   clearFilters(): void {
+    // Limpiar objeto de filtros
     this.filterValues = {};
-    this.institutionFilterControl.setValue('');
+
+    // Asegurarse de eliminar específicamente los filtros de fecha
+    delete this.filterValues['fecha_recepcion'];
+    delete this.filterValues['fecha_recepcion_start'];
+    delete this.filterValues['fecha_recepcion_end'];
+
+    // Limpiar controles específicos
+    this.institutionFilterControl.setValue('', {emitEvent: false});
+
+    // Reiniciar paginación
     if (this.paginator) {
       this.paginator.pageIndex = 0;
     }
+
+    // Recargar datos sin filtros
     this.loadInputs();
+
+    // Notificar al usuario
+    this.alertService.info('Filtros limpiados');
   }
 
   /**
@@ -462,5 +601,59 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/nueva-entrada']);
   }
 
+  /**
+   * Valida el formato de fecha al perder foco
+   */
+  validateDateFormat(event: any): void {
+    const inputValue = event.target.value;
+    if (!inputValue) return;
+
+    // Validar formato dd/mm/yyyy usando regex
+    const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = inputValue.match(dateRegex);
+
+    if (!match) {
+      this.alertService.warning('Formato de fecha incorrecto. Use dd/mm/yyyy');
+      return;
+    }
+
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+
+    // Validar valores
+    if (day < 1 || day > 31 || month < 1 || month > 12) {
+      this.alertService.warning('Fecha inválida');
+    }
+  }
+
   // No necesitamos los métodos de paginación personalizados ya que usamos MatPaginator
+
+  /**
+   * Verifica si hay filtros activos
+   */
+  hasActiveFilters(): boolean {
+    return Object.values(this.filterValues).some(value =>
+      value !== null && value !== undefined && value !== '');
+  }
+
+  /**
+   * Cuenta cuántos filtros activos hay (excluyendo pares start/end)
+   */
+  countActiveFilters(): number {
+    // Crear una copia del objeto de filtros
+    const filtersCopy = { ...this.filterValues };
+
+    // Si hay ambos filtros de fecha, contar como uno solo
+    if (filtersCopy['fecha_recepcion_start'] && filtersCopy['fecha_recepcion_end']) {
+      // Si también existe fecha_recepcion, no contar los _start y _end por separado
+      if (filtersCopy['fecha_recepcion']) {
+        delete filtersCopy['fecha_recepcion_start'];
+        delete filtersCopy['fecha_recepcion_end'];
+      }
+    }
+
+    return Object.values(filtersCopy).filter(value =>
+      value !== null && value !== undefined && value !== '').length;
+  }
 }

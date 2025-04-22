@@ -26,7 +26,7 @@ export class AuthService extends BaseApiService {
     return this.post<any>(`${this.endpoint}/login`, request)
       .pipe(
         tap(response => {
-          console.log('Respuesta de login recibida:', response);
+          // console.log('Respuesta de login recibida:', response);
           // La respuesta ya contiene los datos, no 'response.data'
           this.setSession(response);
         }),
@@ -67,7 +67,7 @@ export class AuthService extends BaseApiService {
   isAuthenticated(): boolean {
     // Asegúrate de que esta función funcione correctamente
     const isAuth = this.authStateService.isAuthenticated();
-    console.log('¿Usuario autenticado?', isAuth);
+    // console.log('¿Usuario autenticado?', isAuth);
     return isAuth;
   }
 
@@ -83,7 +83,7 @@ export class AuthService extends BaseApiService {
    * Guardar la sesión del usuario
    */
   private setSession(authResponse: any): void {
-    console.log('setSession recibió:', authResponse);
+    // console.log('setSession recibió:', authResponse);
 
     // En lugar de esperar authResult.accessToken, verificar si viene directamente
     const accessToken = authResponse.accessToken;
@@ -94,7 +94,7 @@ export class AuthService extends BaseApiService {
       return;
     }
 
-    console.log('Guardando token directamente en localStorage:', accessToken.substring(0, 20) + '...');
+    // console.log('Guardando token directamente en localStorage:', accessToken.substring(0, 20) + '...');
 
     try {
       // Guardar directamente en localStorage sin usar el servicio
@@ -103,13 +103,13 @@ export class AuthService extends BaseApiService {
 
       // Verificación inmediata
       const savedToken = localStorage.getItem('token');
-      console.log('Token guardado correctamente en localStorage:', !!savedToken);
+      // console.log('Token guardado correctamente en localStorage:', !!savedToken);
 
       // Actualizar estado de autenticación
       this.authStateService.setAuthenticated(true);
       this.authStateService.setCurrentUser(user);
 
-      console.log('Usuario autenticado:', user);
+      // console.log('Usuario autenticado:', user);
     } catch (error) {
       console.error('Error al guardar la sesión:', error);
     }
@@ -134,13 +134,13 @@ export class AuthService extends BaseApiService {
       const tokenString = localStorage.getItem('token');
       const userString = localStorage.getItem('user');
 
-      console.log('reloadAuthState - token exists:', !!tokenString);
+      // console.log('reloadAuthState - token exists:', !!tokenString);
 
       if (tokenString && userString) {
         const user = JSON.parse(userString);
         this.authStateService.setAuthenticated(true);
         this.authStateService.setCurrentUser(user);
-        console.log('Estado de autenticación recargado con éxito');
+        // console.log('Estado de autenticación recargado con éxito');
         return;
       }
     } catch (e) {

@@ -6,7 +6,7 @@ import { throwError } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  console.log('Interceptando petición:', req.url);
+  // console.log('Interceptando petición:', req.url);
 
   // Obtener el token (así es como deberías hacerlo)
   const token = localStorage.getItem('token');
@@ -23,7 +23,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     tap(event => {
       if (event instanceof HttpResponse) {
-        console.log('Respuesta recibida:', event);
+        // console.log('Respuesta recibida:', event);
         // No manipular la respuesta aquí, solo registrarla
       }
     }),

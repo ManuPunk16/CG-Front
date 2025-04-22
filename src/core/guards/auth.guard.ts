@@ -12,8 +12,8 @@ export const authGuard: CanActivateFn = (route, state) => {
   const token = storageService.getItem('token');
   const isAuth = authService.isAuthenticated();
 
-  console.log('AuthGuard - Token exists:', !!token);
-  console.log('AuthGuard - isAuthenticated:', isAuth);
+  // console.log('AuthGuard - Token exists:', !!token);
+  // console.log('AuthGuard - isAuthenticated:', isAuth);
 
   if (token && !isAuth) {
     // Inconsistencia: hay token pero no está autenticado según el servicio

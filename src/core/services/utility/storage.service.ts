@@ -22,7 +22,7 @@ export class StorageService {
         console.error('StorageService: El almacenamiento no funciona correctamente');
       } else {
         this.storage.removeItem('test');
-        console.log('StorageService: Funciona correctamente');
+        // console.log('StorageService: Funciona correctamente');
       }
     } catch (e) {
       console.error('StorageService: Error accediendo al almacenamiento local', e);
@@ -35,7 +35,7 @@ export class StorageService {
   setItem(key: string, value: string): void {
     try {
       this.storage.setItem(key, value);
-      console.log(`StorageService: Item '${key}' guardado`);
+      // console.log(`StorageService: Item '${key}' guardado`);
     } catch (error) {
       console.error('Error al guardar en storage:', error);
     }

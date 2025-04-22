@@ -20,41 +20,41 @@ export const routes: Routes = [
         loadComponent: () => import('../features/main/main.component').then(c => c.MainComponent),
         canActivate: [areaAccessGuard]
       },
-      {
-        path: 'editar-entrada/:id',
-        loadComponent: () => import('../features/shared/editar-entrada/editar-entrada.component').then(c => c.EditarEntradaComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'nueva-entrada',
-        loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'nueva-entrada-antiguos',
-        loadComponent: () => import('../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component').then(c => c.NuevaEntradaAntiguosComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'editar-seguimiento/:id',
-        loadComponent: () => import('../features/shared/editar-seguimiento/editar-seguimiento.component').then(c => c.EditarSeguimientoComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'ficha_tecnica/:id',
-        loadComponent: () => import('../features/shared/ficha-tecnica/ficha-tecnica.component').then(c => c.FichaTecnicaComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'Entradas/panel-control',
-        loadComponent: () => import('../features/shared/panel-control/panel-control.component').then(c => c.PanelControlComponent),
-        canActivate: [areaAccessGuard]
-      },
-      {
-        path: 'Perfil',
-        loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
-        canActivate: [areaAccessGuard]
-      },
+      // {
+      //   path: 'editar-entrada/:id',
+      //   loadComponent: () => import('../features/shared/editar-entrada/editar-entrada.component').then(c => c.EditarEntradaComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'nueva-entrada',
+      //   loadComponent: () => import('../features/shared/nueva-entrada/nueva-entrada.component').then(c => c.NuevaEntradaComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'nueva-entrada-antiguos',
+      //   loadComponent: () => import('../features/shared/nueva-entrada-antiguos/nueva-entrada-antiguos.component').then(c => c.NuevaEntradaAntiguosComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'editar-seguimiento/:id',
+      //   loadComponent: () => import('../features/shared/editar-seguimiento/editar-seguimiento.component').then(c => c.EditarSeguimientoComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'ficha_tecnica/:id',
+      //   loadComponent: () => import('../features/shared/ficha-tecnica/ficha-tecnica.component').then(c => c.FichaTecnicaComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'Entradas/panel-control',
+      //   loadComponent: () => import('../features/shared/panel-control/panel-control.component').then(c => c.PanelControlComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
+      // {
+      //   path: 'Perfil',
+      //   loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
+      //   canActivate: [areaAccessGuard]
+      // },
       {
         path: '',
         redirectTo: 'Entradas', // Redirige a /Entradas cuando está autenticado

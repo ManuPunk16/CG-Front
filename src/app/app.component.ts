@@ -41,7 +41,7 @@ import { MatMenuModule } from '@angular/material/menu';
     MatIconModule,
     MatButtonModule,
     NgIf,
-    NgClass,
+    // NgClass,
     MatMenuModule
     // LoadingSpinnerComponent
   ],

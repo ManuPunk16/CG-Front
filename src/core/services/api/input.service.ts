@@ -1,21 +1,27 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { BaseApiService } from './base-api.service';
-import { ApiResponse } from '../../models/api-response.model';
+import { ApiResponse, PaginatedResponse } from '../../models/api-response.model';
 import { Input } from '../../models/input/input.model';
 
 export interface InputQueryParams {
-  year?: number;
-  area?: string;
+  year?: number | 'all' | null;
   page?: number;
   limit?: number;
   sortBy?: string;
   sortOrder?: string;
   search?: string;
   estatus?: string;
-  fechaInicio?: string;
-  fechaFin?: string;
-  [key: string]: string | number | boolean | null | undefined;
+  asignado?: string; // Asegúrate de que este campo exista
+  area?: string;     // Agrega campo alternativo si es necesario
+  fecha_recepcion?: string;
+  num_oficio?: string;
+  folio?: string | number;
+  institucion_origen?: string;
+  remitente?: string;
+  asunto?: string;
+  [key: string]: any; // Permite campos adicionales
 }
 
 export interface TimeStatsParams {
@@ -97,9 +103,21 @@ export class InputService extends BaseApiService {
 
   /**
    * Obtiene la lista de inputs con paginación y filtros
+   * @param params Parámetros de consulta
    */
-  getInputs(params: InputQueryParams): Observable<ApiResponse<Input[]>> {
-    return this.get<ApiResponse<Input[]>>(this.endpoint, params);
+  getInputs(params: InputQueryParams): Observable<ApiResponse<PaginatedResponse<Input>>> {
+    // Convertir params a URLSearchParams para la consulta
+    const queryParams = new URLSearchParams();
+
+    // Agregar cada parámetro no nulo a la consulta
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined) {
+        queryParams.append(key, String(params[key]));
+      }
+    });
+
+    const url = `${this.endpoint}?${queryParams.toString()}`;
+    return this.get<ApiResponse<PaginatedResponse<Input>>>(url);
   }
 
   /**
@@ -257,5 +275,33 @@ export class InputService extends BaseApiService {
     } | null;
   }[]>> {
     return this.get<ApiResponse<any>>(`${this.endpoint}/usuarios/ultimas-modificaciones`);
+  }
+
+  /**
+   * Obtiene los años que tienen registros
+   */
+  getAvailableYears(): Observable<number[]> {
+    return this.get<ApiResponse<number[]>>(`${this.endpoint}/available-years`)
+      .pipe(
+        map(response => response.data || []),
+        catchError(error => {
+          console.error('Error obteniendo años disponibles', error);
+          return of([]);
+        })
+      );
+  }
+
+  /**
+   * Obtiene el conteo total de registros
+   */
+  getTotalCount(): Observable<number> {
+    return this.get<ApiResponse<number>>(`${this.endpoint}/total-count`)
+      .pipe(
+        map(response => response.data || 0),
+        catchError(error => {
+          console.error('Error obteniendo conteo total', error);
+          return of(0);
+        })
+      );
   }
 }

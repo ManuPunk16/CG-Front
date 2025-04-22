@@ -1,10 +1,23 @@
 <div class="w-full px-2 sm:px-4 py-4">
-  <!-- Encabezado y filtros -->
+  <!-- Encabezado con selector de año -->
   <div class="bg-white shadow-md rounded-lg overflow-hidden mb-4">
     <div class="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50">
       <div class="mb-2 sm:mb-0">
         <h1 class="text-xl font-semibold text-gray-800">Registros de Entradas</h1>
-        <p class="text-sm text-gray-500">Información del año <span class="font-medium">{{ currentYear }}</span></p>
+        <div class="flex items-center mt-1">
+          <p class="text-sm text-gray-500 mr-3">Año: </p>
+          <mat-form-field appearance="outline" class="w-24 h-10 m-0">
+            <mat-select [(ngModel)]="currentYear" (selectionChange)="onYearChange()">
+              <mat-option *ngFor="let year of availableYears" [value]="year">
+                {{ year }}
+              </mat-option>
+              <!-- <mat-divider></mat-divider> -->
+              <!-- <mat-option [value]="'all'" class="text-blue-600">
+                <mat-icon class="text-blue-600">search</mat-icon> Todos los años
+              </mat-option> -->
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
       <div class="flex gap-2">
         <button mat-raised-button color="primary" (click)="crearNuevoRegistro()">
@@ -19,26 +32,26 @@
         <h2 class="text-md font-medium text-gray-700 mb-2">Filtros de búsqueda</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           <!-- Filtro por folio -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Folio</mat-label>
             <input matInput [(ngModel)]="filterValues['folio']" placeholder="Buscar por folio">
           </mat-form-field>
 
           <!-- Filtro por fecha_recepcion -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Fecha de Recepción</mat-label>
-            <input matInput [(ngModel)]="filterValues['fecha_recepcion']" placeholder="dd/mm/yyyy">
+            <input matInput [(ngModel)]="filterValues['fecha_recepcion']" placeholder="dd/mm/yyyy" (blur)="validateDateFormat($event)">
             <mat-hint>Formato: dd/mm/yyyy</mat-hint>
           </mat-form-field>
 
           <!-- Filtro por num_oficio -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Núm. Oficio</mat-label>
             <input matInput [(ngModel)]="filterValues['num_oficio']" placeholder="Buscar por oficio">
           </mat-form-field>
 
           <!-- Filtro por institucion_origen con Autocomplete -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Institución</mat-label>
             <input type="text"
                    placeholder="Buscar institución"
@@ -60,19 +73,19 @@
           </mat-form-field>
 
           <!-- Filtro por remitente -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Remitente</mat-label>
             <input matInput [(ngModel)]="filterValues['remitente']" placeholder="Buscar por remitente">
           </mat-form-field>
 
           <!-- Filtro por asunto -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Asunto</mat-label>
             <input matInput [(ngModel)]="filterValues['asunto']" placeholder="Buscar por asunto">
           </mat-form-field>
 
           <!-- Filtro por asignado -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Asignado</mat-label>
             <mat-select [(ngModel)]="filterValues['asignado']">
               <mat-option value="">Todos</mat-option>
@@ -81,7 +94,7 @@
           </mat-form-field>
 
           <!-- Filtro por estatus -->
-          <mat-form-field appearance="outline" class="w-full">
+          <mat-form-field class="w-full">
             <mat-label>Estatus</mat-label>
             <mat-select [(ngModel)]="filterValues['estatus']">
               <mat-option value="">Todos</mat-option>
@@ -95,11 +108,28 @@
             <mat-icon>search</mat-icon>
             Buscar
           </button>
-          <button mat-stroked-button (click)="clearFilters()">
+          <button mat-stroked-button (click)="clearFilters()" [disabled]="!hasActiveFilters()">
             <mat-icon>clear_all</mat-icon>
             Limpiar
+            <span *ngIf="countActiveFilters() > 0" class="ml-1 bg-gray-200 text-gray-800 px-1.5 rounded-full text-xs">
+              {{countActiveFilters()}}
+            </span>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advertencia cuando se seleccionan todos los años -->
+  <div *ngIf="isAllYearsSelected" class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-4 rounded-md">
+    <div class="flex items-start">
+      <div class="flex-shrink-0">
+        <mat-icon class="text-amber-400">warning</mat-icon>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-amber-700">
+          Has seleccionado todos los años ({{totalAllYearsItems}} registros). Considera usar filtros adicionales para mejorar el rendimiento.
+        </p>
       </div>
     </div>
   </div>

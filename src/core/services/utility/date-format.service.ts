@@ -44,6 +44,18 @@ export class DateFormatService {
   }
 
   /**
+   * Formatea una fecha para enviarla al backend
+   * @param date Fecha a formatear
+   * @returns Fecha en formato yyyy-MM-dd
+   */
+  formatToBackendDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  /**
    * Convierte un string o Date a objeto Date
    */
   ensureDate(date: Date | string): Date {
