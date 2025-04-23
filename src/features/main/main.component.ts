@@ -166,7 +166,10 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         case 'fecha_recepcion':
           return item.fecha_recepcion ? new Date(item.fecha_recepcion).getTime() : 0;
         case 'atencion_otorgada':
-          // Utilizar el valor procesado para ordenamiento
+          // Manejar el nuevo formato de objeto para 'Sin registrar'
+          if (item.atencion_otorgada_visual && typeof item.atencion_otorgada_visual === 'object') {
+            return (item.atencion_otorgada_visual as {texto: string}).texto || '';
+          }
           return item.atencion_otorgada_visual || '';
         default:
           const value = item[property as keyof Input];
@@ -424,12 +427,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
             // Acceder directamente a los inputs
             const inputs = response.data.inputs || [];
 
-            this.dataSource.data = inputs.map((input: Input) => ({
-              ...input,
-              atencion_otorgada_visual: this.getAtencionOtorgada(input),
-              diasAtraso: this.calcularDiasAtraso(input),
-              colorSemaforo: this.getColorSemaforo(input)
-            }));
+            this.dataSource.data = this.procesarDatos(inputs);
 
             // Acceder a la información de paginación
             const pagination = response.data.pagination;
@@ -577,26 +575,135 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Calcula los días de atraso para el semáforo
+   * Calcula los días de atraso y asigna color de semáforo
+   * @param input El registro de entrada
+   * @returns Objeto con días de atraso y color de semáforo
    */
-  calcularDiasAtraso(input: Input): number {
-    if (input.estatus === EstatusEnum.ATENDIDO) return 0;
-    if (!input.fecha_recepcion) return -1; // Usando -1 para "N/A"
+  private calcularDiasAtraso(input: any): { diasAtraso: number; colorSemaforo: string } {
+    let diasAtraso = 0;
+    let colorSemaforo = 'bg-gray-300'; // Color default para neutro/indefinido
 
-    const hoy = new Date();
+    // Siempre necesitamos fecha_recepcion
+    if (!input.fecha_recepcion) {
+      return { diasAtraso, colorSemaforo };
+    }
+
     const fechaRecepcion = new Date(input.fecha_recepcion);
-    const diff = Math.floor((hoy.getTime() - fechaRecepcion.getTime()) / (1000 * 60 * 60 * 24));
 
-    return diff;
+    // Si no hay seguimientos, usar fecha actual para el cálculo
+    if (!input.seguimientos || !input.seguimientos.fecha_acuse_recibido) {
+      const fechaActual = new Date();
+      diasAtraso = this.calcularDiasEntreFechas(fechaRecepcion, fechaActual);
+    } else {
+      // Si hay fecha de acuse, calcular hasta esa fecha
+      const fechaAcuse = new Date(input.seguimientos.fecha_acuse_recibido);
+      diasAtraso = this.calcularDiasEntreFechas(fechaRecepcion, fechaAcuse);
+    }
+
+    // Asignar color según días de atraso
+    if (diasAtraso <= 3) {
+      colorSemaforo = 'bg-green-500'; // Verde para menos de 3 días
+    } else if (diasAtraso <= 7) {
+      colorSemaforo = 'bg-yellow-500'; // Amarillo para 4-7 días
+    } else {
+      colorSemaforo = 'bg-red-500'; // Rojo para más de 7 días
+    }
+
+    return { diasAtraso, colorSemaforo };
   }
 
   /**
-   * Muestra el texto para días de atraso
+   * Calcula días entre dos fechas, incluyendo fines de semana (días naturales)
+   * @param fechaInicio Fecha inicial
+   * @param fechaFin Fecha final
+   * @returns Número de días naturales entre fechas
    */
-  getDiasAtrasoText(input: Input): string {
-    const dias = input.diasAtraso;
-    if (dias === -1) return 'N/A';
-    return dias?.toString() || '';
+  private calcularDiasEntreFechas(fechaInicio: Date, fechaFin: Date): number {
+    // Asegurar que fechaInicio es anterior o igual a fechaFin
+    if (fechaInicio > fechaFin) {
+      return 0;
+    }
+
+    // Clonar fechas para no modificar las originales
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    // Reset a medianoche para contar días completos
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+
+    // Calcular diferencia en días naturales usando milisegundos
+    const unDiaEnMs = 24 * 60 * 60 * 1000; // Milisegundos en un día
+    const diferenciaTiempo = fin.getTime() - inicio.getTime();
+    const diasTotales = Math.round(diferenciaTiempo / unDiaEnMs);
+
+    return diasTotales;
+  }
+
+  /**
+   * Obtener texto para mostrar en la columna de días atraso
+   */
+  getDiasAtrasoText(item: any): string {
+    if (!item.fecha_recepcion) {
+      return 'N/A';
+    }
+
+    // Determinar si usar fecha actual o fecha de acuse
+    let fechaFin: Date;
+
+    if (item.seguimientos?.fecha_acuse_recibido) {
+      fechaFin = new Date(item.seguimientos.fecha_acuse_recibido);
+    } else {
+      fechaFin = new Date(); // Fecha actual si no hay acuse
+    }
+
+    const fechaInicio = new Date(item.fecha_recepcion);
+    const diasAtraso = this.calcularDiasEntreFechas(fechaInicio, fechaFin);
+
+    // Si no hay acuse, indicar que el contador sigue activo
+    if (!item.seguimientos?.fecha_acuse_recibido) {
+      return `${diasAtraso} días (activo)`;
+    }
+
+    return `${diasAtraso} días`;
+  }
+
+  /**
+   * Aplicar cálculos y coloración a los elementos de la tabla
+   */
+  private procesarDatos(data: any[]): any[] {
+    return data.map(item => {
+      // Calcular días de atraso y color semáforo
+      const { diasAtraso, colorSemaforo } = this.calcularDiasAtraso(item);
+
+      // Verificar si tiene atención otorgada en el seguimiento
+      const tieneAtencion = item.seguimientos &&
+                          item.seguimientos.atencion_otorgada &&
+                          item.seguimientos.atencion_otorgada.trim() !== '';
+
+      // Texto para mostrar en columna de atención otorgada con formato más descriptivo
+      let atencionOtorgada;
+
+      if (tieneAtencion) {
+        // Limitar largo del texto para visualización
+        atencionOtorgada = item.seguimientos.atencion_otorgada.length > 100
+          ? item.seguimientos.atencion_otorgada.substring(0, 100) + '...'
+          : item.seguimientos.atencion_otorgada;
+      } else {
+        // Texto más descriptivo para cuando no hay atención registrada
+        atencionOtorgada = {
+          texto: 'Atención otorgada por parte del enlace no registrada',
+          sinRegistrar: true
+        };
+      }
+
+      return {
+        ...item,
+        diasAtraso,
+        colorSemaforo,
+        atencion_otorgada_visual: atencionOtorgada
+      };
+    });
   }
 
   /**
@@ -605,7 +712,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   getColorSemaforo(input: Input): string {
     if (input.estatus === EstatusEnum.ATENDIDO) return 'bg-green-500';
 
-    const dias = this.calcularDiasAtraso(input);
+    const dias = this.calcularDiasAtraso(input).diasAtraso;
     if (dias === -1) return 'bg-gray-500';
 
     if (dias <= 15) return 'bg-green-500';
@@ -963,18 +1070,25 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     htmlContent += `<p style="margin-bottom:20px;">Año seleccionado: ${selectedYear}</p>`;
 
     // Tabla de estadísticas - Ajustando ancho para usar espacio disponible
-    htmlContent += '<table class="stats-table" style="width:100%; border-collapse:collapse; min-width:700px;">';
+    htmlContent += '<table class="stats-table" style="width:100%; border-collapse:collapse; min-width:800px;">';
 
-    // Encabezados con más espacio y mejor alineación
+    // Encabezados con más espacio y mejor alineación - AÑADIR COLUMNA DE RESPUESTA REGISTRADA
     htmlContent += `
       <tr style="background-color:#f3f4f6; font-weight:bold;">
         <th style="padding:12px 16px; text-align:left; border:1px solid #ddd;">Área</th>
         <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:80px;">Total</th>
         <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:100px;">Atendidos</th>
         <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:120px;">No Atendidos</th>
+        <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:130px;">Respuesta Registrada</th>
         <th style="padding:12px 16px; text-align:center; border:1px solid #ddd; min-width:100px;">% Atención</th>
       </tr>
     `;
+
+    // Variables para el resumen total
+    let totalRegistros = 0;
+    let totalAtendidos = 0;
+    let totalNoAtendidos = 0;
+    let totalRespuestasRegistradas = 0;
 
     // Procesar los datos para el año actual
     if (Array.isArray(datos)) {
@@ -984,8 +1098,10 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Calcular totales
         const total = datosAnioActual.atendido + datosAnioActual.noAtendido;
+
+        // Calcular porcentaje basado en respuestas registradas, no en estatus
         const porcentajeAtencion = total > 0
-          ? Math.round((datosAnioActual.atendido / total) * 100)
+          ? Math.round((datosAnioActual.respuestaRegistrada / total) * 100)
           : 0;
 
         // Determinar el color según el porcentaje
@@ -995,12 +1111,19 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
             ? '#f59e0b'
             : 'red';
 
+        // Actualizar totales generales
+        totalRegistros += total;
+        totalAtendidos += datosAnioActual.atendido;
+        totalNoAtendidos += datosAnioActual.noAtendido;
+        totalRespuestasRegistradas += datosAnioActual.respuestaRegistrada;
+
         htmlContent += `
           <tr style="border-bottom:1px solid #ddd;">
             <td style="padding:10px 16px; border:1px solid #ddd;">${direccion.direccion}</td>
             <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${total}</td>
             <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.atendido}</td>
             <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.noAtendido}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.respuestaRegistrada}</td>
             <td style="padding:10px 16px; text-align:center; font-weight:bold; border:1px solid #ddd; color:${color};">
               ${porcentajeAtencion}%
             </td>
@@ -1010,36 +1133,48 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       htmlContent += `
         <tr>
-          <td colspan="5" style="padding:8px; text-align:center;">No hay datos disponibles</td>
+          <td colspan="6" style="padding:8px; text-align:center;">No hay datos disponibles</td>
         </tr>
       `;
     }
 
+    // Calcular porcentaje global basado en respuestas registradas
+    const porcentajeGlobal = totalRegistros > 0
+      ? Math.round((totalRespuestasRegistradas / totalRegistros) * 100)
+      : 0;
+
+    // Color para el porcentaje global
+    const colorGlobal = porcentajeGlobal >= 75
+      ? 'green'
+      : porcentajeGlobal >= 50
+        ? '#f59e0b'
+        : 'red';
+
     htmlContent += '</table>';
 
-    // Resumen anual
-    const resumenAnual = this.calcularResumenAnual(datos, selectedYear);
-
+    // Resumen anual actualizado con respuestas registradas
     htmlContent += `
       <div style="margin-top:20px; padding:15px; background-color:#f9fafb; border-radius:5px; border:1px solid #e5e7eb;">
         <h4 style="margin-top:0;">Resumen Anual ${selectedYear}</h4>
-        <div style="display:flex; justify-content:space-around; text-align:center; margin-top:10px;">
-          <div>
-            <strong style="display:block; font-size:18px;">${resumenAnual.total}</strong>
+        <div style="display:flex; justify-content:space-around; flex-wrap:wrap; text-align:center; margin-top:10px;">
+          <div style="margin:10px;">
+            <strong style="display:block; font-size:18px;">${totalRegistros}</strong>
             <span>Total</span>
           </div>
-          <div>
-            <strong style="display:block; font-size:18px; color:green;">${resumenAnual.atendidos}</strong>
+          <div style="margin:10px;">
+            <strong style="display:block; font-size:18px; color:green;">${totalAtendidos}</strong>
             <span>Atendidos</span>
           </div>
-          <div>
-            <strong style="display:block; font-size:18px; color:red;">${resumenAnual.noAtendidos}</strong>
+          <div style="margin:10px;">
+            <strong style="display:block; font-size:18px; color:red;">${totalNoAtendidos}</strong>
             <span>No Atendidos</span>
           </div>
-          <div>
-            <strong style="display:block; font-size:18px; color:${
-              resumenAnual.porcentaje >= 75 ? 'green' : resumenAnual.porcentaje >= 50 ? '#f59e0b' : 'red'
-            };">${resumenAnual.porcentaje}%</strong>
+          <div style="margin:10px;">
+            <strong style="display:block; font-size:18px; color:blue;">${totalRespuestasRegistradas}</strong>
+            <span>Respuestas Registradas</span>
+          </div>
+          <div style="margin:10px;">
+            <strong style="display:block; font-size:18px; color:${colorGlobal};">${porcentajeGlobal}%</strong>
             <span>Atención Global</span>
           </div>
         </div>
@@ -1048,7 +1183,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
     htmlContent += `
       <p style="margin-top:20px; font-style:italic; color:#6b7280;">
-        Las estadísticas muestran el porcentaje de oficios atendidos por cada área en el año ${selectedYear}.
+        Las estadísticas muestran el porcentaje de oficios con respuestas registradas por cada área en el año ${selectedYear}.
       </p>
     `;
 
@@ -1058,7 +1193,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     Swal.fire({
       title: 'Estadísticas de Áreas',
       html: htmlContent,
-      width: 1000, // Aumentar de 800 a 1000px
+      width: 1100, // Aumentar para acomodar la columna extra
       confirmButtonText: 'Cerrar',
       confirmButtonColor: '#3085d6',
       // Permite que el modal sea aún más grande en pantallas grandes
@@ -1070,11 +1205,15 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Obtiene los datos consolidados para el año actual
+   * Obtiene los datos consolidados para el año actual, ahora con respuestas registradas
    */
-  private obtenerDatosAnioActual(direccion: any, currentYear: number): { atendido: number, noAtendido: number } {
+  private obtenerDatosAnioActual(direccion: any, currentYear: number): {
+    atendido: number,
+    noAtendido: number,
+    respuestaRegistrada: number
+  } {
     // Valores por defecto
-    const resultado = { atendido: 0, noAtendido: 0 };
+    const resultado = { atendido: 0, noAtendido: 0, respuestaRegistrada: 0 };
 
     // Buscar los datos del año actual
     if (direccion.anios && Array.isArray(direccion.anios)) {
@@ -1085,6 +1224,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         anioActual.meses.forEach((mes: any) => {
           resultado.atendido += mes.atendido || 0;
           resultado.noAtendido += mes.noAtendido || 0;
+          resultado.respuestaRegistrada += mes.respuestaRegistrada || 0;
         });
       }
     }
