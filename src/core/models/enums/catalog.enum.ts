@@ -1,0 +1,4 @@
+export enum CatalogType {
+  INSTITUTION = 'INSTITUTION',
+  INSTRUMENT = 'INSTRUMENT'
+}

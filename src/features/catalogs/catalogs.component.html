@@ -1,0 +1,348 @@
+<div class="catalogs-container p-4 md:p-6 bg-gray-50 min-h-screen">
+  <div class="bg-white rounded-lg shadow-sm p-5 mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">Gestión de Catálogos</h1>
+    <p class="text-sm text-gray-600">
+      Administre la información de los catálogos del sistema para instituciones e instrumentos.
+    </p>
+  </div>
+
+  <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start" class="bg-white rounded-lg shadow-sm" animationDuration="250ms">
+    <!-- Tab de Instituciones -->
+    <mat-tab label="Instituciones">
+      <div class="p-4 md:p-6">
+        <div class="grid md:grid-cols-12 gap-6">
+          <!-- Formulario de creación/edición -->
+          <div class="md:col-span-4">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+              <div class="p-5 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                  <mat-icon class="mr-2 text-primary-500" fontIcon="{{ editingInstitution ? 'edit' : 'add_circle' }}"></mat-icon>
+                  {{ editingInstitution ? 'Editar Institución' : 'Nueva Institución' }}
+                </h2>
+              </div>
+              <div class="p-5">
+                <form [formGroup]="institutionForm" (ngSubmit)="onSubmitInstitution()">
+                  <mat-form-field class="w-full">
+                    <mat-label>Nombre de la institución</mat-label>
+                    <input matInput formControlName="name" placeholder="Ej: SECRETARÍA DE GOBERNACIÓN">
+                    <mat-icon matPrefix class="mr-2 text-gray-400">business</mat-icon>
+                    <mat-error *ngIf="institutionForm.get('name')?.hasError('required')">
+                      El nombre es requerido
+                    </mat-error>
+                    <mat-error *ngIf="institutionForm.get('name')?.hasError('minlength')">
+                      El nombre debe tener al menos 3 caracteres
+                    </mat-error>
+                  </mat-form-field>
+
+                  <div class="flex justify-end mt-6 gap-3">
+                    <button
+                      *ngIf="editingInstitution"
+                      type="button"
+                      mat-stroked-button
+                      color="warn"
+                      class="px-4"
+                      (click)="cancelEdit(CatalogType.INSTITUTION)"
+                    >
+                      <mat-icon class="mr-1">close</mat-icon>
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      mat-raised-button
+                      color="primary"
+                      class="px-4"
+                      [disabled]="institutionForm.invalid"
+                    >
+                      <mat-icon class="mr-1">{{ editingInstitution ? 'save' : 'add' }}</mat-icon>
+                      {{ editingInstitution ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Instituciones -->
+          <div class="md:col-span-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+              <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center mb-4 sm:mb-0">
+                  <mat-icon class="mr-2 text-primary-500">domain</mat-icon>
+                  Instituciones Registradas
+                </h2>
+                <mat-form-field class="w-full sm:w-64 m-0">
+                  <mat-label>Buscar institución</mat-label>
+                  <input matInput (keyup)="applyInstitutionFilter($event)" placeholder="Escriba para filtrar">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="relative overflow-x-auto">
+                <div *ngIf="isLoadingInstitutions" class="absolute inset-0 bg-white bg-opacity-70 flex justify-center items-center z-10">
+                  <mat-spinner diameter="40" class="mb-2"></mat-spinner>
+                  <span class="ml-3 text-gray-600 font-medium">Cargando datos...</span>
+                </div>
+
+                <!-- Encabezado móvil mostrando el recuento -->
+                <div class="sm:hidden px-4 py-3 bg-gray-50 border-t border-b border-gray-200">
+                  <span class="text-sm font-medium text-gray-600">
+                    {{ institutionData.length }} instituciones encontradas
+                  </span>
+                </div>
+
+                <table mat-table [dataSource]="institutionData" matSort #institutionSort="matSort" class="w-full">
+                  <!-- Columna Nombre -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 text-gray-600">
+                      Nombre de la Institución
+                    </th>
+                    <td mat-cell *matCellDef="let row" class="border-b border-gray-100">
+                      <div class="py-3">{{ row.name }}</div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Columna Acciones -->
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef class="bg-gray-50 text-gray-600 text-right">Acciones</th>
+                    <td mat-cell *matCellDef="let row" class="border-b border-gray-100 text-right">
+                      <div class="flex justify-end">
+                        <button
+                          mat-icon-button
+                          color="primary"
+                          matTooltip="Editar institución"
+                          class="focus:outline-none"
+                          (click)="editItem(row)"
+                        >
+                          <mat-icon class="text-blue-600">edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          color="warn"
+                          matTooltip="Eliminar institución"
+                          class="focus:outline-none ml-1"
+                          (click)="deleteItem(row)"
+                        >
+                          <mat-icon class="text-red-600">delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="institutionColumns; sticky: true"></tr>
+                  <tr mat-row *matRowDef="let row; columns: institutionColumns;" class="hover:bg-gray-50 transition-colors"></tr>
+
+                  <!-- Fila para cuando no hay datos -->
+                  <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell py-6" colspan="2">
+                      <div class="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+                        <mat-icon class="text-gray-400" style="font-size: 48px; height: 48px; width: 48px;">
+                          info_outline
+                        </mat-icon>
+                        <p class="text-gray-500 mt-4 text-center">
+                          No se encontraron instituciones registradas
+                          <span *ngIf="(institutionForm.get('name')?.value || '').length > 0">
+                            que coincidan con tu búsqueda
+                          </span>
+                        </p>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          class="mt-4"
+                          (click)="loadInstitutions()"
+                        >
+                          <mat-icon class="mr-1">refresh</mat-icon>
+                          Recargar datos
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Actualizar el paginador para utilizar eventos y mostrar el total de items -->
+
+                <mat-paginator
+                  #institutionPaginator
+                  [length]="totalInstitutions"
+                  [pageSize]="pageSize"
+                  [pageSizeOptions]="[5, 10, 25, 50]"
+                  showFirstLastButtons
+                  class="border-t border-gray-100"
+                  aria-label="Seleccionar página de instituciones"
+                  (page)="onInstitutionPageChange($event)">
+                </mat-paginator>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Tab de Instrumentos (similar al anterior pero para instrumentos) -->
+    <mat-tab label="Instrumentos">
+      <div class="p-4 md:p-6">
+        <div class="grid md:grid-cols-12 gap-6">
+          <!-- Formulario de creación/edición para Instrumentos -->
+          <div class="md:col-span-4">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+              <div class="p-5 border-b border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                  <mat-icon class="mr-2 text-primary-500" fontIcon="{{ editingInstrument ? 'edit' : 'add_circle' }}"></mat-icon>
+                  {{ editingInstrument ? 'Editar Instrumento' : 'Nuevo Instrumento' }}
+                </h2>
+              </div>
+              <div class="p-5">
+                <form [formGroup]="instrumentForm" (ngSubmit)="onSubmitInstrument()">
+                  <mat-form-field class="w-full">
+                    <mat-label>Nombre del instrumento</mat-label>
+                    <input matInput formControlName="name" placeholder="Ej: OFICIO">
+                    <mat-icon matPrefix class="mr-2 text-gray-400">description</mat-icon>
+                    <mat-error *ngIf="instrumentForm.get('name')?.hasError('required')">
+                      El nombre es requerido
+                    </mat-error>
+                    <mat-error *ngIf="instrumentForm.get('name')?.hasError('minlength')">
+                      El nombre debe tener al menos 3 caracteres
+                    </mat-error>
+                  </mat-form-field>
+
+                  <div class="flex justify-end mt-6 gap-3">
+                    <button
+                      *ngIf="editingInstrument"
+                      type="button"
+                      mat-stroked-button
+                      color="warn"
+                      class="px-4"
+                      (click)="cancelEdit(CatalogType.INSTRUMENT)"
+                    >
+                      <mat-icon class="mr-1">close</mat-icon>
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      mat-raised-button
+                      color="primary"
+                      class="px-4"
+                      [disabled]="instrumentForm.invalid"
+                    >
+                      <mat-icon class="mr-1">{{ editingInstrument ? 'save' : 'add' }}</mat-icon>
+                      {{ editingInstrument ? 'Actualizar' : 'Guardar' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Instrumentos -->
+          <div class="md:col-span-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+              <div class="p-5 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800 flex items-center mb-4 sm:mb-0">
+                  <mat-icon class="mr-2 text-primary-500">description</mat-icon>
+                  Instrumentos Registrados
+                </h2>
+                <mat-form-field class="w-full sm:w-64 m-0">
+                  <mat-label>Buscar instrumento</mat-label>
+                  <input matInput (keyup)="applyInstrumentFilter($event)" placeholder="Escriba para filtrar">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="relative overflow-x-auto">
+                <div *ngIf="isLoadingInstruments" class="absolute inset-0 bg-white bg-opacity-70 flex justify-center items-center z-10">
+                  <mat-spinner diameter="40" class="mb-2"></mat-spinner>
+                  <span class="ml-3 text-gray-600 font-medium">Cargando datos...</span>
+                </div>
+
+                <!-- Encabezado móvil mostrando el recuento -->
+                <div class="sm:hidden px-4 py-3 bg-gray-50 border-t border-b border-gray-200">
+                  <span class="text-sm font-medium text-gray-600">
+                    {{ instrumentData.length }} instrumentos encontrados
+                  </span>
+                </div>
+
+                <table mat-table [dataSource]="instrumentData" matSort #instrumentSort="matSort" class="w-full">
+                  <!-- Columna Nombre -->
+                  <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-gray-50 text-gray-600">
+                      Nombre del Instrumento
+                    </th>
+                    <td mat-cell *matCellDef="let row" class="border-b border-gray-100">
+                      <div class="py-3">{{ row.name }}</div>
+                    </td>
+                  </ng-container>
+
+                  <!-- Columna Acciones -->
+                  <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef class="bg-gray-50 text-gray-600 text-right">Acciones</th>
+                    <td mat-cell *matCellDef="let row" class="border-b border-gray-100 text-right">
+                      <div class="flex justify-end">
+                        <button
+                          mat-icon-button
+                          color="primary"
+                          matTooltip="Editar instrumento"
+                          class="focus:outline-none"
+                          (click)="editItem(row)"
+                        >
+                          <mat-icon class="text-blue-600">edit</mat-icon>
+                        </button>
+                        <button
+                          mat-icon-button
+                          color="warn"
+                          matTooltip="Eliminar instrumento"
+                          class="focus:outline-none ml-1"
+                          (click)="deleteItem(row)"
+                        >
+                          <mat-icon class="text-red-600">delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-header-row *matHeaderRowDef="instrumentColumns; sticky: true"></tr>
+                  <tr mat-row *matRowDef="let row; columns: instrumentColumns;" class="hover:bg-gray-50 transition-colors"></tr>
+
+                  <!-- Fila para cuando no hay datos -->
+                  <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell py-6" colspan="2">
+                      <div class="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+                        <mat-icon class="text-gray-400" style="font-size: 48px; height: 48px; width: 48px;">
+                          info_outline
+                        </mat-icon>
+                        <p class="text-gray-500 mt-4 text-center">
+                          No se encontraron instrumentos registrados
+                          <span *ngIf="(instrumentForm.get('name')?.value || '').length > 0">
+                            que coincidan con tu búsqueda
+                          </span>
+                        </p>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          class="mt-4"
+                          (click)="loadInstruments()"
+                        >
+                          <mat-icon class="mr-1">refresh</mat-icon>
+                          Recargar datos
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <mat-paginator
+                  #instrumentPaginator
+                  [length]="totalInstruments"
+                  [pageSize]="pageSize"
+                  [pageSizeOptions]="[5, 10, 25, 50]"
+                  showFirstLastButtons
+                  class="border-t border-gray-100"
+                  aria-label="Seleccionar página de instrumentos"
+                  (page)="onInstrumentPageChange($event)">
+                </mat-paginator>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

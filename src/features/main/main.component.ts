@@ -242,11 +242,11 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         this.userAllowedAreas = allowedAreas;
       }
 
-      console.log('Áreas permitidas para el usuario:', {
-        userRole: currentUser.roles,
-        userArea: this.userArea,
-        allowedAreas: this.userAllowedAreas
-      });
+      // console.log('Áreas permitidas para el usuario:', {
+      //   userRole: currentUser.roles,
+      //   userArea: this.userArea,
+      //   allowedAreas: this.userAllowedAreas
+      // });
 
       // Actualizar las áreas disponibles en el filtro
       this.updateAvailableAreas();
@@ -260,7 +260,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     // Asignar las áreas permitidas al selector
     this.areas = [...this.userAllowedAreas];
 
-    console.log(`Áreas disponibles para filtrar (${this.areas.length}):`, this.areas);
+    // console.log(`Áreas disponibles para filtrar (${this.areas.length}):`, this.areas);
 
     // Si ya hay un área seleccionada pero no está en las áreas permitidas, limpiarla
     if (this.filterValues['asignado'] &&
@@ -405,20 +405,20 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    console.log('Parámetros de búsqueda completos:', params);
+    // console.log('Parámetros de búsqueda completos:', params);
 
     // Llamar al servicio...
     this.inputService.getInputs(params)
       .pipe(
         takeUntil(this.destroy$),
         tap(response => {
-          console.log('Respuesta del servidor:', response);
+          // console.log('Respuesta del servidor:', response);
 
           // Agrega esta línea para comparar (ahora correctamente tipada)
-          console.log('Filtros aplicados vs. filtros devueltos:', {
-            enviados: params,
-            recibidos: response.data.filters
-          });
+          // console.log('Filtros aplicados vs. filtros devueltos:', {
+          //   enviados: params,
+          //   recibidos: response.data.filters
+          // });
 
           if (response && response.data) {
             // Acceder directamente a los inputs

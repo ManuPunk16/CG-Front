@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../core/guards/auth.guard';
 import { areaAccessGuard } from '../core/guards/area-access.guard';
+import { RolesEnum } from '../core/models/enums/roles.enum';
 
 export const routes: Routes = [
   // Rutas públicas
@@ -18,7 +19,7 @@ export const routes: Routes = [
       {
         path: 'Entradas',
         loadComponent: () => import('../features/main/main.component').then(c => c.MainComponent),
-        canActivate: [areaAccessGuard]
+        canActivate: [authGuard]
       },
       // {
       //   path: 'editar-entrada/:id',
@@ -55,6 +56,15 @@ export const routes: Routes = [
       //   loadComponent: () => import('../features/user-panel/user-panel.component').then(c => c.UserPanelComponent),
       //   canActivate: [areaAccessGuard]
       // },
+      {
+        path: 'Catalogos',
+        loadComponent: () => import('../features/catalogs/catalogs.component').then(m => m.CatalogsComponent),
+        canActivate: [authGuard],
+        data: {
+          roles: [RolesEnum.ADMIN],
+          breadcrumb: 'Catálogos'
+        }
+      },
       {
         path: '',
         redirectTo: 'Entradas', // Redirige a /Entradas cuando está autenticado

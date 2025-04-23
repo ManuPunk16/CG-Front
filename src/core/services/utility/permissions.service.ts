@@ -20,7 +20,7 @@ export class PermissionsService {
     // Normalizar el rol para hacer la comparación insensible a mayúsculas/minúsculas
     const normalizedRole = userRole?.toLowerCase();
 
-    console.log('Evaluando áreas permitidas:', { userRole, normalizedRole, roleEnum: RolesEnum });
+    // console.log('Evaluando áreas permitidas:', { userRole, normalizedRole, roleEnum: RolesEnum });
 
     switch (normalizedRole) {
       case RolesEnum.ADMIN.toLowerCase():
@@ -91,12 +91,12 @@ export class PermissionsService {
     if (!currentUser) return [];
 
     const areas = this.getAreasByRole(currentUser.roles as string, currentUser.area);
-    console.log('getCurrentUserAllowedAreas', {
-      currentUser: currentUser.username,
-      role: currentUser.roles,
-      area: currentUser.area,
-      result: areas
-    });
+    // console.log('getCurrentUserAllowedAreas', {
+    //   currentUser: currentUser.username,
+    //   role: currentUser.roles,
+    //   area: currentUser.area,
+    //   result: areas
+    // });
     return areas;
   }
 

@@ -43,12 +43,17 @@
         [disableClose]="!mobileQuery.matches && !!currentUser()">
 
       <mat-nav-list *ngIf="currentUser()">
-        <a mat-list-item routerLink="/Entradas" routerLinkActive="active">
+        <a mat-list-item [routerLink]="['/Entradas']" routerLinkActive="active">
           <mat-icon>inbox</mat-icon>
           <span class="ml-2">Entradas</span>
         </a>
 
-        <a mat-list-item routerLink="/Entradas/panel-control" routerLinkActive="active"
+        <a mat-list-item [routerLink]="['/Catalogos']" routerLinkActive="active" *ngIf="isAdmin()">
+          <mat-icon>category</mat-icon>
+          <span class="ml-2">Catálogos</span>
+        </a>
+
+        <a mat-list-item [routerLink]="['/Entradas/panel-control']" routerLinkActive="active"
            *ngIf="isAdmin() || isDirectorGeneral()">
           <mat-icon>dashboard</mat-icon>
           <span class="ml-2">Panel de Control</span>
