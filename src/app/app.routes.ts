@@ -75,6 +75,11 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'Entradas/Ficha-tecnica/:id',
+        loadComponent: () => import('../features/shared/ficha-tecnica-profesional/ficha-tecnica-profesional.component').then(m => m.FichaTecnicaProfesionalComponent),
+        canActivate: [authGuard],
+      },
+      {
         path: '',
         redirectTo: 'Entradas', // Redirige a /Entradas cuando está autenticado
         pathMatch: 'full'

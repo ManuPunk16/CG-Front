@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { BaseApiService } from './base-api.service';
 import { ApiResponse, PaginatedResponse } from '../../models/api-response.model';
 import { Input } from '../../models/input/input.model';
+import { DuplicateResponseData, DuplicateApiResponse } from '../../models/input/duplicate.model';
+import { InputDetailResponse, TiempoRespuestaResponse } from '../../models/input/input-response.model';
 
 export interface InputQueryParams {
   year?: number | 'all' | null;
@@ -123,8 +125,15 @@ export class InputService extends BaseApiService {
   /**
    * Obtiene un input por ID
    */
-  getInputById(id: string): Observable<ApiResponse<Input>> {
-    return this.get<ApiResponse<Input>>(`${this.endpoint}/${id}`);
+  getInputById(id: string): Observable<InputDetailResponse> {
+    console.log(`Solicitando documento con ID: ${id}`);
+    return this.get<InputDetailResponse>(`${this.endpoint}/${id}`).pipe(
+      tap(response => console.log(`Respuesta recibida para ID ${id}:`, response)),
+      catchError(error => {
+        console.error(`Error al obtener documento con ID ${id}:`, error);
+        throw error;
+      })
+    );
   }
 
   /**
@@ -175,26 +184,8 @@ export class InputService extends BaseApiService {
   /**
    * Calcula el tiempo de respuesta de un registro específico
    */
-  calcularTiempoRespuesta(id: string): Observable<ApiResponse<{
-    _id: string;
-    num_oficio: string;
-    anio: number;
-    folio: number;
-    asunto: string;
-    remitente: string;
-    asignado: string;
-    estatus: string;
-    fecha_recepcion: Date;
-    fecha_vencimiento: Date;
-    diferencia_dias: number | null;
-    tiempo_transcurrido_dias: number | null;
-    estado_semaforo: string | null;
-    color_semaforo: string | null;
-    estado_tramite: 'FINALIZADO' | 'ATENDIDO SIN ACUSE' | 'EN TRÁMITE';
-    tiene_respuesta: boolean;
-    dias_efectivos: number | null;
-  }>> {
-    return this.get<ApiResponse<any>>(`${this.endpoint}/tiempo-respuesta/${id}`);
+  calcularTiempoRespuesta(id: string): Observable<TiempoRespuestaResponse> {
+    return this.get<TiempoRespuestaResponse>(`${this.endpoint}/tiempo-respuesta/${id}`);
   }
 
   /**
@@ -216,11 +207,11 @@ export class InputService extends BaseApiService {
   /**
    * Obtiene registros duplicados por número de oficio
    */
-  getDuplicatedOficios(id: string, area?: string): Observable<ApiResponse<DuplicateResponse>> {
+  getDuplicatedOficios(id: string, area?: string): Observable<DuplicateApiResponse> {
     if (area) {
-      return this.get<ApiResponse<DuplicateResponse>>(`${this.endpoint}/duplicados/${id}/area/${encodeURIComponent(area)}`);
+      return this.get<DuplicateApiResponse>(`${this.endpoint}/duplicados/${id}/area/${encodeURIComponent(area)}`);
     }
-    return this.get<ApiResponse<DuplicateResponse>>(`${this.endpoint}/duplicados/${id}`);
+    return this.get<DuplicateApiResponse>(`${this.endpoint}/duplicados/${id}`);
   }
 
   /**

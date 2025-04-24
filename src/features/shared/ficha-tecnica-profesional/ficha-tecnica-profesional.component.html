@@ -1,0 +1,464 @@
+<div class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    <!-- Encabezado con acciones -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+          <mat-icon class="mr-2">description</mat-icon>
+          Ficha Técnica
+          <span class="ml-3 text-sm font-medium bg-gray-100 rounded-md px-2 py-1">
+            ID: {{id}}
+          </span>
+        </h1>
+        <p class="text-gray-500 text-sm mt-1">Información detallada del documento</p>
+      </div>
+
+      <div class="mt-4 md:mt-0 space-x-2 flex">
+        <button
+          mat-raised-button
+          color="primary"
+          class="flex items-center"
+          [routerLink]="['/entradas']">
+          <mat-icon class="mr-1">arrow_back</mat-icon>
+          Volver
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          class="flex items-center"
+          (click)="irAEditar()"
+          [disabled]="!inputDetails">
+          <mat-icon class="mr-1">edit</mat-icon>
+          Editar
+        </button>
+        <button
+          mat-raised-button
+          color="accent"
+          class="flex items-center"
+          (click)="irAEditarSeguimiento()"
+          [disabled]="!inputDetails">
+          <mat-icon class="mr-1">comment</mat-icon>
+          Seguimiento
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicador de carga principal -->
+    <div *ngIf="loadingInput || !inputDetails" class="flex justify-center p-8">
+      <mat-spinner [diameter]="40"></mat-spinner>
+    </div>
+
+    <!-- Mostrar un mensaje cuando no hay datos de input ni de tiempo de respuesta -->
+    <div *ngIf="!loadingInput && !inputDetails && !tiempoRespuesta" class="p-6 flex flex-col items-center justify-center">
+      <mat-icon class="text-gray-400 text-6xl mb-4">warning</mat-icon>
+      <h2 class="text-xl font-semibold text-gray-600 mb-2">No se encontró información del documento</h2>
+      <p class="text-gray-500 mb-4">El documento solicitado no existe o no se pudo recuperar la información.</p>
+      <button mat-raised-button color="primary" [routerLink]="['/entradas']">
+        <mat-icon>arrow_back</mat-icon>
+        Volver a entradas
+      </button>
+    </div>
+
+    <!-- Contenido principal si hay datos -->
+    <div *ngIf="inputDetails || tiempoRespuesta" class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+      <!-- Contenido principal (visible cuando los datos están cargados) -->
+      <div *ngIf="inputDetails" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Panel principal (ocupa 2 columnas en escritorio) -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Tarjeta de información general -->
+          <mat-card class="rounded-lg shadow">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <h2 class="text-xl font-bold text-gray-800">Información General</h2>
+              <div
+                class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                [ngClass]="getEstatusClass(inputDetails.estatus)">
+                {{inputDetails.estatus}}
+              </div>
+            </div>
+
+            <div class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Sección de datos principales - mejor organizada -->
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-3">Datos principales</h3>
+                  <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Folio</span>
+                      <span class="text-right font-medium">{{inputDetails.folio}}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Núm. Oficio</span>
+                      <span class="text-right font-medium break-all overflow-hidden">{{inputDetails.num_oficio || 'No disponible'}}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Fecha Oficio</span>
+                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_oficio)}}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Fecha Recepción</span>
+                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_recepcion)}}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Hora Recepción</span>
+                      <span class="text-right font-medium">{{inputDetails.hora_recepcion || 'No especificada'}}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 items-center">
+                      <span class="text-gray-500">Fecha Vencimiento</span>
+                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_vencimiento)}}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-3">Origen y asignación</h3>
+                  <div class="space-y-3"> <!-- Cambiar de space-y-2 a space-y-3 para más espacio vertical -->
+                    <div class="flex justify-between py-1"> <!-- Agregamos padding vertical para separar elementos -->
+                      <span class="text-gray-500">Remitente</span>
+                      <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.remitente || 'No especificado'}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Institución</span>
+                      <span class="text-right font-medium">{{inputDetails.institucion_origen || 'No especificada'}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Instrumento Jurídico</span>
+                      <span class="text-right font-medium">{{inputDetails.instrumento_juridico || 'No especificado'}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Área Asignada</span>
+                      <span class="text-right font-medium">{{inputDetails.asignado}}</span>
+                    </div>
+                    <!-- <div class="flex justify-between">
+                      <span class="text-gray-500">Fecha Creación</span>
+                      <span class="font-medium">{{formatearFechaHora(inputDetails.createdAt)}}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-gray-500">Última Modificación</span>
+                      <span class="font-medium">{{formatearFechaHora(inputDetails.updatedAt)}}</span>
+                    </div> -->
+                  </div>
+                </div>
+              </div>
+
+              <mat-divider class="my-6 p-1"></mat-divider>
+
+              <!-- Sección de asunto mejorada -->
+              <div class="space-y-4">
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-2">Asunto</h3>
+                  <p class="bg-gray-50 p-4 rounded-md text-gray-800 border border-gray-100 leading-relaxed">
+                    {{inputDetails.asunto || 'No especificado'}}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 class="font-medium text-gray-700 mb-2">Observación</h3>
+                  <p class="bg-gray-50 p-4 rounded-md text-gray-800 border border-gray-100 italic">
+                    {{inputDetails.observacion || 'No hay observaciones'}}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </mat-card>
+
+          <!-- Sección de Seguimiento y Respuesta (reemplazar la sección actual) -->
+          <mat-card class="rounded-lg shadow mt-6">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <h2 class="text-xl font-bold text-gray-800">Seguimiento y Respuesta</h2>
+              <div *ngIf="inputDetails.seguimientos?.fecha_acuse_recibido" class="rounded-full px-3 py-1 text-sm font-medium bg-green-100 text-green-800">
+                {{tiempoRespuesta?.diferencia_dias || 0}} días
+              </div>
+            </div>
+
+            <div class="p-6">
+              <!-- Si hay seguimientos, mostrar toda la información -->
+              <div *ngIf="inputDetails.seguimientos; else noSeguimientos">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Sección de datos de respuesta - mejor organizada -->
+                  <div>
+                    <h3 class="font-medium text-gray-700 mb-3">Datos de respuesta</h3>
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-2 items-center">
+                        <span class="text-gray-500">Núm. Expediente</span>
+                        <span class="text-right font-medium">{{inputDetails.seguimientos.num_expediente || 'No disponible'}}</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 items-center">
+                        <span class="text-gray-500">Oficio de Salida</span>
+                        <span class="text-right font-medium break-all">{{inputDetails.seguimientos.oficio_salida || 'No disponible'}}</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 items-center">
+                        <span class="text-gray-500">Fecha Oficio Salida</span>
+                        <span class="text-right font-medium">{{formatearFecha(inputDetails.seguimientos.fecha_oficio_salida) || 'No disponible'}}</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 items-center">
+                        <span class="text-gray-500">Fecha Acuse</span>
+                        <span class="text-right font-medium">{{formatearFecha(inputDetails.seguimientos.fecha_acuse_recibido) || 'No disponible'}}</span>
+                      </div>
+                      <div class="grid grid-cols-2 gap-2 items-center">
+                        <span class="text-gray-500">Registrado</span>
+                        <span class="text-right font-medium">{{formatearFechaHora(inputDetails.seguimientos.fecha_respuesta) || 'No disponible'}}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Sección de destinatario con más espacio vertical -->
+                  <div>
+                    <h3 class="font-medium text-gray-700 mb-3">Destinatario</h3>
+                    <div class="space-y-3 p-3 rounded-md">
+                      <div class="flex justify-between py-1">
+                        <span class="text-gray-500">Nombre</span>
+                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.destinatario || 'No disponible'}}</span>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span class="text-gray-500">Cargo</span>
+                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.cargo || 'No disponible'}}</span>
+                      </div>
+                      <div class="flex justify-between py-1">
+                        <span class="text-gray-500">Respuesta</span>
+                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.atencion_otorgada || 'No disponible'}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="mt-4">
+                  <h3 class="font-medium text-gray-700 mb-2 flex justify-center">Información adicional</h3>
+                  <div class="space-y-2">
+                    <div class="flex justify-center">
+                      <span class="text-gray-500">Anexos: </span>
+                      <span class="font-medium">{{inputDetails.seguimientos.anexo || 'No'}}</span>
+                    </div>
+                    <div class="flex justify-center">
+                      <span class="text-gray-500">Firma/Visado: </span>
+                      <span class="font-medium">{{inputDetails.seguimientos.firma_visado || 'No'}}</span>
+                    </div>
+                    <div class="flex items-center justify-center">
+                      <span class="text-gray-500">Registrado por: </span>
+                      <span class="font-medium bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full flex items-center shadow-sm">
+                        <mat-icon class="text-sm mr-2">person</mat-icon>
+                        <span class="font-semibold">{{formatUserName(inputDetails.seguimientos.usuario?.username) || 'No disponible'}}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Comentarios de seguimiento -->
+                <div *ngIf="inputDetails.seguimientos.comentarios" class="mt-4">
+                  <h3 class="font-medium text-gray-700 mb-2">Comentarios</h3>
+                  <p class="bg-gray-50 p-3 rounded text-gray-800">
+                    {{inputDetails.seguimientos.comentarios}}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Mensaje cuando no hay seguimientos -->
+              <ng-template #noSeguimientos>
+                <p class="text-gray-500 italic text-center py-4">
+                  No se ha registrado información de seguimiento para este documento.
+                </p>
+              </ng-template>
+            </div>
+          </mat-card>
+
+          <!-- Tarjeta de Documentos Relacionados -->
+          <mat-card class="rounded-lg shadow">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <h2 class="text-xl font-bold text-gray-800">
+                Documentos Relacionados
+                <span *ngIf="duplicados!.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{duplicados!.length}}
+                </span>
+              </h2>
+            </div>
+
+            <div class="p-6">
+              <div *ngIf="loadingDuplicados" class="flex justify-center p-4">
+                <mat-spinner [diameter]="30"></mat-spinner>
+              </div>
+
+              <div *ngIf="errorDuplicados" class="text-center text-red-500 p-4">
+                {{errorDuplicados}}
+              </div>
+
+              <div *ngIf="!loadingDuplicados && !duplicados?.length" class="text-center text-gray-500 p-4">
+                No se encontraron documentos relacionados con el mismo número de oficio.
+              </div>
+
+              <!-- Lista de documentos relacionados mejorada -->
+              <div *ngIf="!loadingDuplicados && duplicados!.length > 0" class="space-y-4">
+                <div *ngFor="let duplicado of duplicados"
+                     class="border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors p-4 shadow-sm">
+                  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <mat-icon class="mr-2 text-blue-500 text-base">description</mat-icon>
+                        <a [routerLink]="['/Entradas/Ficha-tecnica', duplicado._id]" class="text-blue-600 hover:underline">
+                          Folio {{duplicado.folio}}
+                        </a>
+                      </h3>
+                      <p class="mt-1 text-sm text-gray-500">
+                        <span class="font-medium">Oficio:</span> {{duplicado.num_oficio}}
+                      </p>
+                    </div>
+
+                    <div class="mt-2 sm:mt-0 flex flex-col sm:items-end">
+                      <span class="text-sm text-gray-500">{{formatearFecha(duplicado.fecha_recepcion)}}</span>
+                      <span
+                        class="mt-1 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                        [ngClass]="getEstatusClass(duplicado.estatus)">
+                        {{duplicado.estatus}}
+                      </span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-sm text-gray-500">
+                    <span class="font-medium">Área asignada:</span> {{duplicado.asignado}}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="space-y-6">
+          <!-- Tarjeta de Archivos PDF -->
+          <mat-card class="rounded-lg shadow">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <h2 class="text-xl font-bold text-gray-800">Archivos Adjuntos</h2>
+            </div>
+
+            <div class="p-6">
+              <div *ngIf="loadingPdfs" class="flex justify-center p-4">
+                <mat-spinner [diameter]="30"></mat-spinner>
+              </div>
+
+              <!-- Archivos PDF de entrada - mejorados -->
+              <div class="mb-6">
+                <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                  Documentos del Oficio
+                  <span *ngIf="pdfUrls.length > 0" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{pdfUrls.length}}
+                  </span>
+                </h3>
+
+                <div *ngIf="!loadingPdfs && pdfUrls.length === 0" class="text-center text-gray-500 p-4 bg-gray-50 rounded-md">
+                  <p *ngIf="errorPdfEntrada">{{errorPdfEntrada}}</p>
+                  <p *ngIf="!errorPdfEntrada">No hay archivos asociados al oficio.</p>
+                </div>
+
+                <div *ngIf="pdfUrls.length > 0" class="space-y-2.5">
+                  <a *ngFor="let pdfUrl of pdfUrls; let i = index"
+                     [href]="pdfUrl"
+                     target="_blank"
+                     class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors shadow-sm">
+                    <mat-icon class="mr-3 text-red-500">picture_as_pdf</mat-icon>
+                    <span class="text-sm text-gray-900 flex-grow font-medium truncate">{{pdfFilenames[i]}}</span>
+                    <mat-icon class="text-blue-500">open_in_new</mat-icon>
+                  </a>
+                </div>
+              </div>
+
+              <!-- Archivos PDF de seguimiento -->
+              <div>
+                <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                  <!-- <mat-icon class="mr-1 text-green-500">picture_as_pdf</mat-icon> -->
+                  Documentos de Seguimiento
+                  <span *ngIf="pdfUrlsSeguimiento.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {{pdfUrlsSeguimiento.length}}
+                  </span>
+                </h3>
+
+                <div *ngIf="!loadingPdfs && pdfUrlsSeguimiento.length === 0" class="text-center text-gray-500 p-4">
+                  <p *ngIf="errorPdfSeguimiento">{{errorPdfSeguimiento}}</p>
+                  <p *ngIf="!errorPdfSeguimiento">No hay archivos asociados al seguimiento.</p>
+                </div>
+
+                <div *ngIf="pdfUrlsSeguimiento.length > 0" class="space-y-2">
+                  <a *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index"
+                     [href]="pdfUrl"
+                     target="_blank"
+                     class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                    <mat-icon class="mr-3 text-green-500">picture_as_pdf</mat-icon>
+                    <span class="text-sm text-gray-900 flex-grow">{{pdfFilenamesSeguimiento[i]}}</span>
+                    <mat-icon class="text-gray-400">open_in_new</mat-icon>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </mat-card>
+
+          <!-- Tarjeta de Usuarios y Trazabilidad -->
+          <mat-card class="rounded-lg shadow">
+            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+              <h2 class="text-xl font-bold text-gray-800">Información de Registro</h2>
+            </div>
+
+            <div class="p-6">
+              <!-- Información de usuario que registró -->
+              <div *ngIf="asignador" class="mb-6">
+                <h3 class="font-medium text-gray-700 mb-3">Registrado por</h3>
+                <div class="flex items-center bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500"> <!-- Añadido border-left para destacar -->
+                  <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <span class="text-sm font-medium text-blue-700">{{asignador.username.charAt(0).toUpperCase()}}</span>
+                  </div>
+                  <div class="flex-grow">
+                    <p class="text-sm font-medium text-gray-900">{{formatUserName(asignador.username)}}</p>
+                    <p class="text-xs text-gray-500">{{asignador.area || 'Sin área asignada'}}</p>
+                  </div>
+                  <div class="text-right text-xs text-gray-500">
+                    <p>{{formatearFechaHora(inputDetails.createdAt)}}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Información de usuario que editó por última vez -->
+              <div *ngIf="ultimoEditor && ultimoEditor.username !== asignador?.username">
+                <h3 class="font-medium text-gray-700 mb-3">Última edición por</h3>
+                <div class="flex items-center bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-500"> <!-- Añadido border-left para destacar -->
+                  <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                    <span class="text-sm font-medium text-yellow-700">{{ultimoEditor.username.charAt(0).toUpperCase()}}</span>
+                  </div>
+                  <div class="flex-grow">
+                    <p class="text-sm font-medium text-gray-900">{{formatUserName(ultimoEditor.username)}}</p>
+                    <p class="text-xs text-gray-500">{{ultimoEditor.area || 'Sin área asignada'}}</p>
+                  </div>
+                  <div class="text-right text-xs text-gray-500">
+                    <p>{{formatearFechaHora(inputDetails.updatedAt)}}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lista de fechas clave -->
+              <div class="mt-6">
+                <h3 class="font-medium text-gray-700 mb-3">Fechas clave</h3>
+                <ul class="space-y-3 pl-0">
+                  <!-- Creación -->
+                  <li class="flex items-start">
+                    <div class="relative pt-1">
+                      <div class="h-3 w-3 rounded-full bg-green-500"></div>
+                      <div class="h-full w-0.5 bg-gray-200 absolute top-4 left-1.5 -ml-px"></div>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900">Creado</p>
+                      <p class="text-xs text-gray-500">{{formatearFechaHora(inputDetails.createdAt)}}</p>
+                    </div>
+                  </li>
+
+                  <!-- Última actualización -->
+                  <li class="flex items-start">
+                    <div class="h-3 w-3 rounded-full bg-blue-500"></div>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900">Actualizado</p>
+                      <p class="text-xs text-gray-500">{{formatearFechaHora(inputDetails.updatedAt)}}</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

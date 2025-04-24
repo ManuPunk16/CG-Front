@@ -1,44 +1,71 @@
 import { EstatusEnum } from '../enums/estatus.enum';
-import { Seguimiento } from './seguimiento.model';
-import { User } from '../user/user.model';
 
+/**
+ * Usuario básico para referencias
+ */
+export interface UserRef {
+  id: string;
+  username: string;
+}
+
+/**
+ * Modelo para datos de seguimiento
+ */
+export interface Seguimiento {
+  _id?: string;
+  oficio_salida: string;
+  fecha_respuesta: string | Date;
+  usuario?: UserRef;
+  comentarios?: string | null;
+  archivosPdf_seguimiento?: string[];
+  num_expediente: string;
+  fecha_oficio_salida: string | Date;
+  fecha_acuse_recibido: string | Date;
+  destinatario: string;
+  cargo: string;
+  atencion_otorgada: string;
+  anexo: string;
+  estatus: string;
+  firma_visado: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+/**
+ * Modelo principal de Input
+ */
 export interface Input {
   _id: string;
   anio: number;
   folio: number;
   num_oficio: string;
-  fecha_oficio: Date;
-  fecha_vencimiento?: Date;
-  fecha_recepcion: Date;
+  fecha_oficio: string | Date;
+  fecha_vencimiento?: string | Date;
+  fecha_recepcion: string | Date;
   hora_recepcion?: string;
-  instrumento_juridico: string;
+  instrumento_juridico?: string;
   remitente: string;
-  institucion_origen: string;
+  institucion_origen?: string;
   asunto: string;
   asignado: string;
   estatus: EstatusEnum | string;
-  observacion: string;
-  archivosPdf: string[];
-  create_user: {
-    id: string;
-    username: string;
-    createdAt?: Date;
-  };
-  editor_user?: {
-    id: string;
-    username: string;
-    editedAt?: Date;
-  };
+  observacion?: string | null;
+  archivosPdf?: string[];
+  create_user?: UserRef;
+  editor_user?: UserRef;
   edit_count: number;
   deleted: boolean;
-  seguimientos: Seguimiento;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  __v?: number;
 
-  // Campos calculados
+  // Objeto de seguimientos (si existe)
+  seguimientos?: Seguimiento;
+
+  // Campos calculados que pueden venir de otros endpoints
   diferencia_dias?: number | null;
-  tiempo_recepcion?: Date;
-  tiempo_respuesta?: Date;
+  tiempo_recepcion?: string | Date;
+  tiempo_respuesta?: string | Date;
   diasAtraso?: number | string;
   mensajeAtraso?: string;
   estadoSemaforo?: string;

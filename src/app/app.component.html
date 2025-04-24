@@ -58,12 +58,6 @@
           <span class="ml-2">Panel de Administración</span>
         </a>
 
-        <a mat-list-item [routerLink]="['/Entradas/panel-control']" routerLinkActive="active"
-           *ngIf="isAdmin() || isDirectorGeneral()">
-          <mat-icon>dashboard</mat-icon>
-          <span class="ml-2">Panel de Control</span>
-        </a>
-
         <a mat-list-item routerLink="/Perfil" routerLinkActive="active">
           <mat-icon>person</mat-icon>
           <span class="ml-2">Mi Perfil</span>

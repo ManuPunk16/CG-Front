@@ -63,4 +63,19 @@ export class PdfService extends BaseApiService {
     }
     return `${baseUrl}/download/${id}?filename=${encodeURIComponent(filename)}`;
   }
+
+  /**
+   * Obtiene todos los PDFs asociados a un input (principales y seguimiento)
+   */
+  getAllInputPdfs(id: string): Observable<ApiResponse<{
+    inputId: string,
+    principales: PdfMetadata[],
+    seguimiento: PdfMetadata[]
+  }>> {
+    return this.get<ApiResponse<{
+      inputId: string,
+      principales: PdfMetadata[],
+      seguimiento: PdfMetadata[]
+    }>>(`${this.endpoint}/all/${id}`);
+  }
 }

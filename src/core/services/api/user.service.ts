@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { User } from '../../models/user/user.model';
 import { ApiResponse } from '../../models/api-response.model';
+import { HttpParams } from '@angular/common/http';
 
 export interface UserQueryParams {
   page?: number;
@@ -33,16 +34,33 @@ export class UserService extends BaseApiService {
 
   /**
    * Obtiene un usuario por ID
+   * @param id ID del usuario
+   * @param params Parámetros adicionales
    */
-  getUserById(id: string): Observable<ApiResponse<User>> {
-    return this.get<ApiResponse<User>>(`${this.endpoint}/${id}`);
+  getUserById(id: string, params?: any): Observable<ApiResponse<User>> {
+    // Si no hay parámetros, llamamos directamente al método get
+    if (!params) {
+      return this.get<ApiResponse<User>>(`${this.endpoint}/${id}`);
+    }
+
+    // Convertir el objeto params a un objeto simple de clave-valor
+    // que sea compatible con el tipo esperado por BaseApiService.get
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+
+    Object.keys(params).forEach(key => {
+      queryParams[key] = params[key];
+    });
+
+    // Pasar el objeto de parámetros directamente (sin envolverlo en { params: ... })
+    return this.get<ApiResponse<User>>(`${this.endpoint}/${id}`, queryParams);
   }
 
   /**
    * Crea un nuevo usuario
    */
   createUser(user: Partial<User>): Observable<ApiResponse<User>> {
-    return this.post<ApiResponse<User>>(`${this.endpoint}/register`, user);
+    // Cambiar de ${this.endpoint}/register a auth/register
+    return this.post<ApiResponse<User>>(`auth/register`, user);
   }
 
   /**

@@ -739,7 +739,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   verDetalles(input: Input): void {
     if (input._id) {
-      window.open(`/ficha_tecnica/${input._id}`, '_blank');
+      window.open(`Entradas/Ficha-tecnica/${input._id}`, '_blank');
     }
   }
 

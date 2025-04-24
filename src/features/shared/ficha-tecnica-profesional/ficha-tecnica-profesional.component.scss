@@ -1,0 +1,45 @@
+// Estilos específicos para semáforos
+.semaforo {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+
+  &.verde {
+    background-color: #10B981; // Tailwind green-500
+  }
+
+  &.amarillo {
+    background-color: #F59E0B; // Tailwind amber-500
+  }
+
+  &.rojo {
+    background-color: #EF4444; // Tailwind red-500
+  }
+}
+
+// Mejorar visualización de enlaces PDF
+a[target="_blank"] {
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+    background-color: rgba(59, 130, 246, 0.05);
+  }
+}
+
+// Transiciones suaves
+.mat-card {
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Ajustar espaciado en dispositivos móviles
+@media (max-width: 640px) {
+  .p-6 {
+    padding: 1rem;
+  }
+}
