@@ -1,23 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseApiService } from './base-api.service';
+import { User } from '../../models/user/user.model';
 import { ApiResponse } from '../../models/api-response.model';
-import { User } from '../../models/user.model';
 
 export interface UserQueryParams {
   page?: number;
   limit?: number;
-  active?: boolean;
   search?: string;
-  role?: string;
+  sort?: string;
   area?: string;
-  [key: string]: string | number | boolean | null | undefined;
+  active?: boolean;
+  [key: string]: string | number | boolean | undefined;
 }
 
 export interface PasswordChange {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
+  password: string;
 }
 
 @Injectable({
@@ -27,7 +25,7 @@ export class UserService extends BaseApiService {
   private endpoint = 'users';
 
   /**
-   * Obtiene la lista de usuarios con paginación y filtros
+   * Obtiene la lista de usuarios
    */
   getUsers(params?: UserQueryParams): Observable<ApiResponse<User[]>> {
     return this.get<ApiResponse<User[]>>(this.endpoint, params);
@@ -44,7 +42,7 @@ export class UserService extends BaseApiService {
    * Crea un nuevo usuario
    */
   createUser(user: Partial<User>): Observable<ApiResponse<User>> {
-    return this.post<ApiResponse<User>>(this.endpoint, user);
+    return this.post<ApiResponse<User>>(`${this.endpoint}/register`, user);
   }
 
   /**
@@ -55,10 +53,10 @@ export class UserService extends BaseApiService {
   }
 
   /**
-   * Cambiar contraseña de usuario
+   * Cambia la contraseña de un usuario
    */
-  changePassword(id: string, passwords: PasswordChange): Observable<ApiResponse<void>> {
-    return this.post<ApiResponse<void>>(`${this.endpoint}/${id}/change-password`, passwords);
+  changePassword(id: string, passwordData: PasswordChange): Observable<ApiResponse<void>> {
+    return this.post<ApiResponse<void>>(`${this.endpoint}/${id}/change-password`, passwordData);
   }
 
   /**

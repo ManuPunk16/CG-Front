@@ -66,6 +66,15 @@ export const routes: Routes = [
         }
       },
       {
+        path: 'Administracion',
+        loadComponent: () => import('../features/admin-panel/admin-panel.component').then(m => m.AdminPanelComponent),
+        canActivate: [authGuard],
+        data: {
+          roles: [RolesEnum.ADMIN, RolesEnum.DIRECTOR_GENERAL, RolesEnum.DIRECTOR],
+          breadcrumb: 'Panel de Administración'
+        }
+      },
+      {
         path: '',
         redirectTo: 'Entradas', // Redirige a /Entradas cuando está autenticado
         pathMatch: 'full'

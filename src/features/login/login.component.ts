@@ -10,7 +10,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { AuthService } from '../../core/services/api/auth.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs/operators';
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass, NgIf, CommonModule } from '@angular/common';
 import { AlertService } from '../../core/services/ui/alert.service';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -27,12 +27,13 @@ import { Subject } from 'rxjs';
     MatButtonModule,
     ReactiveFormsModule,
     NgIf,
-    NgClass
+    NgClass,
+    CommonModule
   ],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
   // Inyección de dependencias usando la nueva sintaxis

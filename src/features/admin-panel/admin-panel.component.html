@@ -1,0 +1,300 @@
+<div class="w-full min-h-screen bg-gray-50 p-4 md:p-6">
+  <!-- Encabezado -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Panel de Control</h1>
+    <p class="text-gray-600">Gestiona usuarios, consulta estadísticas y monitorea actividad del sistema</p>
+  </div>
+
+  <!-- Navegación por pestañas - Con scroll horizontal en móviles -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="border-b border-gray-200 overflow-x-auto">
+      <nav class="flex flex-nowrap whitespace-nowrap">
+        <!-- Pestaña: Estadísticas por Estatus -->
+        <button (click)="setActiveTab(0)"
+                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 0,
+                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 0}"
+                class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
+          <mat-icon class="mr-2">pie_chart</mat-icon>
+          Estadísticas por Estatus
+        </button>
+
+        <!-- Pestaña: Contador de registros -->
+        <button (click)="setActiveTab(2)"
+                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 2,
+                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 2}"
+                class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
+          <mat-icon class="mr-2">analytics</mat-icon>
+          Contador de Registros
+        </button>
+
+        <!-- Pestaña: Actividad de Usuarios -->
+        <button (click)="setActiveTab(3)"
+                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 3,
+                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 3}"
+                class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
+          <mat-icon class="mr-2">history</mat-icon>
+          Actividad de Usuarios
+        </button>
+
+        <!-- Pestaña: Logs de Inicio de Sesión -->
+        <button *ngIf="canViewSection('logs')"
+                (click)="setActiveTab(4)"
+                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 4,
+                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 4}"
+                class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
+          <mat-icon class="mr-2">login</mat-icon>
+          Logs de Acceso
+        </button>
+
+        <!-- Pestaña: Gestión de Usuarios -->
+        <button *ngIf="canViewSection('users')"
+                (click)="setActiveTab(5)"
+                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 5,
+                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 5}"
+                class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
+          <mat-icon class="mr-2">people</mat-icon>
+          Gestión de Usuarios
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Contenedor principal para contenidos de pestañas -->
+  <div class="bg-white rounded-lg shadow-md p-4 md:p-6 min-h-[500px]">
+    <!-- 1. Estadísticas por Estatus -->
+    <div *ngIf="activeTab === 0">
+      <h2 class="text-xl font-semibold mb-4">Estadísticas por Estatus</h2>
+
+      <!-- Gráficas de estatus - Una encima de la otra -->
+      <div class="flex flex-col gap-6">
+        <!-- Gráfico de Distribución de Estatus -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold mb-4">Distribución de Estatus</h3>
+            <!-- Componente de estadísticas con altura fija para evitar problemas de rendering -->
+            <app-system-statistics
+              [chartType]="'bar'"
+              [areaFilter]="selectedArea"
+              [height]="'350px'"
+              [showFilters]="true">
+            </app-system-statistics>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Contador de Registros -->
+    <div *ngIf="activeTab === 2">
+      <h2 class="text-xl font-semibold mb-4">Contador de Registros</h2>
+
+      <!-- Dashboard de contadores -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500">Total Registros</p>
+              <p class="text-2xl font-bold">{{totalRegistros || 0}}</p>
+            </div>
+            <div class="p-2 bg-blue-100 rounded-lg">
+              <mat-icon class="text-blue-600">description</mat-icon>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">Todos los tiempos</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500">Atendidos</p>
+              <p class="text-2xl font-bold text-green-600">{{registrosAtendidos || 0}}</p>
+            </div>
+            <div class="p-2 bg-green-100 rounded-lg">
+              <mat-icon class="text-green-600">check_circle</mat-icon>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">{{porcentajeAtendidos || 0}}% del total</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-amber-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500">En Proceso</p>
+              <p class="text-2xl font-bold text-amber-600">{{registrosPendientes || 0}}</p>
+            </div>
+            <div class="p-2 bg-amber-100 rounded-lg">
+              <mat-icon class="text-amber-600">pending</mat-icon>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">{{porcentajePendientes || 0}}% del total</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-500">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-sm text-gray-500">Sin Atender</p>
+              <p class="text-2xl font-bold text-red-600">{{registrosSinAtender || 0}}</p>
+            </div>
+            <div class="p-2 bg-red-100 rounded-lg">
+              <mat-icon class="text-red-600">error_outline</mat-icon>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">{{porcentajeSinAtender || 0}}% del total</p>
+        </div>
+      </div>
+
+      <!-- Tabla de resumen por área -->
+      <mat-card class="shadow-md">
+        <mat-card-header>
+          <mat-card-title>Resumen por Área</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registros</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Atendidos</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sin Atender</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Atención</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <!-- Filas para cada área permitida -->
+              </tbody>
+            </table>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- 4. Actividad de Usuarios -->
+    <div *ngIf="activeTab === 3">
+      <h2 class="text-xl font-semibold mb-4">Actividad de Usuarios</h2>
+
+      <!-- Filtro de búsqueda -->
+      <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <mat-form-field class="w-full md:w-80">
+            <mat-label>Buscar usuario</mat-label>
+            <input matInput [(ngModel)]="filtroUsuario" (input)="filtrarUsuarioPorNombre()" placeholder="Nombre o área">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" class="ml-auto" (click)="loadUserActivityData()">
+            <mat-icon>refresh</mat-icon>
+            Actualizar datos
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabla de actividad de usuarios -->
+      <div class="bg-white rounded-lg shadow-md">
+        <div *ngIf="cargandoActividad" class="flex justify-center items-center py-10">
+          <mat-spinner [diameter]="40"></mat-spinner>
+          <span class="ml-4 text-gray-500">Cargando información de actividad...</span>
+        </div>
+
+        <div *ngIf="!cargandoActividad && usuariosActividadFiltrados.length === 0" class="py-10 text-center">
+          <mat-icon class="text-gray-400 text-5xl">search_off</mat-icon>
+          <p class="text-gray-500 mt-2">No se encontraron usuarios con los filtros aplicados</p>
+        </div>
+
+        <div *ngIf="!cargandoActividad && usuariosActividadFiltrados.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seguimientos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Última Actividad</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalles</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr *ngFor="let item of usuariosActividadFiltrados" class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                      <span class="text-xs font-medium text-blue-700">{{item.usuario.username.charAt(0).toUpperCase()}}</span>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">
+                        {{item.usuario.username}}
+                      </div>
+                      <div *ngIf="!item.usuario.active" class="text-xs text-red-600 font-medium">Inactivo</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-normal break-words max-w-[200px]">
+                  <div class="text-sm text-gray-900">{{item.usuario.area}}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                        [ngClass]="{
+                          'bg-purple-100 text-purple-800': item.usuario.roles === 'administrador',
+                          'bg-green-100 text-green-800': item.usuario.roles === 'director',
+                          'bg-blue-100 text-blue-800': item.usuario.roles === 'enlace',
+                          'bg-indigo-100 text-indigo-800': item.usuario.roles === 'director general'
+                        }">
+                    {{item.usuario.roles}}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{item.estadisticas.total_seguimientos}}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <ng-container *ngIf="item.estadisticas.ultima_modificacion; else sinActividad">
+                    <div class="text-sm text-gray-900">
+                      {{obtenerFechaFormateada(item.estadisticas.ultima_modificacion.fecha_respuesta)}}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      Folio: {{item.estadisticas.ultima_modificacion.anio}}-{{item.estadisticas.ultima_modificacion.folio}}
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{item.estadisticas.ultima_modificacion.num_oficio}}
+                    </div>
+                  </ng-container>
+                  <ng-template #sinActividad>
+                    <span class="text-sm text-gray-500 italic">Sin actividad</span>
+                  </ng-template>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button *ngIf="item.estadisticas.ultima_modificacion"
+                          mat-stroked-button
+                          color="primary"
+                          class="px-2 py-1 text-xs"
+                          matTooltip="Ver detalles de última actividad"
+                          (click)="mostrarDetallesUsuario(item)">
+                    <mat-icon class="text-sm mr-1">visibility</mat-icon>
+                    Detalles
+                  </button>
+
+                  <span *ngIf="!item.estadisticas.ultima_modificacion" class="text-gray-400 text-xs italic">
+                    Sin detalles
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Logs de Inicio de Sesión -->
+    <div *ngIf="activeTab === 4 && canViewSection('logs')">
+      <h2 class="text-xl font-semibold mb-4">Registros de Acceso al Sistema</h2>
+
+      <!-- Tabla de logs -->
+      <app-login-logs [userPermissions]="{role: userRole, area: userArea, isAdmin: isAdmin, isDirectorGeneral: isDirectorGeneral}"></app-login-logs>
+    </div>
+
+    <!-- 6. Gestión de Usuarios (solo admin) -->
+    <div *ngIf="activeTab === 5 && canViewSection('users')">
+      <h2 class="text-xl font-semibold mb-4">Gestión de Usuarios</h2>
+      <!-- Tabla de usuarios -->
+      <app-user-management></app-user-management>
+    </div>
+  </div>
+</div>

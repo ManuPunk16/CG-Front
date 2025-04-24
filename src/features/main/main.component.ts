@@ -1231,35 +1231,4 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return resultado;
   }
-
-  /**
-   * Calcula el resumen anual de todas las áreas
-   */
-  private calcularResumenAnual(datos: any[], currentYear: number): {
-    total: number,
-    atendidos: number,
-    noAtendidos: number,
-    porcentaje: number
-  } {
-    let totalAtendidos = 0;
-    let totalNoAtendidos = 0;
-
-    if (Array.isArray(datos)) {
-      datos.forEach(direccion => {
-        const datosAnio = this.obtenerDatosAnioActual(direccion, currentYear);
-        totalAtendidos += datosAnio.atendido;
-        totalNoAtendidos += datosAnio.noAtendido;
-      });
-    }
-
-    const total = totalAtendidos + totalNoAtendidos;
-    const porcentaje = total > 0 ? Math.round((totalAtendidos / total) * 100) : 0;
-
-    return {
-      total,
-      atendidos: totalAtendidos,
-      noAtendidos: totalNoAtendidos,
-      porcentaje
-    };
-  }
 }

@@ -53,6 +53,11 @@
           <span class="ml-2">Catálogos</span>
         </a>
 
+        <a mat-list-item [routerLink]="['/Administracion']" routerLinkActive="active">
+          <mat-icon>admin_panel_settings</mat-icon>
+          <span class="ml-2">Panel de Administración</span>
+        </a>
+
         <a mat-list-item [routerLink]="['/Entradas/panel-control']" routerLinkActive="active"
            *ngIf="isAdmin() || isDirectorGeneral()">
           <mat-icon>dashboard</mat-icon>

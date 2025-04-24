@@ -1,7 +1,13 @@
 export interface ApiResponse<T> {
   status: string;
-  message?: string;
+  message: string;
   data: T;
+  metadata?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 // Interfaz específica para respuestas paginadas

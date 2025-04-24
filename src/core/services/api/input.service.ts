@@ -274,7 +274,7 @@ export class InputService extends BaseApiService {
       timestamp: Date;
     } | null;
   }[]>> {
-    return this.get<ApiResponse<any>>(`${this.endpoint}/usuarios/ultimas-modificaciones`);
+    return this.get<ApiResponse<any>>(`${this.endpoint}/estadisticas/usuarios`);
   }
 
   /**
@@ -323,5 +323,53 @@ export class InputService extends BaseApiService {
    */
   getEstadisticasRegistros(): Observable<any> {
     return this.get<any>(`${this.endpoint}/estadisticas/registros`);
+  }
+
+  /**
+   * Obtiene estadísticas de tiempos de respuesta para un área específica
+   * @param area Área a consultar
+   * @param fechaInicio Fecha de inicio del periodo (formato YYYY-MM-DD)
+   * @param fechaFin Fecha de fin del periodo (formato YYYY-MM-DD)
+   */
+  getTiemposRespuestaArea(area: string, fechaInicio: string, fechaFin: string): Observable<ApiResponse<any>> {
+    const params: any = {};
+
+    // Solo añadir fechas a los parámetros si están definidas
+    if (fechaInicio) params.fechaInicio = fechaInicio;
+    if (fechaFin) params.fechaFin = fechaFin;
+
+    // Corregir la URL para usar la ruta correcta (añadir 'inputs/')
+    return this.http.get<ApiResponse<any>>(
+      `${this.apiUrl}/inputs/tiempos-respuesta/area/${encodeURIComponent(area)}`,
+      { params }
+    );
+  }
+
+  /**
+   * Obtiene estadísticas de estatus para un área específica
+   * @param area Área a consultar
+   * @param fechaInicio Fecha de inicio del periodo (formato YYYY-MM-DD)
+   * @param fechaFin Fecha de fin del periodo (formato YYYY-MM-DD)
+   */
+  getEstadisticasEstatusArea(area: string, fechaInicio: string, fechaFin: string): Observable<ApiResponse<any>> {
+    const params: any = {};
+
+    // Solo añadir fechas a los parámetros si están definidas
+    if (fechaInicio) params.fechaInicio = fechaInicio;
+    if (fechaFin) params.fechaFin = fechaFin;
+
+    // Corregir la URL para usar la ruta correcta (añadir 'inputs/')
+    return this.http.get<ApiResponse<any>>(
+      `${this.apiUrl}/inputs/estadisticas/estatus/area/${encodeURIComponent(area)}`,
+      { params }
+    );
+  }
+
+  /**
+   * Obtiene estadísticas de tiempo de respuesta para un oficio específico
+   * @param id ID del oficio
+   */
+  getTiempoRespuestaPorId(id: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/tiempo-respuesta/${id}`);
   }
 }

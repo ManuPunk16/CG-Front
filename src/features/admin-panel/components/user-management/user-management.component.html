@@ -1,0 +1,146 @@
+<div class="w-full">
+  <!-- Encabezado y controles -->
+  <div class="flex flex-wrap items-center justify-between mb-4">
+    <div class="flex-grow mr-4 mb-2 sm:mb-0">
+      <mat-form-field class="w-full" >
+        <mat-label>Buscar usuarios</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Buscar por nombre, email, área..." #input>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()"
+            class="mb-2 sm:mb-0 bg-blue-600 hover:bg-blue-700">
+      <mat-icon>add</mat-icon>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="flex justify-center p-8">
+    <mat-spinner [diameter]="40"></mat-spinner>
+  </div>
+
+  <!-- Tabla de usuarios -->
+  <div class="bg-white shadow rounded-lg overflow-hidden" [class.opacity-50]="isLoading">
+    <div class="overflow-x-auto">
+      <table mat-table [dataSource]="dataSource" matSort class="w-full">
+        <!-- Username Column -->
+        <ng-container matColumnDef="username">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Usuario
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <div class="flex items-center">
+              <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                <span class="text-xs font-medium text-blue-700">{{user.username.charAt(0).toUpperCase()}}</span>
+              </div>
+              <span>{{user.username}}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Email Column -->
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Email
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{user.email}}
+          </td>
+        </ng-container>
+
+        <!-- Área Column -->
+        <ng-container matColumnDef="area">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Área
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-normal break-words max-w-xs text-sm text-gray-500">
+            {{user.area}}
+          </td>
+        </ng-container>
+
+        <!-- Role Column -->
+        <ng-container matColumnDef="roles">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Rol
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="px-2 py-1 text-xs rounded-full font-medium"
+                  [ngClass]="{
+                    'bg-purple-100 text-purple-800': user.roles === 'administrador',
+                    'bg-blue-100 text-blue-800': user.roles === 'enlace',
+                    'bg-green-100 text-green-800': user.roles === 'director',
+                    'bg-indigo-100 text-indigo-800': user.roles === 'director_general'
+                  }">
+              {{user.roles}}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="active">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Estado
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="px-2 py-1 text-xs rounded-full font-medium"
+                  [ngClass]="{
+                    'bg-green-100 text-green-800': user.active,
+                    'bg-red-100 text-red-800': !user.active
+                  }">
+              {{user.active ? 'Activo' : 'Inactivo'}}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Acciones
+          </th>
+          <td mat-cell *matCellDef="let user" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <div class="flex space-x-2">
+              <!-- Editar botón -->
+              <button mat-icon-button color="primary" (click)="openEditDialog(user)" matTooltip="Editar usuario">
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <!-- Cambiar contraseña botón -->
+              <button mat-icon-button color="accent" (click)="openResetPasswordDialog(user)" matTooltip="Cambiar contraseña">
+                <mat-icon>vpn_key</mat-icon>
+              </button>
+
+              <!-- Activar/Desactivar botón -->
+              <button mat-icon-button [color]="user.active ? 'warn' : 'primary'" (click)="confirmToggleStatus(user)"
+                      [matTooltip]="user.active ? 'Desactivar usuario' : 'Activar usuario'">
+                <mat-icon>{{user.active ? 'person_off' : 'person'}}</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [ngClass]="{'bg-gray-50': !row.active}"></tr>
+
+        <!-- Fila para cuando no hay datos -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell py-4 text-center text-gray-500" [attr.colspan]="displayedColumns.length">
+            <div class="flex flex-col items-center py-8">
+              <mat-icon class="text-gray-400 text-5xl mb-2">search_off</mat-icon>
+              <p *ngIf="input.value; else noData">No se encontraron usuarios para "{{input.value}}"</p>
+              <ng-template #noData>
+                <p>No hay usuarios registrados</p>
+              </ng-template>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]"
+                  showFirstLastButtons
+                  aria-label="Seleccionar página de usuarios">
+    </mat-paginator>
+  </div>
+</div>
