@@ -282,7 +282,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   loadCatalogs(): void {
     // Cargar instituciones desde CatalogService con el formato completo
     this.isLoadingInstitutions = true;
-    this.catalogService.getRawCatalogItems(CatalogType.INSTITUTION)
+    this.catalogService.getRawCatalogItems(CatalogType.INSTITUTION, 1000) // Solicitar hasta 1000 instituciones
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -294,8 +294,11 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         next: (response) => {
           // Almacenar los datos crudos de instituciones
           this.rawInstitutionsData = response.institution || [];
+          console.log(`Se cargaron ${this.rawInstitutionsData.length} instituciones del catálogo`);
+
           // Extraer los nombres para el antiguo formato (por compatibilidad)
           this.institutions = this.rawInstitutionsData.map(item => item.name);
+
           // Inicializar el filtrado de instituciones
           this.filterInstitutions('');
           this.cdr.detectChanges();
@@ -315,17 +318,36 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Filtra las instituciones según lo que escribe el usuario
    */
   filterInstitutions(value: string): void {
-    const filterValue = value.toLowerCase();
+    if (typeof value !== 'string') {
+      console.warn('Valor no es string:', value);
+      return;
+    }
 
-    this.filteredInstitutions = this.rawInstitutionsData.filter(item =>
-      item.name.toLowerCase().includes(filterValue)
-    );
+    const filterValue = value.toLowerCase().trim();
 
-    // Actualizar el valor en filterValues cuando se selecciona una institución
-    if (this.institutionFilterControl.value) {
-      this.filterValues['institucion_origen'] = this.institutionFilterControl.value;
-    } else {
-      delete this.filterValues['institucion_origen'];
+    try {
+      if (!this.rawInstitutionsData || !Array.isArray(this.rawInstitutionsData)) {
+        console.warn('No hay datos de instituciones para filtrar');
+        this.filteredInstitutions = [];
+        return;
+      }
+
+      // Si el valor del filtro está vacío, limitar a mostrar las primeras 100 para mejor rendimiento
+      if (!filterValue) {
+        this.filteredInstitutions = this.rawInstitutionsData.slice(0, 1000);
+        console.log('Mostrando las primeras 1000 instituciones (campo vacío)');
+      } else {
+        // Si hay un valor de filtro, aplicar el filtro sin límite de resultados
+        this.filteredInstitutions = this.rawInstitutionsData.filter(item =>
+          item && item.name && item.name.toLowerCase().includes(filterValue)
+        );
+      }
+
+      console.log(`Se encontraron ${this.filteredInstitutions.length} instituciones que coinciden`);
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error al filtrar instituciones:', error);
+      this.filteredInstitutions = [];
     }
   }
 
@@ -1419,5 +1441,16 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       this.alertService.warning('El formato de fecha no es válido. Use DD/MM/YYYY o YYYY-MM-DD');
       return null;
     }
+  }
+
+  /**
+   * Maneja la selección de una institución del autocompletado
+   */
+  onInstitutionSelected(event: any): void {
+    const selectedInstitution = event.option.value;
+    this.filterValues['institucion_origen'] = selectedInstitution;
+
+    // Actualizar para debug
+    console.log('Institución seleccionada:', selectedInstitution);
   }
 }

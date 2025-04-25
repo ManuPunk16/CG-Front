@@ -69,6 +69,11 @@ form {
   word-break: break-all;
 }
 
+.mat-column-actions {
+  min-width: 80px;
+  max-width: 100px;
+}
+
 .mat-column-diasAtraso, .mat-column-fecha_recepcion, .mat-column-folio {
   min-width: 80px;
   max-width: 110px;
@@ -118,5 +123,144 @@ form {
       padding: 0.5em !important;
     }
   }
+}
+
+/* Estilo para placeholders más difuminados */
+::placeholder {
+  color: #A0AEC0 !important;
+  opacity: 0.6 !important;
+}
+
+/* Estilo específico para opciones de selección */
+select option:first-child {
+  color: #A0AEC0;
+  opacity: 0.6;
+}
+
+/* Para Safari y navegadores basados en WebKit */
+select:not(:checked) {
+  color: #A0AEC0;
+  opacity: 0.8;
+}
+
+/* Cambiar el color del texto una vez seleccionado */
+select:focus, select:focus-visible {
+  color: #1a202c;
+}
+
+/* Ajuste específico para el datepicker */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Estilos para opciones seleccionadas en selects */
+select option:checked {
+  background-color: #EBF4FF;
+  color: #2B6CB0;
+}
+
+/* Estilos para el autocompletado de Material */
+:host ::ng-deep {
+  .mat-mdc-autocomplete-panel {
+    // @apply bg-white rounded-md shadow-lg border border-gray-200;
+    margin-top: 4px !important;
+    padding: 8px 0;
+    max-height: 400px !important; /* Aumentar la altura máxima */
+    overflow-y: auto;
+
+    /* Mejorar scrollbar */
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+    }
+  }
+
+  .cdk-overlay-pane {
+    margin-top: 4px;
+  }
+
+  .mat-mdc-option {
+    min-height: 40px;
+    line-height: 40px;
+    padding: 0 16px;
+    transition: background-color 0.2s ease-in-out;
+    font-size: 14px;
+    height: auto !important;
+    line-height: 1.4 !important;
+    padding: 10px 16px !important;
+  }
+
+  .mat-mdc-option:hover:not(.mdc-list-item--disabled) {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .mat-mdc-option.mdc-list-item--selected {
+    background-color: rgba(25, 118, 210, 0.12);
+  }
+
+  /* Estilo correcto para campos select */
+  .mat-mdc-select-panel {
+    min-width: calc(100% + 32px) !important;
+    transform: translateX(-16px) !important;
+  }
+
+  /* Asegurar que la barra de desplazamiento se vea bien */
+  .mat-mdc-autocomplete-panel::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .mat-mdc-autocomplete-panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .mat-mdc-autocomplete-panel::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .mat-mdc-autocomplete-panel::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+/* Ajustes para selects */
+select.appearance-none {
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem;
+}
+
+.filter-group select {
+  position: relative;
+  z-index: 10;
+  background-color: white;
+}
+
+/* Asegurar que las flechas de despliegue se vean correctamente */
+.select-wrapper {
+  position: relative;
+  // @apply w-full;
+}
+
+/* Asegurar que el placeholder del autocompletado se vea correctamente */
+input::placeholder {
+  color: #A0AEC0;
+  opacity: 0.6;
 }
 

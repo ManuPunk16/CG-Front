@@ -25,10 +25,13 @@ export class CatalogService extends BaseApiService {
 
   /**
    * Obtiene los datos crudos del catálogo sin procesamiento
+   * @param type Tipo de catálogo
+   * @param limit Límite de registros a obtener (por defecto 1000)
    */
-  getRawCatalogItems(type: CatalogType | string): Observable<any> {
-    // También usar ruta relativa aquí, y preferiblemente usar this.get en lugar de this.http.get
-    return this.get<any>(`catalogs/${type.toLowerCase()}`);
+  getRawCatalogItems(type: CatalogType | string, limit: number = 1000): Observable<any> {
+    // Añadir parámetro limit para obtener más registros
+    const params = { limit: limit.toString() };
+    return this.get<any>(`catalogs/${type.toLowerCase()}`, params);
   }
 
   /**

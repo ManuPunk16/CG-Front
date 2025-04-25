@@ -33,7 +33,7 @@
   </div>
 
   <!-- Grid para los campos de filtro con mejor agrupación -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
     <!-- Folio -->
     <div class="filter-group">
       <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-folio">
@@ -47,10 +47,11 @@
           id="filter-folio"
           type="text"
           [(ngModel)]="filterValues['folio']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
-          placeholder="Buscar por folio">
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
+          placeholder="Buscar por folio"
+          style="::placeholder { color: #CBD5E0; opacity: 0.5; }">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">#</span>
+          <span class="text-gray-400 sm:text-sm">#</span>
         </div>
       </div>
     </div>
@@ -68,10 +69,10 @@
           id="filter-num-oficio"
           type="text"
           [(ngModel)]="filterValues['num_oficio']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
           placeholder="Buscar por oficio">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
+          <span class="text-gray-400 sm:text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
             </svg>
@@ -94,10 +95,10 @@
           type="date"
           [(ngModel)]="filterValues['fecha_recepcion']"
           (blur)="validateDateFormat($event)"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
           placeholder="DD/MM/YYYY">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
+          <span class="text-gray-400 sm:text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
             </svg>
@@ -106,7 +107,7 @@
       </div>
     </div>
 
-    <!-- Institución origen -->
+    <!-- Institución origen corregida -->
     <div class="filter-group">
       <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-institucion">
         <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -118,18 +119,22 @@
         <input
           id="filter-institucion"
           type="text"
-          [(ngModel)]="filterValues['institucion_origen']"
+          [formControl]="institutionFilterControl"
           [matAutocomplete]="auto"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
           placeholder="Buscar institución">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
+          <span class="text-gray-400 sm:text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path>
             </svg>
           </span>
         </div>
-        <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayInstitution">
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          (optionSelected)="onInstitutionSelected($event)"
+          [displayWith]="displayInstitution"
+          panelClass="autocomplete-panel-full">
           <mat-option *ngFor="let option of filteredInstitutions" [value]="option.name">
             {{option.name}}
           </mat-option>
@@ -150,10 +155,10 @@
           id="filter-remitente"
           type="text"
           [(ngModel)]="filterValues['remitente']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
           placeholder="Buscar por remitente">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
+          <span class="text-gray-400 sm:text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -175,10 +180,10 @@
           id="filter-asunto"
           type="text"
           [(ngModel)]="filterValues['asunto']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10"
+          class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 text-base"
           placeholder="Buscar por asunto">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
+          <span class="text-gray-400 sm:text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -187,70 +192,70 @@
       </div>
     </div>
 
-    <!-- Área asignada -->
-    <div class="filter-group">
-      <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-area">
-        <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <!-- Área asignada corregida -->
+<div class="filter-group">
+  <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-area">
+    <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+    </svg>
+    Área asignada
+  </label>
+  <div class="relative">
+    <select
+      id="filter-area"
+      [(ngModel)]="filterValues['asignado']"
+      class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 pr-10 appearance-none text-base">
+      <option value="" class="text-gray-400">Todas las áreas</option>
+      <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
+    </select>
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <span class="text-gray-400 sm:text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
         </svg>
-        Área asignada
-      </label>
-      <div class="relative">
-        <select
-          id="filter-area"
-          [(ngModel)]="filterValues['asignado']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 appearance-none">
-          <option value="">Todas las áreas</option>
-          <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
-        </select>
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-            </svg>
-          </span>
-        </div>
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </div>
-      </div>
+      </span>
     </div>
+    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-700">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </div>
+  </div>
+</div>
 
-    <!-- Estatus -->
-    <div class="filter-group">
-      <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-estatus">
-        <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+<!-- Estatus corregido -->
+<div class="filter-group">
+  <label class="block text-sm font-semibold text-gray-700 mb-2" for="filter-estatus">
+    <svg class="w-4 h-4 inline-block mr-1 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    Estatus
+  </label>
+  <div class="relative">
+    <select
+      id="filter-estatus"
+      [(ngModel)]="filterValues['estatus']"
+      class="w-full h-11 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 pr-10 appearance-none text-base">
+      <option value="" class="text-gray-400">Todos los estatus</option>
+      <option *ngFor="let status of statusOptions" [value]="status" [ngClass]="{
+        'text-green-600': status === 'ATENDIDO',
+        'text-red-600': status === 'NO ATENDIDO'
+      }">{{ status }}</option>
+    </select>
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <span class="text-gray-400 sm:text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
         </svg>
-        Estatus
-      </label>
-      <div class="relative">
-        <select
-          id="filter-estatus"
-          [(ngModel)]="filterValues['estatus']"
-          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300 focus:ring-opacity-50 pl-10 appearance-none">
-          <option value="">Todos los estatus</option>
-          <option *ngFor="let status of statusOptions" [value]="status" [ngClass]="{
-            'text-green-600': status === 'ATENDIDO',
-            'text-red-600': status === 'NO ATENDIDO'
-          }">{{ status }}</option>
-        </select>
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span class="text-gray-500 sm:text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-          </span>
-        </div>
-        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </div>
-      </div>
+      </span>
     </div>
+    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-700">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- Botones de acción para filtros -->
