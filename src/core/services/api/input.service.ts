@@ -146,8 +146,17 @@ export class InputService extends BaseApiService {
   /**
    * Actualiza un input existente
    */
-  updateInput(id: string, input: Partial<Input>): Observable<ApiResponse<Input>> {
-    return this.put<ApiResponse<Input>>(`${this.endpoint}/${id}`, input);
+  updateInput(id: string, inputData: any): Observable<any> {
+    // Usar PUT o PATCH directamente con el ID, sin "update" en la ruta
+    return this.http.patch<any>(`${this.apiUrl}/${this.endpoint}/update/${id}`, inputData);
+  }
+
+  /**
+   * Crea o actualiza un seguimiento para un input
+   * En el backend, esto se maneja a través de la misma ruta de actualización
+   */
+  manageSeguimiento(inputId: string, seguimientoData: any): Observable<any> {
+    return this.http.patch<any>(`${this.endpoint}/update/${inputId}`, seguimientoData);
   }
 
   /**

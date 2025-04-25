@@ -12,17 +12,25 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
+import { EstatusEnum } from '../../../core/models/enums/estatus.enum';
+import { AreasEnum } from '../../../core/models/enums/areas.enum';
 
 import { InputService } from '../../../core/services/api/input.service';
 import { UserService } from '../../../core/services/api/user.service';
 import { PdfService } from '../../../core/services/api/pdf.service';
 import { AlertService } from '../../../core/services/ui/alert.service';
+import { AuthService } from '../../../core/services/api/auth.service';
+import { RolesEnum } from '../../../core/models/enums/roles.enum';
 
 import { Input } from '../../../core/models/input/input.model';
 import { User } from '../../../core/models/user.model';
 import { Subject, Observable, forkJoin, of } from 'rxjs';
 import { takeUntil, switchMap, map, catchError, tap } from 'rxjs/operators';
 import { DuplicatedDocument } from '../../../core/models/input/duplicate.model';
+
+import Swal from 'sweetalert2';
 
 interface TiempoRespuesta {
   _id: string;
@@ -68,7 +76,8 @@ interface Duplicado extends DuplicatedDocument {}
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatChipsModule,
-    MatExpansionModule
+    MatExpansionModule,
+    ReactiveFormsModule
   ],
   providers: [DatePipe],
   templateUrl: './ficha-tecnica-profesional.component.html',
@@ -106,6 +115,14 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
   // Control de suscripciones
   private destroy$ = new Subject<void>();
 
+  // Agregar propiedades para controlar permisos
+  canEditInput: boolean = false;
+  canEditSeguimiento: boolean = false;
+
+  // Añadir estas propiedades a la clase
+  inputForm: FormGroup = new FormGroup({});
+  seguimientoForm: FormGroup = new FormGroup({});
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -115,10 +132,19 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     private alertService: AlertService,
     private datePipe: DatePipe,
     private sanitizer: DomSanitizer,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService, // Agregar servicio de autenticación
+    private fb: FormBuilder
+  ) {
+    // Inicializar formularios vacíos
+    this.initForms();
+  }
 
   ngOnInit(): void {
+    // Verificar permisos iniciales
+    this.canEditInput = this.isAdmin();
+    this.canEditSeguimiento = true; // Todos los usuarios registrados pueden editar seguimiento
+
     // Garantizar que duplicados nunca sea undefined
     this.duplicados = [];
 
@@ -378,7 +404,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     this.errorPdfEntrada = null;
     this.errorPdfSeguimiento = null;
 
-    // Usando el PdfService para obtener todos los PDFs directamente
+    // Usando el PdfService para obtener todos los PDFs
     this.pdfService.getAllInputPdfs(this.id).pipe(
       takeUntil(this.destroy$),
       catchError(error => {
@@ -386,34 +412,85 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         this.errorPdfEntrada = 'Error al obtener la lista de archivos.';
         this.loadingPdfs = false;
         return of({ data: { principales: [], seguimiento: [] } });
-      })
-    ).subscribe(result => {
-      if (result && result.data) {
+      }),
+      switchMap(result => {
+        if (!result?.data) {
+          return of(null);
+        }
+
         const { principales, seguimiento } = result.data;
 
-        // Procesar PDFs principales
+        // Crear arrays para almacenar observables de URLs
+        const principalUrlObservables: Observable<{ name: string, url: string }>[] = [];
+        const seguimientoUrlObservables: Observable<{ name: string, url: string }>[] = [];
+
+        // Generar observables para PDFs principales
         principales.forEach(pdf => {
           if (pdf.exists) {
-            const url = this.pdfService.getPdfUrl(this.id, pdf.name);
-            this.pdfFilenames.push(pdf.name);
-            this.pdfUrls.push(this.sanitizer.bypassSecurityTrustUrl(url));
+            principalUrlObservables.push(
+              this.pdfService.getPdfUrl(this.id, pdf.name, false).pipe(
+                map(url => ({ name: pdf.name, url }))
+              )
+            );
           }
         });
 
-        // Procesar PDFs de seguimiento
+        // Generar observables para PDFs de seguimiento
         seguimiento.forEach(pdf => {
           if (pdf.exists) {
-            const url = this.pdfService.getPdfUrl(this.id, pdf.name, true);
-            this.pdfFilenamesSeguimiento.push(pdf.name);
-            this.pdfUrlsSeguimiento.push(this.sanitizer.bypassSecurityTrustUrl(url));
+            seguimientoUrlObservables.push(
+              this.pdfService.getPdfUrl(this.id, pdf.name, true).pipe(
+                map(url => ({ name: pdf.name, url }))
+              )
+            );
           }
+        });
+
+        // Combinar observables de PDFs principales
+        const principalPdfs$ = principalUrlObservables.length > 0
+          ? forkJoin(principalUrlObservables)
+          : of([]);
+
+        // Combinar observables de PDFs de seguimiento
+        const seguimientoPdfs$ = seguimientoUrlObservables.length > 0
+          ? forkJoin(seguimientoUrlObservables)
+          : of([]);
+
+        // Devolver ambos grupos de PDFs cuando todos se hayan cargado
+        return forkJoin({
+          principales: principalPdfs$,
+          seguimiento: seguimientoPdfs$
+        });
+      })
+    ).subscribe({
+      next: (result) => {
+        if (!result) {
+          this.loadingPdfs = false;
+          return;
+        }
+
+        // Procesar URLs principales
+        result.principales.forEach(item => {
+          this.pdfFilenames.push(item.name);
+          this.pdfUrls.push(this.sanitizer.bypassSecurityTrustUrl(item.url));
+        });
+
+        // Procesar URLs de seguimiento
+        result.seguimiento.forEach(item => {
+          this.pdfFilenamesSeguimiento.push(item.name);
+          this.pdfUrlsSeguimiento.push(this.sanitizer.bypassSecurityTrustUrl(item.url));
         });
 
         this.pdfsCargados = true;
+        this.loadingPdfs = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al procesar PDFs:', error);
+        this.loadingPdfs = false;
+        this.alertService.error('Ocurrió un error al cargar los archivos PDF');
+        this.cdr.detectChanges();
       }
-
-      this.loadingPdfs = false;
-      this.cdr.detectChanges();
     });
   }
 
@@ -567,17 +644,753 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navegación a pantalla de edición
+   * Comprueba si el usuario actual tiene permisos de administrador
    */
-  irAEditar(): void {
-    this.router.navigate(['/editar', this.id]);
+  isAdmin(): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    return currentUser?.roles === RolesEnum.ADMIN;
   }
 
   /**
-   * Navegación a pantalla de edición de seguimiento
+   * Navegación a pantalla de edición con confirmación previa
+   */
+  irAEditar(): void {
+    // Verificar permisos de administrador
+    if (!this.isAdmin()) {
+      this.alertService.error('No tienes permisos para editar este documento');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Editar Documento',
+      html: `
+        <div class="text-left">
+          <p class="mb-4 text-gray-700">Estás a punto de editar el documento:</p>
+          <div class="bg-blue-50 p-3 rounded-md border-l-4 border-blue-400 mb-4">
+            <p class="text-sm font-medium">Folio: <span class="font-bold">${this.inputDetails?.anio}-${this.inputDetails?.folio}</span></p>
+            <p class="text-sm font-medium">Oficio: <span class="font-bold">${this.inputDetails?.num_oficio}</span></p>
+          </div>
+          <p class="text-sm text-gray-600">Los cambios que realices afectarán la información principal del documento.</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<i class="material-icons mr-1">edit</i> Continuar con la edición',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'swal-wide',
+        title: 'text-lg font-medium text-gray-800',
+        htmlContainer: 'text-left'
+      },
+      backdrop: `rgba(0,0,30,0.4)`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.mostrarFormularioEdicion();
+      }
+    });
+  }
+
+  /**
+   * Muestra el formulario de edición del documento principal
+   */
+  mostrarFormularioEdicion(): void {
+    // Preparar los valores iniciales del formulario basados en inputDetails
+    this.inputForm.patchValue({
+      num_oficio: this.inputDetails?.num_oficio || '',
+      fecha_oficio: this.formatDateForInput(this.inputDetails?.fecha_oficio),
+      fecha_vencimiento: this.formatDateForInput(this.inputDetails?.fecha_vencimiento),
+      fecha_recepcion: this.formatDateForInput(this.inputDetails?.fecha_recepcion),
+      hora_recepcion: this.inputDetails?.hora_recepcion || '',
+      instrumento_juridico: this.inputDetails?.instrumento_juridico || '',
+      remitente: this.inputDetails?.remitente || '',
+      institucion_origen: this.inputDetails?.institucion_origen || '',
+      asunto: this.inputDetails?.asunto || '',
+      asignado: this.inputDetails?.asignado || '',
+      estatus: this.inputDetails?.estatus || 'NO ATENDIDO',
+      observacion: this.inputDetails?.observacion || ''
+    });
+
+    // Opciones para los campos select
+    const areaOptions = Object.values(AreasEnum)
+      .map(area => `<option value="${area}" ${this.inputForm.get('asignado')?.value === area ? 'selected' : ''}>${area}</option>`)
+      .join('');
+
+    const estatusOptions = Object.values(EstatusEnum)
+      .map(estatus => `<option value="${estatus}" ${this.inputForm.get('estatus')?.value === estatus ? 'selected' : ''}>${estatus}</option>`)
+      .join('');
+
+    // Preparar rutas de PDFs para mostrar
+    let pdfRutas = this.inputDetails?.archivosPdf || [];
+    if (!pdfRutas.length) {
+      pdfRutas = [''];  // Al menos un campo vacío si no hay rutas
+    }
+
+    const pdfFields = pdfRutas.map((ruta, index) => `
+      <div class="flex items-center mb-2 pdf-input-group" id="pdf-group-${index}">
+        <input id="swal-input-pdf-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+        ${index > 0 ? `
+          <button type="button" onclick="document.getElementById('pdf-group-${index}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+
+    // Mostrar SweetAlert con el formulario - incluyendo la sección de PDFs
+    Swal.fire({
+      title: 'Editar Documento',
+      html: `
+        <form id="editDocForm" class="text-left">
+          <!-- Número de oficio y fecha de oficio -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-num_oficio">Número de Oficio*</label>
+              <input id="swal-input-num_oficio" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('num_oficio')?.value}" placeholder="Ej: CJ/DG/123/2023" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_oficio">Fecha de Oficio*</label>
+              <input id="swal-input-fecha_oficio" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('fecha_oficio')?.value}" required>
+            </div>
+          </div>
+
+          <!-- Recepción -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_recepcion">Fecha de Recepción*</label>
+              <input id="swal-input-fecha_recepcion" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('fecha_recepcion')?.value}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-hora_recepcion">Hora de Recepción</label>
+              <input id="swal-input-hora_recepcion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('hora_recepcion')?.value}" placeholder="Ej. 10:30 AM">
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_vencimiento">Fecha de Vencimiento</label>
+              <input id="swal-input-fecha_vencimiento" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('fecha_vencimiento')?.value}">
+            </div>
+          </div>
+
+          <!-- Remitente e institución -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-remitente">Remitente*</label>
+              <input id="swal-input-remitente" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('remitente')?.value}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-institucion_origen">Institución de Origen</label>
+              <input id="swal-input-institucion_origen" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.inputForm.get('institucion_origen')?.value}">
+            </div>
+          </div>
+
+          <!-- Instrumento jurídico -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-instrumento_juridico">Instrumento Jurídico</label>
+            <input id="swal-input-instrumento_juridico" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value="${this.inputForm.get('instrumento_juridico')?.value}">
+          </div>
+
+          <!-- Área y estatus -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-asignado">Área Asignada*</label>
+              <select id="swal-input-asignado" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                ${areaOptions}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-estatus">Estatus*</label>
+              <select id="swal-input-estatus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                ${estatusOptions}
+              </select>
+            </div>
+          </div>
+
+          <!-- Asunto -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-asunto">Asunto*</label>
+            <textarea id="swal-input-asunto" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="4" required>${this.inputForm.get('asunto')?.value}</textarea>
+          </div>
+
+          <!-- Sección de archivos PDF -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rutas de Archivos PDF</label>
+            <div id="pdf-container">
+              ${pdfFields}
+            </div>
+            <button type="button" id="add-pdf-btn" class="mt-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar otra ruta de PDF
+            </button>
+            <p class="text-xs text-gray-500 mt-1">Ingrese rutas completas a los archivos PDF (ej: \\\\ws\\Control_Gestion_pdfs\\DIRECCION\\2025\\03\\archivo.pdf)</p>
+          </div>
+
+          <!-- Observación - ahora aparece después de la sección de PDFs -->
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-observacion">Observación</label>
+            <textarea id="swal-input-observacion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3">${this.inputForm.get('observacion')?.value}</textarea>
+          </div>
+
+          <div class="text-xs text-gray-500 mb-3">* Campos obligatorios</div>
+        </form>
+
+        <script>
+          document.getElementById('add-pdf-btn').addEventListener('click', function() {
+            const container = document.getElementById('pdf-container');
+            const newIndex = container.children.length;
+            const newGroup = document.createElement('div');
+            newGroup.className = 'flex items-center mb-2 pdf-input-group';
+            newGroup.id = 'pdf-group-' + newIndex;
+
+            newGroup.innerHTML = \`
+              <input id="swal-input-pdf-\${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="" placeholder="\\\\\\\\ws\\\\Control_Gestion_pdfs\\\\DIRECCIÓN\\\\AÑO\\\\MES\\\\archivo.pdf">
+              <button type="button" onclick="document.getElementById('pdf-group-\${newIndex}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            \`;
+
+            container.appendChild(newGroup);
+          });
+        </script>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar Cambios',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'swal-wide',
+        popup: 'swal-wide',
+        title: 'text-lg font-medium text-gray-800',
+        htmlContainer: 'text-left max-h-[75vh] overflow-y-auto' // Aumentamos altura máxima también
+      },
+      preConfirm: () => {
+        // Validar campos obligatorios
+        const numOficio = (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value;
+        const fechaOficio = (document.getElementById('swal-input-fecha_oficio') as HTMLInputElement).value;
+        const fechaRecepcion = (document.getElementById('swal-input-fecha_recepcion') as HTMLInputElement).value;
+        const remitente = (document.getElementById('swal-input-remitente') as HTMLInputElement).value;
+        const asunto = (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value;
+        const asignado = (document.getElementById('swal-input-asignado') as HTMLSelectElement).value;
+
+        if (!numOficio || !fechaOficio || !fechaRecepcion || !remitente || !asunto || !asignado) {
+          Swal.showValidationMessage('Por favor complete todos los campos obligatorios');
+          return false;
+        }
+
+        // Recopilar rutas de PDFs
+        const pdfInputs = Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]'));
+        const pdfRutas = pdfInputs.map(input => (input as HTMLInputElement).value.trim()).filter(Boolean);
+
+        // Recopilar todos los valores del formulario
+        return {
+          num_oficio: numOficio,
+          fecha_oficio: fechaOficio,
+          fecha_recepcion: fechaRecepcion,
+          hora_recepcion: (document.getElementById('swal-input-hora_recepcion') as HTMLInputElement).value,
+          fecha_vencimiento: (document.getElementById('swal-input-fecha_vencimiento') as HTMLInputElement).value,
+          instrumento_juridico: (document.getElementById('swal-input-instrumento_juridico') as HTMLInputElement).value,
+          remitente: remitente,
+          institucion_origen: (document.getElementById('swal-input-institucion_origen') as HTMLInputElement).value,
+          asunto: asunto,
+          asignado: asignado,
+          estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+          observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+          archivosPdf: pdfRutas
+        };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.guardarEdicionDocumento(result.value);
+      }
+    });
+  }
+
+  /**
+   * Guarda los cambios del documento principal
+   */
+  guardarEdicionDocumento(formData: any): void {
+    // Mostrar indicador de carga
+    Swal.fire({
+      title: 'Guardando cambios...',
+      html: 'Por favor espere mientras se actualiza la información',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Construir el objeto de actualización
+    const inputUpdate = {
+      ...formData,
+      _id: this.inputDetails?._id
+    };
+
+    // Realizar la actualización a través del servicio
+    this.inputService.updateInput(this.id, inputUpdate).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          // Actualizar el estado local con los datos actualizados
+          if (response.data) {
+            this.inputDetails = response.data;
+          }
+
+          // Mostrar mensaje de éxito
+          Swal.fire({
+            title: '¡Actualizado!',
+            text: 'El documento se actualizó correctamente',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+          });
+
+          // Recargar los datos para mostrar la información actualizada
+          this.loadInputDetails().subscribe();
+        } else {
+          // Manejar respuesta inesperada
+          Swal.fire({
+            title: 'Advertencia',
+            text: 'La operación se completó pero hubo un problema al actualizar los datos locales',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al actualizar el documento:', error);
+
+        // Mostrar mensaje de error
+        Swal.fire({
+          title: 'Error',
+          text: error.error?.message || 'Hubo un error al guardar los cambios. Inténtelo nuevamente.',
+          icon: 'error',
+          confirmButtonColor: '#3085d6'
+        });
+      }
+    });
+  }
+
+  /**
+   * Navegación a pantalla de edición de seguimiento con confirmación previa
    */
   irAEditarSeguimiento(): void {
-    this.router.navigate(['/editar-seguimiento', this.id]);
+    // Verificar si el documento tiene un seguimiento asociado
+    if (!this.inputDetails?.seguimientos) {
+      this.alertService.error('Este documento no tiene seguimiento. El seguimiento debe crearse desde el registro de entrada.');
+      return;
+    }
+
+    // Construir mensaje para edición de seguimiento
+    const alertaAdicional = this.inputDetails?.estatus === 'ATENDIDO'
+      ? `
+        <div class="bg-yellow-50 p-3 rounded-md border-l-4 border-yellow-400 mt-4">
+          <p class="text-sm font-medium text-yellow-800">
+            <i class="material-icons text-yellow-600 align-text-bottom text-sm">warning</i>
+            Este documento está marcado como "ATENDIDO". Realizar cambios podría afectar a reportes o estadísticas.
+          </p>
+        </div>
+      ` : '';
+
+    Swal.fire({
+      title: 'Editar Seguimiento',
+      html: `
+        <div class="text-left">
+          <p class="mb-4 text-gray-700">Estás a punto de editar el seguimiento del documento:</p>
+          <div class="bg-blue-50 p-3 rounded-md border-l-4 border-blue-400 mb-4">
+            <p class="text-sm font-medium">Folio: <span class="font-bold">${this.inputDetails?.folio}</span></p>
+            <p class="text-sm font-medium">Oficio: <span class="font-bold">${this.inputDetails?.num_oficio}</span></p>
+            <p class="text-sm font-medium">Área asignada: <span class="font-bold">${this.inputDetails?.asignado}</span></p>
+          </div>
+          ${alertaAdicional}
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `<i class="material-icons mr-1">edit</i> Continuar`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'swal-wide',
+        title: 'text-lg font-medium text-gray-800',
+        htmlContainer: 'text-left'
+      },
+      backdrop: `rgba(0,0,30,0.4)`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.mostrarFormularioSeguimiento();
+      }
+    });
+  }
+
+  /**
+   * Muestra el formulario para editar el seguimiento
+   */
+  mostrarFormularioSeguimiento(): void {
+    // Variables para almacenar campos PDF y opciones de estatus
+    let pdfFields = '';
+    let estatusOptions = '';
+
+    // Cargar datos existentes del seguimiento
+    if (this.inputDetails?.seguimientos) {
+      // Usar el estatus que viene del documento
+      const estatusActual = this.inputDetails.estatus || 'NO ATENDIDO';
+
+      this.seguimientoForm.patchValue({
+        num_expediente: this.inputDetails.seguimientos.num_expediente || '',
+        oficio_salida: this.inputDetails.seguimientos.oficio_salida || '',
+        fecha_oficio_salida: this.formatDateForInput(this.inputDetails.seguimientos.fecha_oficio_salida),
+        fecha_acuse_recibido: this.formatDateForInput(this.inputDetails.seguimientos.fecha_acuse_recibido),
+        destinatario: this.inputDetails.seguimientos.destinatario || '',
+        cargo: this.inputDetails.seguimientos.cargo || '',
+        atencion_otorgada: this.inputDetails.seguimientos.atencion_otorgada || '',
+        anexo: this.inputDetails.seguimientos.anexo || '',
+        estatus: estatusActual, // Usamos el estatus del documento
+        firma_visado: this.inputDetails.seguimientos.firma_visado || '',
+        comentarios: this.inputDetails.seguimientos.comentarios || ''
+      });
+
+      // Preparar rutas de PDFs para mostrar
+      let pdfRutas = this.inputDetails?.seguimientos?.archivosPdf_seguimiento || [];
+      if (!pdfRutas.length) {
+        pdfRutas = [''];  // Al menos un campo vacío si no hay rutas
+      }
+
+      // Crear los campos de PDF dinámicos - Asignar a la variable declarada
+      pdfFields = pdfRutas.map((ruta, index) => `
+        <div class="flex items-center mb-2 pdf-seguimiento-group" id="pdf-seg-group-${index}">
+          <input id="swal-input-pdf-seg-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+          ${index > 0 ? `
+            <button type="button" onclick="document.getElementById('pdf-seg-group-${index}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+
+      // Opciones para los campos select - Asignar a la variable declarada
+      estatusOptions = Object.values(EstatusEnum)
+        .map(estatus => `<option value="${estatus}" ${this.inputDetails?.estatus === estatus ? 'selected' : ''}>${estatus}</option>`)
+        .join('');
+    } else {
+      // Si no hay seguimiento, no debería llegar aquí, pero por si acaso reseteamos el formulario
+      this.seguimientoForm.reset();
+      return;
+    }
+
+    // Mostrar formulario con clases CSS actualizadas para mayor ancho
+    Swal.fire({
+      title: 'Editar Seguimiento',
+      html: `
+        <form id="editSeguimientoForm" class="text-left">
+          <!-- Número de expediente y oficio de salida -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-num_expediente">Número de Expediente</label>
+              <input id="swal-input-num_expediente" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('num_expediente')?.value}">
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-oficio_salida">Oficio de Salida*</label>
+              <input id="swal-input-oficio_salida" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('oficio_salida')?.value}" required>
+            </div>
+          </div>
+
+          <!-- Fechas -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_oficio_salida">Fecha Oficio Salida</label>
+              <input id="swal-input-fecha_oficio_salida" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('fecha_oficio_salida')?.value}">
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_acuse_recibido">Fecha Acuse*</label>
+              <input id="swal-input-fecha_acuse_recibido" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('fecha_acuse_recibido')?.value}" required>
+            </div>
+          </div>
+
+          <!-- Destinatario y cargo -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-destinatario">Destinatario*</label>
+              <input id="swal-input-destinatario" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('destinatario')?.value}" required>
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-cargo">Cargo*</label>
+              <input id="swal-input-cargo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('cargo')?.value}" required>
+            </div>
+          </div>
+
+          <!-- Estatus (campo obligatorio) -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-estatus">Estatus*</label>
+            <select id="swal-input-estatus" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+              ${estatusOptions}
+            </select>
+          </div>
+
+          <!-- Atención otorgada -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-atencion_otorgada">Respuesta / Atención Otorgada*</label>
+            <textarea id="swal-input-atencion_otorgada" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required>${this.seguimientoForm.get('atencion_otorgada')?.value}</textarea>
+          </div>
+
+          <!-- Opciones adicionales como campos de texto libre (no obligatorios) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-anexo">Anexos</label>
+              <input id="swal-input-anexo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('anexo')?.value}" placeholder="Ej: SI, NO, Formato PDF, etc.">
+            </div>
+
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-firma_visado">Firma</label>
+              <input id="swal-input-firma_visado" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="${this.seguimientoForm.get('firma_visado')?.value}" placeholder="Ej: SI, NO, En trámite, etc.">
+            </div>
+          </div>
+
+          <!-- Sección de archivos PDF para seguimiento -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rutas de Archivos PDF (Seguimiento)</label>
+            <div id="pdf-seguimiento-container">
+              ${pdfFields} <!-- Usar la variable pdfFields aquí -->
+            </div>
+            <button type="button" id="add-pdf-seg-btn" class="mt-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar otra ruta de PDF
+            </button>
+            <p class="text-xs text-gray-500 mt-1">Ingrese rutas completas a los archivos PDF (ej: \\\\ws\\Control_Gestion_pdfs\\DIRECCION\\2025\\03\\archivo.pdf)</p>
+          </div>
+
+          <!-- Comentarios - ahora aparece después de la sección de PDFs -->
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-comentarios">Observaciones</label>
+            <textarea id="swal-input-comentarios" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="2">${this.seguimientoForm.get('comentarios')?.value || ''}</textarea>
+          </div>
+
+          <div class="text-xs text-gray-500 mb-3">* Campos obligatorios</div>
+        </form>
+
+        <script>
+          document.getElementById('add-pdf-seg-btn').addEventListener('click', function() {
+            const container = document.getElementById('pdf-seguimiento-container');
+            const newIndex = container.children.length;
+            const newGroup = document.createElement('div');
+            newGroup.className = 'flex items-center mb-2 pdf-seguimiento-group';
+            newGroup.id = 'pdf-seg-group-' + newIndex;
+
+            newGroup.innerHTML = \`
+              <input id="swal-input-pdf-seg-\${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value="" placeholder="\\\\\\\\ws\\\\Control_Gestion_pdfs\\\\DIRECCIÓN\\\\AÑO\\\\MES\\\\archivo.pdf">
+              <button type="button" onclick="document.getElementById('pdf-seg-group-\${newIndex}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            \`;
+
+            container.appendChild(newGroup);
+          });
+        </script>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar Cambios',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      customClass: {
+        container: 'swal-wide',
+        popup: 'swal-wide',
+        title: 'text-lg font-medium text-gray-800',
+        htmlContainer: 'text-left max-h-[75vh] overflow-y-auto'
+      },
+      preConfirm: () => {
+        // Validar campos obligatorios
+        const oficioSalida = (document.getElementById('swal-input-oficio_salida') as HTMLInputElement).value;
+        const fechaAcuse = (document.getElementById('swal-input-fecha_acuse_recibido') as HTMLInputElement).value;
+        const destinatario = (document.getElementById('swal-input-destinatario') as HTMLInputElement).value;
+        const cargo = (document.getElementById('swal-input-cargo') as HTMLInputElement).value;
+        const atencionOtorgada = (document.getElementById('swal-input-atencion_otorgada') as HTMLTextAreaElement).value;
+        const estatus = (document.getElementById('swal-input-estatus') as HTMLSelectElement).value;
+
+        if (!oficioSalida || !fechaAcuse || !destinatario || !cargo || !atencionOtorgada || !estatus) {
+          Swal.showValidationMessage('Por favor complete todos los campos obligatorios');
+          return false;
+        }
+
+        // Recopilar rutas de PDFs
+        const pdfInputs = Array.from(document.querySelectorAll('[id^="swal-input-pdf-seg-"]'));
+        const pdfRutas = pdfInputs.map(input => (input as HTMLInputElement).value.trim()).filter(Boolean);
+
+        // Recopilar todos los valores del formulario
+        return {
+          num_expediente: (document.getElementById('swal-input-num_expediente') as HTMLInputElement).value,
+          oficio_salida: oficioSalida,
+          fecha_oficio_salida: (document.getElementById('swal-input-fecha_oficio_salida') as HTMLInputElement).value,
+          fecha_acuse_recibido: fechaAcuse,
+          destinatario: destinatario,
+          cargo: cargo,
+          atencion_otorgada: atencionOtorgada,
+          anexo: (document.getElementById('swal-input-anexo') as HTMLInputElement).value,
+          firma_visado: (document.getElementById('swal-input-firma_visado') as HTMLInputElement).value,
+          comentarios: (document.getElementById('swal-input-comentarios') as HTMLTextAreaElement).value,
+          estatus: estatus,
+          archivosPdf_seguimiento: pdfRutas
+        };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.guardarSeguimiento(result.value);
+      }
+    });
+  }
+
+  /**
+   * Guarda los cambios del seguimiento
+   */
+  guardarSeguimiento(formData: any): void {
+    // Mostrar indicador de carga
+    Swal.fire({
+      title: 'Guardando cambios...',
+      html: 'Por favor espere mientras se actualiza la información',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Preparamos la estructura para actualización con la API real
+    // La API espera que los datos de seguimiento estén dentro de seguimientos
+    const updateData = {
+      seguimientos: {
+        ...formData,
+        // Mantenemos el ID del seguimiento
+        _id: this.inputDetails?.seguimientos?._id
+      },
+      // Actualizamos el estatus del documento principal con el seleccionado por el usuario
+      estatus: formData.estatus
+    };
+
+    // Usar updateInput directamente, ya que no hay endpoints específicos para seguimientos
+    this.inputService.updateInput(this.id, updateData).subscribe({
+      next: (response) => {
+        if (response && response.status === 'success') {
+          // Actualizar el estado local con los datos actualizados
+          if (response.data) {
+            this.inputDetails = response.data;
+          }
+
+          // Mostrar mensaje de éxito
+          Swal.fire({
+            title: '¡Guardado!',
+            text: 'El seguimiento se actualizó correctamente',
+            icon: 'success',
+            confirmButtonColor: '#3085d6'
+          });
+
+          // Recargar los datos para mostrar la información actualizada
+          this.loadInputDetails().subscribe();
+        } else {
+          // Manejar respuesta inesperada
+          Swal.fire({
+            title: 'Advertencia',
+            text: 'La operación se completó pero hubo un problema al actualizar los datos locales',
+            icon: 'warning',
+            confirmButtonColor: '#3085d6'
+          });
+        }
+      },
+      error: (error) => {
+        console.error('Error al guardar el seguimiento:', error);
+
+        // Mostrar mensaje de error
+        Swal.fire({
+          title: 'Error',
+          text: error.error?.message || 'Hubo un error al guardar los cambios. Inténtelo nuevamente.',
+          icon: 'error',
+          confirmButtonColor: '#3085d6'
+        });
+      }
+    });
+  }
+
+  // Método para inicializar formularios
+  initForms(): void {
+    // Formulario para documento principal
+    this.inputForm = this.fb.group({
+      num_oficio: ['', Validators.required],
+      fecha_oficio: ['', Validators.required],
+      fecha_vencimiento: [''],
+      fecha_recepcion: ['', Validators.required],
+      hora_recepcion: [''],
+      instrumento_juridico: [''],
+      remitente: ['', Validators.required],
+      institucion_origen: [''],
+      asunto: ['', Validators.required],
+      asignado: ['', Validators.required],
+      estatus: ['NO ATENDIDO', Validators.required],
+      observacion: ['']
+    });
+
+    // Formulario para seguimiento - actualizado según los campos obligatorios
+    this.seguimientoForm = this.fb.group({
+      num_expediente: [''], // No obligatorio
+      oficio_salida: ['', Validators.required],
+      fecha_oficio_salida: [''], // No obligatorio
+      fecha_acuse_recibido: ['', Validators.required],
+      destinatario: ['', Validators.required],
+      cargo: ['', Validators.required],
+      atencion_otorgada: ['', Validators.required],
+      anexo: [''], // No obligatorio
+      estatus: ['', Validators.required], // Obligatorio pero sin valor por defecto
+      firma_visado: [''], // No obligatorio
+      comentarios: ['']
+    });
+  }
+
+  // Método para formatear fechas para campos de entrada
+  formatDateForInput(date: string | Date | undefined | null): string {
+    if (!date) return '';
+
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
+
+    // Formato YYYY-MM-DD para input type="date"
+    return d.toISOString().split('T')[0];
   }
 
   /**
@@ -590,5 +1403,26 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     return username.split('.').map(part =>
       part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
     ).join(' ');
+  }
+
+  /**
+   * Obtiene el nombre del usuario que registró el seguimiento
+   */
+  getSeguimientoUsuario(): string {
+    if (this.inputDetails?.seguimientos?.usuario?.username) {
+      return this.formatUserName(this.inputDetails.seguimientos.usuario.username);
+    }
+
+    // Buscar en otras ubicaciones posibles dentro del objeto
+    if (this.inputDetails?.seguimientos?.usuario?.username) {
+      return this.formatUserName(this.inputDetails.seguimientos.usuario.username);
+    }
+
+    // Usar el editor del documento principal como última opción
+    if (this.inputDetails?.editor_user?.username) {
+      return this.formatUserName(this.inputDetails.editor_user.username);
+    }
+
+    return 'No disponible';
   }
 }

@@ -1,14 +1,24 @@
+import { AlertService } from './../ui/alert.service';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { BaseApiService } from './base-api.service';
 import { ApiResponse } from '../../models/api-response.model';
 import { PdfListResponse, PdfMetadata } from '../../models/pdf.model';
+import { HttpHeaders } from '@angular/common/http';
+import { map, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PdfService extends BaseApiService {
   private endpoint = 'pdf';
+
+  // Agregar el AlertService al constructor para inyección
+  constructor(
+    private alertService: AlertService // Inyección del servicio de alertas
+  ) {
+    super();
+  }
 
   /**
    * Obtiene la lista de PDFs asociados a un input
@@ -54,14 +64,46 @@ export class PdfService extends BaseApiService {
   }
 
   /**
-   * Obtiene la URL completa para un PDF
+   * Obtiene la URL para visualizar un PDF como blob URL
    */
-  getPdfUrl(id: string, filename: string, isSeguimiento = false): string {
-    const baseUrl = `${this.apiUrl}/${this.endpoint}`;
-    if (isSeguimiento) {
-      return `${baseUrl}/seguimiento/download/${id}?filename=${encodeURIComponent(filename)}`;
+  getPdfUrl(inputId: string, filename: string, isSeguimiento: boolean = false): Observable<string> {
+    // Obtener el token
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      this.alertService.error('Error de autenticación. Por favor inicie sesión nuevamente.');
+      return throwError(() => new Error('No hay token de autenticación disponible'));
     }
-    return `${baseUrl}/download/${id}?filename=${encodeURIComponent(filename)}`;
+
+    // Construir URL
+    const baseUrl = `${this.apiUrl}/pdf/download/${inputId}`;
+    const params = new URLSearchParams({ filename });
+
+    // Si es un PDF de seguimiento, añadir el parámetro correspondiente
+    if (isSeguimiento) {
+      params.append('seguimiento', 'true');
+    }
+
+    // Crear cabeceras con el token
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    // Devolver un observable que emita la URL del blob
+    return this.http.get(`${baseUrl}?${params.toString()}`, {
+      headers: headers,
+      responseType: 'blob'
+    }).pipe(
+      map(blob => {
+        // Crear objeto URL para el blob
+        return URL.createObjectURL(blob);
+      }),
+      catchError(error => {
+        console.error('Error al obtener el PDF:', error);
+        this.alertService.error('Error al cargar el archivo PDF');
+        return throwError(() => error);
+      })
+    );
   }
 
   /**
@@ -77,5 +119,61 @@ export class PdfService extends BaseApiService {
       principales: PdfMetadata[],
       seguimiento: PdfMetadata[]
     }>>(`${this.endpoint}/all/${id}`);
+  }
+
+  /**
+   * Descarga un PDF directamente
+   */
+  downloadPdf(inputId: string, filename: string, isSeguimiento: boolean = false): void {
+    // Obtener el token
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      this.alertService.error('Error de autenticación. Por favor inicie sesión nuevamente.');
+      return;
+    }
+
+    // Construir URL con todos los parámetros necesarios
+    const baseUrl = `${this.apiUrl}/pdf/download/${inputId}`;
+    const params = new URLSearchParams({
+      filename: filename,
+      token: token
+    });
+
+    if (isSeguimiento) {
+      params.append('seguimiento', 'true');
+    }
+
+    // Crear una solicitud con headers adecuados
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+
+    // Realizar la descarga
+    this.http.get(`${baseUrl}?${params.toString()}`, {
+      headers: headers,
+      responseType: 'blob'
+    }).subscribe({
+      next: (data) => {
+        // Crear un objeto URL para el blob
+        const blob = new Blob([data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+
+        // Crear un enlace temporal y hacer clic para descargar
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+
+        // Liberar el objeto URL
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+      },
+      error: (error) => {
+        console.error('Error al descargar PDF:', error);
+        this.alertService.error('Error al descargar el archivo PDF');
+      }
+    });
   }
 }
