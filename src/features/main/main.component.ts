@@ -775,8 +775,21 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     const inputValue = event.target.value;
     if (!inputValue) return;
 
-    // Validar formato dd/mm/yyyy usando regex
+    // Para input tipo "date" no es necesario validar el formato
+    // ya que el navegador asegura que sea válido
+    if (event.target.type === 'date') {
+      return;
+    }
+
+    // Solo para campos de texto donde se espera formato dd/mm/yyyy
     const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    // Si ya está en formato ISO, también es válido
+    if (isoDateRegex.test(inputValue)) {
+      return;
+    }
+
     const match = inputValue.match(dateRegex);
 
     if (!match) {
@@ -1027,8 +1040,17 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Muestra las estadísticas de las áreas
    */
   verEstadisticasAreas(): void {
-    // Usar el año seleccionado o el actual si es "all"
-    const yearToShow = this.currentYear === 'all' ? new Date().getFullYear() : this.currentYear;
+    // Validar que haya un año específico seleccionado
+    if (this.currentYear === 'all') {
+      this.alertService.warning('Por favor selecciona un año específico para ver las estadísticas');
+      return;
+    }
+
+    // Asegurar que estamos usando el año seleccionado
+    const yearToShow = parseInt(this.currentYear as unknown as string, 10);
+
+    // Mostrar información de diagnóstico
+    console.log(`Solicitando estadísticas para el año: ${yearToShow}`);
 
     Swal.fire({
       title: 'Cargando estadísticas',
@@ -1038,22 +1060,26 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       didOpen: () => {
         Swal.showLoading();
 
-        // Usar el servicio
-        this.inputService.getEstadisticasRegistros().subscribe({
-          next: (response: AreasStatsResponse) => {
-            Swal.close();
-            // Pasar también el año seleccionado
-            this.mostrarEstadisticas(response.data, yearToShow as number);
-          },
-          error: (error) => {
-            console.error('Error al obtener estadísticas:', error);
-            Swal.fire({
-              title: 'Error',
-              text: 'Ha ocurrido un error al obtener las estadísticas',
-              icon: 'error'
-            });
-          }
-        });
+        // Usar el servicio para obtener TODOS los datos de estadísticas (sin filtrar por año)
+        this.inputService.getEstadisticasRegistros()
+          .subscribe({
+            next: (response: AreasStatsResponse) => {
+              console.log(`Respuesta recibida para año ${yearToShow}:`, response);
+
+              Swal.close();
+
+              // La respuesta contiene los datos de todos los años, pero mostraremos solo el año seleccionado
+              this.mostrarEstadisticas(response.data, yearToShow);
+            },
+            error: (error) => {
+              console.error(`Error al obtener estadísticas para año ${yearToShow}:`, error);
+              Swal.fire({
+                title: 'Error',
+                text: 'Ha ocurrido un error al obtener las estadísticas',
+                icon: 'error'
+              });
+            }
+          });
       }
     });
   }
@@ -1065,14 +1091,14 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     // Crear tabla HTML para mostrar estadísticas
     let htmlContent = '<div class="estadisticas-container" style="max-width: 100%; overflow-x: auto;">';
 
-    // Título y subtítulo
+    // Título y subtítulo con el año seleccionado
     htmlContent += `<h3 style="margin-bottom:15px;">Estadísticas de Registros por Área</h3>`;
-    htmlContent += `<p style="margin-bottom:20px;">Año seleccionado: ${selectedYear}</p>`;
+    htmlContent += `<p style="margin-bottom:20px;"><strong>Año: ${selectedYear}</strong></p>`;
 
-    // Tabla de estadísticas - Ajustando ancho para usar espacio disponible
+    // Tabla de estadísticas
     htmlContent += '<table class="stats-table" style="width:100%; border-collapse:collapse; min-width:800px;">';
 
-    // Encabezados con más espacio y mejor alineación - AÑADIR COLUMNA DE RESPUESTA REGISTRADA
+    // Encabezados
     htmlContent += `
       <tr style="background-color:#f3f4f6; font-weight:bold;">
         <th style="padding:12px 16px; text-align:left; border:1px solid #ddd;">Área</th>
@@ -1090,18 +1116,18 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     let totalNoAtendidos = 0;
     let totalRespuestasRegistradas = 0;
 
-    // Procesar los datos para el año actual
+    // Procesar los datos para el año seleccionado
     if (Array.isArray(datos)) {
       datos.forEach(direccion => {
-        // Obtener datos para el año actual
-        const datosAnioActual = this.obtenerDatosAnioActual(direccion, selectedYear);
+        // Obtener datos para el año seleccionado
+        const datosAnio = this.obtenerDatosAnioActual(direccion, selectedYear);
 
         // Calcular totales
-        const total = datosAnioActual.atendido + datosAnioActual.noAtendido;
+        const total = datosAnio.atendido + datosAnio.noAtendido;
 
-        // Calcular porcentaje basado en respuestas registradas, no en estatus
+        // Calcular porcentaje basado en respuestas registradas
         const porcentajeAtencion = total > 0
-          ? Math.round((datosAnioActual.respuestaRegistrada / total) * 100)
+          ? Math.round((datosAnio.respuestaRegistrada / total) * 100)
           : 0;
 
         // Determinar el color según el porcentaje
@@ -1113,17 +1139,17 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Actualizar totales generales
         totalRegistros += total;
-        totalAtendidos += datosAnioActual.atendido;
-        totalNoAtendidos += datosAnioActual.noAtendido;
-        totalRespuestasRegistradas += datosAnioActual.respuestaRegistrada;
+        totalAtendidos += datosAnio.atendido;
+        totalNoAtendidos += datosAnio.noAtendido;
+        totalRespuestasRegistradas += datosAnio.respuestaRegistrada;
 
         htmlContent += `
           <tr style="border-bottom:1px solid #ddd;">
             <td style="padding:10px 16px; border:1px solid #ddd;">${direccion.direccion}</td>
             <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${total}</td>
-            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.atendido}</td>
-            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.noAtendido}</td>
-            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnioActual.respuestaRegistrada}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnio.atendido}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnio.noAtendido}</td>
+            <td style="padding:10px 16px; text-align:center; border:1px solid #ddd;">${datosAnio.respuestaRegistrada}</td>
             <td style="padding:10px 16px; text-align:center; font-weight:bold; border:1px solid #ddd; color:${color};">
               ${porcentajeAtencion}%
             </td>
@@ -1133,12 +1159,12 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       htmlContent += `
         <tr>
-          <td colspan="6" style="padding:8px; text-align:center;">No hay datos disponibles</td>
+          <td colspan="6" style="padding:8px; text-align:center;">No hay datos disponibles para el año ${selectedYear}</td>
         </tr>
       `;
     }
 
-    // Calcular porcentaje global basado en respuestas registradas
+    // Calcular porcentaje global
     const porcentajeGlobal = totalRegistros > 0
       ? Math.round((totalRespuestasRegistradas / totalRegistros) * 100)
       : 0;
@@ -1152,10 +1178,10 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
     htmlContent += '</table>';
 
-    // Resumen anual actualizado con respuestas registradas
+    // Resumen anual
     htmlContent += `
       <div style="margin-top:20px; padding:15px; background-color:#f9fafb; border-radius:5px; border:1px solid #e5e7eb;">
-        <h4 style="margin-top:0;">Resumen Anual ${selectedYear}</h4>
+        <h4 style="margin-top:0;">Resumen del Año ${selectedYear}</h4>
         <div style="display:flex; justify-content:space-around; flex-wrap:wrap; text-align:center; margin-top:10px;">
           <div style="margin:10px;">
             <strong style="display:block; font-size:18px;">${totalRegistros}</strong>
@@ -1181,22 +1207,15 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       </div>
     `;
 
-    htmlContent += `
-      <p style="margin-top:20px; font-style:italic; color:#6b7280;">
-        Las estadísticas muestran el porcentaje de oficios con respuestas registradas por cada área en el año ${selectedYear}.
-      </p>
-    `;
-
     htmlContent += '</div>';
 
     // Mostrar estadísticas
     Swal.fire({
-      title: 'Estadísticas de Áreas',
+      title: `Estadísticas de Áreas - ${selectedYear}`,
       html: htmlContent,
-      width: 1100, // Aumentar para acomodar la columna extra
+      width: 1100,
       confirmButtonText: 'Cerrar',
       confirmButtonColor: '#3085d6',
-      // Permite que el modal sea aún más grande en pantallas grandes
       customClass: {
         container: 'swal-wide-container',
         popup: 'swal-wide-popup'
@@ -1205,30 +1224,200 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Obtiene los datos consolidados para el año actual, ahora con respuestas registradas
+   * Obtiene los datos del año seleccionado de una dirección
    */
-  private obtenerDatosAnioActual(direccion: any, currentYear: number): {
-    atendido: number,
-    noAtendido: number,
-    respuestaRegistrada: number
-  } {
-    // Valores por defecto
-    const resultado = { atendido: 0, noAtendido: 0, respuestaRegistrada: 0 };
+  private obtenerDatosAnioActual(direccion: any, selectedYear: number): { atendido: number, noAtendido: number, respuestaRegistrada: number } {
+    // Valores predeterminados en caso de que no se encuentren datos
+    const datosDefault = { atendido: 0, noAtendido: 0, respuestaRegistrada: 0 };
 
-    // Buscar los datos del año actual
-    if (direccion.anios && Array.isArray(direccion.anios)) {
-      const anioActual = direccion.anios.find((a: any) => a.anio === currentYear);
-
-      if (anioActual && Array.isArray(anioActual.meses)) {
-        // Sumar los valores de todos los meses del año actual
-        anioActual.meses.forEach((mes: any) => {
-          resultado.atendido += mes.atendido || 0;
-          resultado.noAtendido += mes.noAtendido || 0;
-          resultado.respuestaRegistrada += mes.respuestaRegistrada || 0;
-        });
-      }
+    if (!direccion.anios || !Array.isArray(direccion.anios)) {
+      return datosDefault;
     }
 
-    return resultado;
+    // Buscar el año seleccionado dentro del array de años
+    const anioData = direccion.anios.find((anio: any) => anio.anio === selectedYear);
+
+    // Si no encontró el año, devolver valores por defecto
+    if (!anioData || !anioData.meses || !Array.isArray(anioData.meses)) {
+      return datosDefault;
+    }
+
+    // Sumar los totales de todos los meses para el año seleccionado
+    return anioData.meses.reduce((total: any, mes: any) => {
+      return {
+        atendido: total.atendido + (mes.atendido || 0),
+        noAtendido: total.noAtendido + (mes.noAtendido || 0),
+        respuestaRegistrada: total.respuestaRegistrada + (mes.respuestaRegistrada || 0)
+      };
+    }, datosDefault);
+  }
+
+  /**
+   * Genera un reporte diario basado en el área y fecha seleccionados
+   */
+  generarReporteDiario(): void {
+    // Verificar que los filtros requeridos estén presentes
+    if (!this.filterValues['asignado'] || !this.filterValues['fecha_recepcion']) {
+      this.alertService.warning('Debe seleccionar un área y una fecha para generar el reporte diario');
+      return;
+    }
+
+    // Formatear la fecha
+    const fechaFormateada = this.obtenerFechaFormateada(this.filterValues['fecha_recepcion']);
+    if (!fechaFormateada) return;
+
+    // Mostrar indicador de carga
+    this.isExporting = true;
+    Swal.fire({
+      title: 'Generando reporte diario',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Corrección: Usar 'fechaInicio' en lugar de 'fecha'
+    const params = {
+      area: this.filterValues['asignado'],
+      fechaInicio: fechaFormateada
+    };
+
+    // Llamar al servicio
+    this.inputService.generarReporteDiario(params)
+      .pipe(
+        finalize(() => {
+          this.isExporting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (blob: Blob) => {
+          // Cerrar el modal de carga
+          Swal.close();
+
+          // Generar nombre de archivo
+          const nombreArea = params.area.replace(/\s+/g, '_');
+          const fileName = `Reporte_Diario_${nombreArea}_${params.fechaInicio}.xlsx`;
+
+          // Descargar el archivo
+          saveAs(blob, fileName);
+
+          // Mostrar mensaje de éxito
+          this.alertService.success('Reporte diario generado correctamente');
+        },
+        error: (error) => {
+          console.error('Error al generar reporte diario:', error);
+          Swal.close();
+          this.alertService.error('Error al generar el reporte diario');
+        }
+      });
+  }
+
+  /**
+   * Genera un reporte resumen basado en la fecha seleccionada
+   */
+  generarReporteResumen(): void {
+    // Verificar que la fecha esté seleccionada
+    if (!this.filterValues['fecha_recepcion']) {
+      this.alertService.warning('Debe seleccionar una fecha para generar el reporte resumen');
+      return;
+    }
+
+    // Formatear la fecha
+    const fechaFormateada = this.obtenerFechaFormateada(this.filterValues['fecha_recepcion']);
+    if (!fechaFormateada) return;
+
+    // Mostrar indicador de carga
+    this.isExporting = true;
+    Swal.fire({
+      title: 'Generando reporte resumen',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Llamar al servicio con la fechaInicio correcta
+    this.inputService.generarReporteResumen(fechaFormateada)
+      .pipe(
+        finalize(() => {
+          this.isExporting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (blob: Blob) => {
+          // Cerrar el modal de carga
+          Swal.close();
+
+          // Generar nombre de archivo
+          const fileName = `Reporte_Resumen_${fechaFormateada}.xlsx`;
+
+          // Descargar el archivo
+          saveAs(blob, fileName);
+
+          // Mostrar mensaje de éxito
+          this.alertService.success('Reporte resumen generado correctamente');
+        },
+        error: (error) => {
+          console.error('Error al generar reporte resumen:', error);
+          Swal.close();
+          this.alertService.error('Error al generar el reporte resumen');
+        }
+      });
+  }
+
+  /**
+   * Convierte una fecha del formato DD/MM/YYYY al formato YYYY-MM-DD
+   * @param fecha Fecha en formato DD/MM/YYYY
+   * @returns Fecha en formato YYYY-MM-DD o la fecha original si no cumple el formato
+   */
+  private convertirFormatoFecha(fecha: string): string {
+    if (!fecha) return '';
+
+    // Verificar si la fecha ya está en formato YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      return fecha;
+    }
+
+    // Verificar si la fecha está en formato DD/MM/YYYY
+    const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = fecha.match(regex);
+
+    if (match) {
+      const day = match[1].padStart(2, '0');
+      const month = match[2].padStart(2, '0');
+      const year = match[3];
+      return `${year}-${month}-${day}`;
+    }
+
+    // Si no se pudo convertir, devolver la fecha original
+    return fecha;
+  }
+
+  /**
+   * Valida y formatea fecha de forma más robusta para los reportes
+   */
+  private obtenerFechaFormateada(fecha: string | undefined): string | null {
+    if (!fecha) return null;
+
+    try {
+      // Intentar convertir la fecha a formato YYYY-MM-DD
+      const fechaFormateada = this.convertirFormatoFecha(fecha);
+
+      // Verificar que sea una fecha válida
+      const fechaObj = new Date(fechaFormateada);
+      if (isNaN(fechaObj.getTime())) {
+        throw new Error('Fecha inválida');
+      }
+
+      return fechaFormateada;
+    } catch (error) {
+      console.error('Error al formatear fecha:', error);
+      this.alertService.warning('El formato de fecha no es válido. Use DD/MM/YYYY o YYYY-MM-DD');
+      return null;
+    }
   }
 }

@@ -9,7 +9,6 @@ export * from './api-response.model';
 
 // Input
 export * from './input/input.model';
-export * from './input/seguimiento.model';
 export * from './input/input-query.model';
 export * from './input/input-stats.model';
 

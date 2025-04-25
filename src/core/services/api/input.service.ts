@@ -6,6 +6,8 @@ import { ApiResponse, PaginatedResponse } from '../../models/api-response.model'
 import { Input } from '../../models/input/input.model';
 import { DuplicateResponseData, DuplicateApiResponse } from '../../models/input/duplicate.model';
 import { InputDetailResponse, TiempoRespuestaResponse } from '../../models/input/input-response.model';
+import { AreasStatsResponse } from '../../models';
+import { HttpParams } from '@angular/common/http';
 
 export interface InputQueryParams {
   year?: number | 'all' | null;
@@ -183,11 +185,27 @@ export class InputService extends BaseApiService {
   /**
    * Genera reporte diario en Excel
    */
-  generarReporteDiario(params: { area: string, fecha?: string }): Observable<Blob> {
+  generarReporteDiario(params: { area: string, fechaInicio: string }): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${this.endpoint}/reporte-diario`, {
       params: this.buildHttpParams(params),
       responseType: 'blob'
     });
+  }
+
+  /**
+   * Genera reporte resumen para una fecha específica
+   * @param fecha Fecha para el reporte (formato YYYY-MM-DD)
+   */
+  generarReporteResumen(fechaInicio: string): Observable<Blob> {
+    // Corrección: La ruta es /resumen con parámetro fechaInicio
+    return this.http.get(`${this.apiUrl}/${this.endpoint}/resumen/${fechaInicio}`, {
+      responseType: 'blob'
+    }).pipe(
+      catchError(error => {
+        console.error('Error al generar reporte resumen:', error);
+        throw error;
+      })
+    );
   }
 
   /**
@@ -318,11 +336,25 @@ export class InputService extends BaseApiService {
   }
 
   /**
-   * Obtiene estadísticas de registros por área
-   * @returns Observable con los datos estadísticos
+   * Obtiene estadísticas de registros por área para un año específico
+   * @param year Año para filtrar las estadísticas
    */
-  getEstadisticasRegistros(): Observable<any> {
-    return this.get<any>(`${this.endpoint}/estadisticas/registros`);
+  getEstadisticasRegistros(year?: number): Observable<AreasStatsResponse> {
+    // Construimos los parámetros explícitamente para asegurar que se envían correctamente
+    const params = new HttpParams().set('year', year ? year.toString() : '');
+
+    // Usamos la URL completa para evitar problemas de concatenación
+    const url = `${this.apiUrl}/${this.endpoint}/estadisticas/registros`;
+
+    console.log(`Solicitando estadísticas con URL: ${url}, Parámetros:`, params.toString());
+
+    return this.http.get<AreasStatsResponse>(url, { params }).pipe(
+      tap(response => console.log('Respuesta de estadísticas:', response)),
+      catchError(error => {
+        console.error('Error al obtener estadísticas:', error);
+        throw error;
+      })
+    );
   }
 
   /**
