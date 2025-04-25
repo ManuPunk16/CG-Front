@@ -787,6 +787,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Navega a la pantalla de creación de nuevo registro
    */
   crearNuevoRegistro(): void {
+    if (!this.checkPermission('admin')) return;
     this.router.navigate(['/nueva-entrada']);
   }
 
@@ -1278,6 +1279,9 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Genera un reporte diario basado en el área y fecha seleccionados
    */
   generarReporteDiario(): void {
+    if (!this.checkPermission('admin')) return;
+
+    // El resto del método continúa igual...
     // Verificar que los filtros requeridos estén presentes
     if (!this.filterValues['asignado'] || !this.filterValues['fecha_recepcion']) {
       this.alertService.warning('Debe seleccionar un área y una fecha para generar el reporte diario');
@@ -1452,5 +1456,119 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Actualizar para debug
     console.log('Institución seleccionada:', selectedInstitution);
+  }
+
+  /**
+   * Genera una tarjeta resumen basada en la fecha seleccionada y filtrada según permisos de usuario
+   */
+  generarTarjetaResumen(): void {
+    // Verificar que la fecha esté seleccionada
+    if (!this.filterValues['fecha_recepcion']) {
+      this.alertService.warning('Debe seleccionar una fecha para generar la tarjeta resumen');
+      return;
+    }
+
+    // Formatear la fecha
+    const fechaFormateada = this.obtenerFechaFormateada(this.filterValues['fecha_recepcion']);
+    if (!fechaFormateada) return;
+
+    // Mostrar indicador de carga
+    this.isExporting = true;
+    Swal.fire({
+      title: 'Generando tarjeta resumen',
+      text: 'Por favor espere...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Preparar parámetros según el rol y permisos del usuario
+    const params: any = {
+      fecha: fechaFormateada
+    };
+
+    // Filtrar por área según el rol:
+    // - Administradores: sin filtro (todos)
+    // - Directores generales: sus áreas asignadas
+    // - Directores/enlaces: solo su área
+    if (!this.isAdmin) {
+      if (this.isDirectorGeneral) {
+        // Para directores generales, obtener las áreas permitidas
+        const areasPermitidas = this.permissionsService.getAreasByRole(RolesEnum.DIRECTOR_GENERAL, this.userArea);
+        if (areasPermitidas && areasPermitidas.length > 0) {
+          params.areas = areasPermitidas;
+        }
+      } else {
+        // Para directores y enlaces, solo su área
+        params.area = this.userArea;
+      }
+    }
+
+    // Llamar al servicio con los parámetros adecuados
+    this.inputService.generarTarjetaResumen(params)
+      .pipe(
+        finalize(() => {
+          this.isExporting = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (blob: Blob) => {
+          // Cerrar el modal de carga
+          Swal.close();
+
+          // Generar nombre de archivo
+          let nombreArchivo = `Tarjeta_Resumen_${fechaFormateada}`;
+
+          // Agregar información de área si aplica
+          if (params.area) {
+            const areaNormalizada = params.area.replace(/\s+/g, '_');
+            nombreArchivo += `_${areaNormalizada}`;
+          }
+          nombreArchivo += '.xlsx';
+
+          // Descargar el archivo
+          saveAs(blob, nombreArchivo);
+
+          // Mostrar mensaje de éxito
+          this.alertService.success('Tarjeta resumen generada correctamente');
+        },
+        error: (error) => {
+          console.error('Error al generar tarjeta resumen:', error);
+          Swal.close();
+          this.alertService.error('Error al generar la tarjeta resumen');
+        }
+      });
+  }
+
+  /**
+   * Verifica si el usuario tiene permiso para una acción específica
+   * @param permissionType Tipo de permiso a verificar
+   * @returns true si tiene permiso, false en caso contrario
+   */
+  private checkPermission(permissionType: 'admin' | 'director-general' | 'director'): boolean {
+    switch (permissionType) {
+      case 'admin':
+        if (!this.isAdmin) {
+          this.alertService.error('No tienes permisos para realizar esta acción');
+          return false;
+        }
+        return true;
+      case 'director-general':
+        if (!this.isAdmin && !this.isDirectorGeneral) {
+          this.alertService.error('No tienes permisos para realizar esta acción');
+          return false;
+        }
+        return true;
+      case 'director':
+        if (!this.isAdmin && !this.isDirectorGeneral && !this.isDirector) {
+          this.alertService.error('No tienes permisos para realizar esta acción');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
   }
 }

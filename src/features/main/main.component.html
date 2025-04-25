@@ -282,88 +282,127 @@
   </div>
 </div>
 
-<!-- Sección de acciones rápidas con nuevos botones mejorados -->
+<!-- Sección de acciones rápidas con mensaje instructivo -->
 <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6 mb-8 transition-all hover:shadow-xl">
-  <h2 class="flex items-center text-xl font-bold text-gray-800 mb-6">
-    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-    </svg>
-    Acciones rápidas
-  </h2>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-    <!-- Botón para crear nuevo registro -->
-    <button
-      (click)="crearNuevoRegistro()"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-md">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+  <!-- Título y mensaje instructivo -->
+  <div class="mb-6">
+    <h2 class="flex items-center text-xl font-bold text-gray-800 mb-3">
+      <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
       </svg>
-      <span class="font-medium">Crear nuevo registro</span>
-    </button>
+      Acciones rápidas
+    </h2>
 
-    <!-- Botones para exportar datos -->
-    <button
-      (click)="exportarTodos()"
-      [disabled]="isExporting"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+    <!-- Actualizar la información de las instrucciones -->
+<div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md mb-4">
+  <div class="flex">
+    <div class="flex-shrink-0">
+      <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
       </svg>
-      <span class="font-medium">Exportar todos</span>
-    </button>
-
-    <button
-      (click)="exportarFiltrados()"
-      [disabled]="isExporting || !hasActiveFilters()"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-      </svg>
-      <span class="font-medium">Exportar filtrados</span>
-    </button>
-
-    <button
-      (click)="exportarPorArea()"
-      [disabled]="isExporting"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-      </svg>
-      <span class="font-medium">Exportar por área</span>
-    </button>
-
-    <!-- NUEVO BOTÓN: Reporte Diario -->
-    <button
-      (click)="generarReporteDiario()"
-      [disabled]="!filterValues['asignado'] || !filterValues['fecha_recepcion']"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-      </svg>
-      <span class="font-medium">Reporte Diario</span>
-    </button>
-
-    <!-- NUEVO BOTÓN: Reporte Resumen -->
-    <button
-      (click)="generarReporteResumen()"
-      [disabled]="!filterValues['fecha_recepcion']"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-      </svg>
-      <span class="font-medium">Reporte Resumen</span>
-    </button>
-
-    <button
-      (click)="verEstadisticasAreas()"
-      class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md">
-      <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-      </svg>
-      <span class="font-medium">Estadísticas por área</span>
-    </button>
+    </div>
+    <div class="ml-3">
+      <p class="text-sm text-blue-800 font-medium mb-2">Instrucciones para el uso de acciones:</p>
+      <ul class="list-disc list-inside text-sm text-blue-700 space-y-1 ml-1">
+        <!-- Solo mostrar para administradores -->
+        <li *ngIf="isAdmin"><span class="font-semibold">Crear nuevo registro:</span> Disponible solo para administradores.</li>
+        <li><span class="font-semibold">Exportar todos:</span> Exporta todos los registros del año seleccionado.</li>
+        <li><span class="font-semibold">Exportar filtrados:</span> Disponible solo cuando hay filtros aplicados.</li>
+        <li><span class="font-semibold">Exportar por área:</span> Permite seleccionar un área específica para exportar.</li>
+        <!-- Solo mostrar para administradores -->
+        <li *ngIf="isAdmin"><span class="font-semibold">Reporte Diario:</span> Disponible solo para administradores. Requiere seleccionar área y fecha.</li>
+        <li><span class="font-semibold">Tarjeta Resumen:</span> Requiere seleccionar fecha. Muestra información según tu rol y permisos.</li>
+        <li><span class="font-semibold">Estadísticas por área:</span> Muestra estadísticas del año seleccionado.</li>
+      </ul>
+      <p class="text-sm text-blue-800 mt-2">Recuerda aplicar los filtros con el botón <span class="font-semibold">"Aplicar filtros"</span> antes de usar estas acciones.</p>
+    </div>
   </div>
+</div>
+  </div>
+
+  <!-- Botones de acciones rápidas con comprobaciones de permisos -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+  <!-- Botón para crear nuevo registro - SOLO ADMINISTRADORES -->
+  <button
+    *ngIf="isAdmin"
+    (click)="crearNuevoRegistro()"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-md"
+    matTooltip="Crear un nuevo registro en el sistema">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span class="font-medium">Crear nuevo registro</span>
+  </button>
+
+  <!-- Botones para exportar datos con tooltips informativos -->
+  <button
+    (click)="exportarTodos()"
+    [disabled]="isExporting"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+    matTooltip="Exporta todos los registros del año seleccionado">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+    </svg>
+    <span class="font-medium">Exportar todos</span>
+  </button>
+
+  <button
+    (click)="exportarFiltrados()"
+    [disabled]="isExporting || !hasActiveFilters()"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+    matTooltip="Exporta solo los registros que cumplen con los filtros aplicados">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+    </svg>
+    <span class="font-medium">Exportar filtrados</span>
+  </button>
+
+  <button
+    (click)="exportarPorArea()"
+    [disabled]="isExporting"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+    matTooltip="Selecciona un área específica para exportar">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+    </svg>
+    <span class="font-medium">Exportar por área</span>
+  </button>
+
+  <!-- REPORTE DIARIO - SOLO ADMINISTRADORES -->
+  <button
+    *ngIf="isAdmin"
+    (click)="generarReporteDiario()"
+    [disabled]="!filterValues['asignado'] || !filterValues['fecha_recepcion']"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+    matTooltip="Genera un reporte diario para el área y fecha seleccionados (requiere seleccionar ambos campos)">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    </svg>
+    <span class="font-medium">Reporte Diario</span>
+  </button>
+
+  <!-- TARJETA RESUMEN - DISPONIBLE PARA TODOS CON FILTRADO POR PERMISOS -->
+  <button
+    (click)="generarTarjetaResumen()"
+    [disabled]="!filterValues['fecha_recepcion']"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+    matTooltip="Genera una tarjeta resumen para la fecha seleccionada, mostrando información según tu rol y permisos">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+    </svg>
+    <span class="font-medium">Tarjeta Resumen</span>
+  </button>
+
+  <button
+    (click)="verEstadisticasAreas()"
+    class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md"
+    matTooltip="Muestra estadísticas de todas las áreas para el año seleccionado">
+    <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+    </svg>
+    <span class="font-medium">Estadísticas por área</span>
+  </button>
+</div>
 </div>
 
 

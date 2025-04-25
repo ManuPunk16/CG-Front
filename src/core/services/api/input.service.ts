@@ -209,6 +209,23 @@ export class InputService extends BaseApiService {
   }
 
   /**
+   * Genera una tarjeta resumen para la fecha especificada, filtrada según permisos
+   * @param params Parámetros para generar la tarjeta resumen (fecha y áreas según permisos)
+   * @returns Observable con el archivo Blob
+   */
+  generarTarjetaResumen(params: any): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${this.endpoint}/tarjeta-resumen`, {
+      params: this.buildHttpParams(params),
+      responseType: 'blob'
+    }).pipe(
+      catchError(error => {
+        console.error('Error al generar tarjeta resumen:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
    * Calcula el tiempo de respuesta de un registro específico
    */
   calcularTiempoRespuesta(id: string): Observable<TiempoRespuestaResponse> {
