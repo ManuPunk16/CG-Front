@@ -885,6 +885,44 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         title: 'text-lg font-medium text-gray-800',
         htmlContainer: 'text-left max-h-[75vh] overflow-y-auto' // Aumentamos altura máxima también
       },
+      didOpen: () => {
+        // Añadir el event listener al botón después de que el modal está abierto
+        document.getElementById('add-pdf-btn')?.addEventListener('click', function() {
+          const container = document.getElementById('pdf-container');
+          if (!container) return;
+
+          const newIndex = container.children.length;
+          const newGroup = document.createElement('div');
+          newGroup.className = 'flex items-center mb-2 pdf-input-group';
+          newGroup.id = 'pdf-group-' + newIndex;
+
+          newGroup.innerHTML = `
+            <input id="swal-input-pdf-${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value="" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+            <button type="button" class="remove-pdf-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          `;
+
+          container.appendChild(newGroup);
+
+          // Agregar evento al botón de eliminar recién creado
+          const removeBtn = newGroup.querySelector('.remove-pdf-btn');
+          removeBtn?.addEventListener('click', function() {
+            newGroup.remove();
+          });
+        });
+
+        // Agregar event listeners a los botones de eliminar iniciales
+        document.querySelectorAll('.remove-pdf-btn').forEach(button => {
+          button.addEventListener('click', function(this: HTMLElement) {
+            const group = this.closest('.pdf-input-group');
+            group?.remove();
+          });
+        });
+      },
       preConfirm: () => {
         // Validar campos obligatorios
         const numOficio = (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value;
@@ -941,10 +979,12 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Construir el objeto de actualización
+    // Construir el objeto de actualización preservando los seguimientos existentes
     const inputUpdate = {
       ...formData,
-      _id: this.inputDetails?._id
+      _id: this.inputDetails?._id,
+      // Preservar el seguimiento existente si existe
+      seguimientos: this.inputDetails?.seguimientos ? { ...this.inputDetails.seguimientos } : undefined
     };
 
     // Realizar la actualización a través del servicio
@@ -1237,6 +1277,44 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         popup: 'swal-wide',
         title: 'text-lg font-medium text-gray-800',
         htmlContainer: 'text-left max-h-[75vh] overflow-y-auto'
+      },
+      didOpen: () => {
+        // Añadir el event listener al botón después de que el modal está abierto
+        document.getElementById('add-pdf-seg-btn')?.addEventListener('click', function() {
+          const container = document.getElementById('pdf-seguimiento-container');
+          if (!container) return;
+
+          const newIndex = container.children.length;
+          const newGroup = document.createElement('div');
+          newGroup.className = 'flex items-center mb-2 pdf-seguimiento-group';
+          newGroup.id = 'pdf-seg-group-' + newIndex;
+
+          newGroup.innerHTML = `
+            <input id="swal-input-pdf-seg-${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value="" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+            <button type="button" class="remove-pdf-seg-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          `;
+
+          container.appendChild(newGroup);
+
+          // Agregar evento al botón de eliminar recién creado
+          const removeBtn = newGroup.querySelector('.remove-pdf-seg-btn');
+          removeBtn?.addEventListener('click', function() {
+            newGroup.remove();
+          });
+        });
+
+        // Agregar event listeners a los botones de eliminar iniciales
+        document.querySelectorAll('.remove-pdf-seg-btn').forEach(button => {
+          button.addEventListener('click', function(this: HTMLElement) {
+            const group = this.closest('.pdf-seguimiento-group');
+            group?.remove();
+          });
+        });
       },
       preConfirm: () => {
         // Validar campos obligatorios
