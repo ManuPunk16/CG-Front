@@ -909,8 +909,27 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       institucion: formData.institucion || '',
       area: formData.area || '',
       asunto: formData.asunto || '',
-      observacion: formData.observacion || ''
+      observacion: formData.observacion || '',
+      archivosPdf: formData.archivosPdf || ['']
     };
+
+    // Preparar las rutas de PDF para mostrar
+    let pdfRutas = initialValues.archivosPdf || [''];
+
+    // Generar campos PDF usando el mismo formato que en la ficha técnica
+    const pdfFields = pdfRutas.map((ruta: string, index: number) => `
+      <div class="flex items-center mb-2 pdf-input-group" id="pdf-group-${index}">
+        <input id="swal-input-pdf-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+        ${index > 0 ? `
+          <button type="button" class="remove-pdf-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
 
     // Construir el contenido HTML del formulario
     const formHtml = `
@@ -1114,6 +1133,23 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
             required>${initialValues.asunto}</textarea>
         </div>
 
+        <!-- Agregar la nueva sección de archivos PDF justo antes de la sección de Observaciones -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Rutas de Archivos PDF
+          </label>
+          <div id="pdf-container">
+            ${pdfFields}
+          </div>
+          <button type="button" id="add-pdf-btn" class="mt-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center text-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Agregar otra ruta de PDF
+          </button>
+          <p class="text-xs text-gray-500 mt-1">Ingrese rutas completas a los archivos PDF (ej: \\\\ws\\Control_Gestion_pdfs\\DIRECCION\\2025\\03\\archivo.pdf)</p>
+        </div>
+
         <!-- Observaciones -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-observacion">
@@ -1159,7 +1195,10 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
                         (document.getElementById('swal-input-institucion-search') as HTMLInputElement).value,
             area: (document.getElementById('swal-input-area') as HTMLSelectElement).value,
             asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
-            observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value
+            observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+            archivosPdf: Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]'))
+              .map(input => (input as HTMLInputElement).value)
+              .filter(Boolean)
           };
 
           localStorage.setItem(formStorageKey, JSON.stringify(formData));
@@ -1170,6 +1209,50 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         formInputs.forEach(input => {
           input.addEventListener('change', saveFormData);
           input.addEventListener('blur', saveFormData);
+        });
+
+        // Añadir el event listener al botón para agregar más campos PDF
+        document.getElementById('add-pdf-btn')?.addEventListener('click', function() {
+          const container = document.getElementById('pdf-container');
+          if (!container) return;
+
+          const newIndex = container.children.length;
+          const newGroup = document.createElement('div');
+          newGroup.className = 'flex items-center mb-2 pdf-input-group';
+          newGroup.id = 'pdf-group-' + newIndex;
+
+          newGroup.innerHTML = `
+            <input id="swal-input-pdf-${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              value="" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+            <button type="button" class="remove-pdf-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          `;
+
+          container.appendChild(newGroup);
+
+          // Agregar evento al botón de eliminar recién creado
+          const removeBtn = newGroup.querySelector('.remove-pdf-btn');
+          removeBtn?.addEventListener('click', function() {
+            newGroup.remove();
+            saveFormData();
+          });
+
+          // Agregar evento al nuevo campo para guardar al cambiar
+          const newInput = newGroup.querySelector('[id^="swal-input-pdf-"]');
+          newInput?.addEventListener('change', saveFormData);
+          newInput?.addEventListener('blur', saveFormData);
+        });
+
+        // Agregar event listeners a los botones de eliminar PDF iniciales
+        document.querySelectorAll('.remove-pdf-btn').forEach(button => {
+          button.addEventListener('click', function(this: HTMLElement) {
+            const group = this.closest('.pdf-input-group');
+            group?.remove();
+            saveFormData();
+          });
         });
 
         // Función para actualizar folio al cambiar el año
@@ -1458,6 +1541,8 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         const area = (document.getElementById('swal-input-area') as HTMLSelectElement).value;
         const asunto = (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value;
         const observacion = (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value;
+        const pdfInputs = Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]'));
+        const pdfRutas = pdfInputs.map(input => (input as HTMLInputElement).value.trim()).filter(Boolean);
 
         // Validar campos obligatorios
         if (!anio || !folio || !numOficio || !fechaOficio || !fechaRecepcion ||
@@ -1482,6 +1567,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
           asignado: area,
           asunto: asunto,
           observacion: observacion || null,
+          archivosPdf: pdfRutas.length > 0 ? pdfRutas : null,
           estatus: 'NO ATENDIDO'  // Valor por defecto
         };
       }
