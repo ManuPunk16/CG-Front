@@ -86,4 +86,43 @@ export class DateFormatService {
     const diffTime = Math.abs(end.getTime() - start.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
+
+  /**
+   * Ajusta una fecha para enviar al backend con compensación de zona horaria
+   * @param dateStr Fecha en formato 'YYYY-MM-DD'
+   * @returns Fecha con la zona horaria ajustada para que se guarde correctamente
+   */
+  adjustDateForBackend(dateStr: string): string {
+    if (!dateStr) return '';
+
+    // Crear una nueva fecha a partir del string, estableciendo la hora al mediodía
+    const fecha = new Date(dateStr);
+    fecha.setHours(12, 0, 0, 0);
+
+    // Devolver la fecha en formato YYYY-MM-DD
+    return this.formatToBackendDate(fecha);
+  }
+
+  /**
+   * Asegura que una fecha se muestre correctamente compensando la zona horaria
+   * @param date Fecha a formatear
+   * @returns Fecha formateada correctamente
+   */
+  formatDateDisplay(date: Date | string | null | undefined): string {
+    if (!date) return '';
+
+    // Si es string, convertir a Date
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+
+    // Crear una nueva fecha usando UTC para evitar ajustes de zona horaria
+    const year = dateObj.getUTCFullYear();
+    const month = dateObj.getUTCMonth();
+    const day = dateObj.getUTCDate();
+
+    // Crear una nueva fecha sin conversión de zona horaria
+    const localDate = new Date(year, month, day);
+
+    // Formatear la fecha local
+    return this.formatShort(localDate);
+  }
 }

@@ -693,40 +693,56 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Aplicar cálculos y coloración a los elementos de la tabla
    */
-  private procesarDatos(data: any[]): any[] {
-    return data.map(item => {
-      // Calcular días de atraso y color semáforo
-      const { diasAtraso, colorSemaforo } = this.calcularDiasAtraso(item);
+private procesarDatos(data: any[]): any[] {
+  return data.map(item => {
+    // Calcular días de atraso y color semáforo
+    const { diasAtraso, colorSemaforo } = this.calcularDiasAtraso(item);
 
-      // Verificar si tiene atención otorgada en el seguimiento
-      const tieneAtencion = item.seguimientos &&
-                          item.seguimientos.atencion_otorgada &&
-                          item.seguimientos.atencion_otorgada.trim() !== '';
+    // Verificar si tiene atención otorgada en el seguimiento
+    const tieneAtencion = item.seguimientos &&
+                        item.seguimientos.atencion_otorgada &&
+                        item.seguimientos.atencion_otorgada.trim() !== '';
 
-      // Texto para mostrar en columna de atención otorgada con formato más descriptivo
-      let atencionOtorgada;
+    // Texto para mostrar en columna de atención otorgada con formato más descriptivo
+    let atencionOtorgada;
 
-      if (tieneAtencion) {
-        // Limitar largo del texto para visualización
-        atencionOtorgada = item.seguimientos.atencion_otorgada.length > 100
-          ? item.seguimientos.atencion_otorgada.substring(0, 100) + '...'
-          : item.seguimientos.atencion_otorgada;
-      } else {
-        // Texto más descriptivo para cuando no hay atención registrada
-        atencionOtorgada = {
-          texto: 'Atención otorgada por parte del enlace no registrada',
-          sinRegistrar: true
-        };
-      }
-
-      return {
-        ...item,
-        diasAtraso,
-        colorSemaforo,
-        atencion_otorgada_visual: atencionOtorgada
+    if (tieneAtencion) {
+      // Limitar largo del texto para visualización
+      atencionOtorgada = item.seguimientos.atencion_otorgada.length > 100
+        ? item.seguimientos.atencion_otorgada.substring(0, 100) + '...'
+        : item.seguimientos.atencion_otorgada;
+    } else {
+      // Texto más descriptivo para cuando no hay atención registrada
+      atencionOtorgada = {
+        texto: 'Atención otorgada por parte del enlace no registrada',
+        sinRegistrar: true
       };
-    });
-  }
+    }
+
+    // Corregir las fechas para mostrarlas correctamente
+    const formatearFecha = (fecha: string | Date | null | undefined) => {
+      if (!fecha) return null;
+      return this.dateFormatService.formatDateDisplay(fecha);
+    };
+
+    return {
+      ...item,
+      // Mantener las fechas originales para operaciones internas
+      fecha_oficio_original: item.fecha_oficio,
+      fecha_recepcion_original: item.fecha_recepcion,
+      fecha_vencimiento_original: item.fecha_vencimiento,
+
+      // Formatear las fechas para visualización
+      fecha_oficio_display: formatearFecha(item.fecha_oficio),
+      fecha_recepcion_display: formatearFecha(item.fecha_recepcion),
+      fecha_vencimiento_display: formatearFecha(item.fecha_vencimiento),
+
+      diasAtraso,
+      colorSemaforo,
+      atencion_otorgada_visual: atencionOtorgada
+    };
+  });
+}
 
   /**
    * Devuelve el color del semáforo basado en los días de atraso
@@ -1567,7 +1583,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
           asignado: area,
           asunto: asunto,
           observacion: observacion || null,
-          archivosPdf: pdfRutas.length > 0 ? pdfRutas : null,
+
           estatus: 'NO ATENDIDO'  // Valor por defecto
         };
       }

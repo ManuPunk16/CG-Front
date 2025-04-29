@@ -94,11 +94,11 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
                       <span class="text-gray-500">Fecha Oficio</span>
-                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_oficio)}}</span>
+                      <span class="text-right font-medium">{{inputDetails.fecha_oficio_display || (inputDetails.fecha_oficio | date:'dd/MM/yyyy')}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
                       <span class="text-gray-500">Fecha Recepción</span>
-                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_recepcion)}}</span>
+                      <span class="text-right font-medium">{{inputDetails.fecha_recepcion_display || (inputDetails.fecha_recepcion | date:'dd/MM/yyyy')}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
                       <span class="text-gray-500">Hora Recepción</span>
@@ -106,7 +106,7 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
                       <span class="text-gray-500">Fecha Vencimiento</span>
-                      <span class="text-right font-medium">{{formatearFecha(inputDetails.fecha_vencimiento)}}</span>
+                      <span class="text-right font-medium">{{inputDetails.fecha_vencimiento_display || (inputDetails.fecha_vencimiento | date:'dd/MM/yyyy')}}</span>
                     </div>
                   </div>
                 </div>
@@ -190,11 +190,11 @@
                       </div>
                       <div class="grid grid-cols-2 gap-2 items-center">
                         <span class="text-gray-500">Fecha Oficio Salida</span>
-                        <span class="text-right font-medium">{{formatearFecha(inputDetails.seguimientos.fecha_oficio_salida) || 'No disponible'}}</span>
+                        <span class="text-right font-medium">{{inputDetails.seguimientos.fecha_oficio_salida_display || (inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy') || 'No disponible'}}</span>
                       </div>
                       <div class="grid grid-cols-2 gap-2 items-center">
                         <span class="text-gray-500">Fecha Acuse</span>
-                        <span class="text-right font-medium">{{formatearFecha(inputDetails.seguimientos.fecha_acuse_recibido) || 'No disponible'}}</span>
+                        <span class="text-right font-medium">{{inputDetails.seguimientos.fecha_acuse_recibido_display || (inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy') || 'No disponible'}}</span>
                       </div>
                       <!-- <div class="grid grid-cols-2 gap-2 items-center">
                         <span class="text-gray-500">Registrado</span>

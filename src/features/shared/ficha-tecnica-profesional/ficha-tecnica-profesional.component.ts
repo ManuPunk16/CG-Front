@@ -45,6 +45,12 @@ interface TiempoRespuesta {
   fecha_vencimiento: Date;
   dias_efectivos: number | null;
 
+  // Propiedades para visualización de fechas
+  fecha_recepcion_display?: string;
+  fecha_vencimiento_display?: string;
+  tiempo_recepcion_display?: string;
+  tiempo_respuesta_display?: string;
+
   // Estos campos son necesarios según el error
   tiempo_recepcion?: Date;
   tiempo_respuesta?: Date;
@@ -258,8 +264,25 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
 
         if (response && response.status === 'success' && response.input) {
           console.log('Datos completos del input:', response.input);
-          this.inputDetails = response.input;
-          return response.input;
+
+          // Procesar fechas para visualización correcta
+          const inputData = response.input;
+
+          // Crear propiedades para fechas correctamente formateadas
+          inputData.fecha_oficio_display = this.formatearFechaCorrecta(inputData.fecha_oficio);
+          inputData.fecha_recepcion_display = this.formatearFechaCorrecta(inputData.fecha_recepcion);
+          inputData.fecha_vencimiento_display = this.formatearFechaCorrecta(inputData.fecha_vencimiento);
+
+          // Si hay datos de seguimiento, procesar esas fechas también
+          if (inputData.seguimientos) {
+            inputData.seguimientos.fecha_oficio_salida_display =
+              this.formatearFechaCorrecta(inputData.seguimientos.fecha_oficio_salida);
+            inputData.seguimientos.fecha_acuse_recibido_display =
+              this.formatearFechaCorrecta(inputData.seguimientos.fecha_acuse_recibido);
+          }
+
+          this.inputDetails = inputData;
+          return inputData;
         }
 
         console.warn('No se encontraron datos en la respuesta:', response);
@@ -605,6 +628,31 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
   formatearFechaHora(fecha: string | Date | undefined | null): string {
     if (!fecha) return 'No disponible';
     return this.datePipe.transform(fecha, 'dd/MM/yyyy HH:mm') || 'Fecha inválida';
+  }
+
+  /**
+   * Formatea una fecha correctamente compensando la zona horaria
+   * @param fecha Fecha a formatear
+   * @param formato Formato a aplicar (por defecto: 'dd/MM/yyyy')
+   * @returns Fecha formateada correctamente
+   */
+  formatearFechaCorrecta(fecha: string | Date | undefined | null, formato: string = 'dd/MM/yyyy'): string {
+    if (!fecha) return 'No disponible';
+
+    // Convertir a objeto Date si es string
+    const fechaObj = typeof fecha === 'string' ? new Date(fecha) : fecha;
+
+    // Obtener componentes de la fecha en UTC para evitar conversión automática de zona horaria
+    const year = fechaObj.getUTCFullYear();
+    const month = fechaObj.getUTCMonth();
+    const day = fechaObj.getUTCDate();
+
+    // Crear una nueva fecha con estos componentes sin conversión de zona horaria
+    const fechaLocal = new Date();
+    fechaLocal.setFullYear(year, month, day);
+
+    // Aplicar el formato utilizando el DatePipe de Angular
+    return this.datePipe.transform(fechaLocal, formato) || 'Fecha inválida';
   }
 
   /**
@@ -1508,7 +1556,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           // Mostrar mensaje de éxito
           Swal.fire({
             title: '¡Guardado!',
-                       text: 'El seguimiento se actualizó correctamente',
+            text: 'El seguimiento se actualizó correctamente',
             icon: 'success',
             confirmButtonColor: '#3085d6'
           });

@@ -29,6 +29,9 @@ export interface Seguimiento {
   firma_visado: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+
+  fecha_oficio_salida_display?: string;
+  fecha_acuse_recibido_display?: string;
 }
 
 /**
@@ -58,6 +61,11 @@ export interface Input {
   createdAt?: string | Date;
   updatedAt?: string | Date;
   __v?: number;
+
+  // Propiedades para visualización de fechas
+  fecha_oficio_display?: string;
+  fecha_recepcion_display?: string;
+  fecha_vencimiento_display?: string;
 
   // Objeto de seguimientos (si existe)
   seguimientos?: Seguimiento;

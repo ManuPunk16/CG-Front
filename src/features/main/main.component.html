@@ -466,7 +466,7 @@
         <!-- Columna de fecha de recepción -->
         <ng-container matColumnDef="fecha_recepcion">
           <th mat-header-cell *matHeaderCellDef mat-sort-header class="w-32 sm:w-36"> Fecha Recepción </th>
-          <td mat-cell *matCellDef="let item"> {{item.fecha_recepcion | date:'dd/MM/yyyy'}} </td>
+          <td mat-cell *matCellDef="let item"> {{item.fecha_recepcion_display || (item.fecha_recepcion | date:'dd/MM/yyyy')}} </td>
         </ng-container>
 
         <!-- Columna de días atraso -->
