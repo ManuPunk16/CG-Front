@@ -1114,10 +1114,27 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Función para ajustar la fecha al formato UTC+0 con hora 06:00
+    const ajustarFechaUTC = (fechaStr: string): string => {
+      if (!fechaStr) return '';
+
+      // Crear fecha a partir del string
+      const fecha = new Date(fechaStr);
+
+      // Establecer la hora a las 6:00 AM UTC (corresponde a medianoche en UTC-6)
+      fecha.setUTCHours(6, 0, 0, 0);
+
+      // Retornar en formato ISO
+      return fecha.toISOString();
+    };
+
     // Construir el objeto de actualización preservando los seguimientos existentes
     const inputUpdate = {
       ...formData,
       _id: this.inputDetails?._id,
+      fecha_oficio: ajustarFechaUTC(formData.fecha_oficio),
+      fecha_recepcion: ajustarFechaUTC(formData.fecha_recepcion),
+      fecha_vencimiento: ajustarFechaUTC(formData.fecha_vencimiento),
       // Preservar el seguimiento existente si existe
       seguimientos: this.inputDetails?.seguimientos ? { ...this.inputDetails.seguimientos } : undefined
     };
@@ -1532,11 +1549,27 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
       }
     });
 
+    // Función para ajustar la fecha al formato UTC+0 con hora 06:00
+    const ajustarFechaUTC = (fechaStr: string): string => {
+      if (!fechaStr) return '';
+
+      // Crear fecha a partir del string
+      const fecha = new Date(fechaStr);
+
+      // Establecer la hora a las 6:00 AM UTC (corresponde a medianoche en UTC-6)
+      fecha.setUTCHours(6, 0, 0, 0);
+
+      // Retornar en formato ISO
+      return fecha.toISOString();
+    };
+
     // Preparamos la estructura para actualización con la API real
     // La API espera que los datos de seguimiento estén dentro de seguimientos
     const updateData = {
       seguimientos: {
         ...formData,
+        fecha_oficio_salida: ajustarFechaUTC(formData.fecha_oficio_salida),
+        fecha_acuse_recibido: ajustarFechaUTC(formData.fecha_acuse_recibido),
         // Mantenemos el ID del seguimiento
         _id: this.inputDetails?.seguimientos?._id
       },

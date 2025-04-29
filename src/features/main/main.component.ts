@@ -404,9 +404,6 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadInputs();
   }
 
-  /**
-   * Carga los inputs con paginación y filtros
-   */
   loadInputs(): void {
     this.isLoadingResults = true;
 
@@ -417,7 +414,6 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       limit: this.paginator?.pageSize || this.pageSize,
       sortBy: this.sort?.active || 'fecha_recepcion',
       sortOrder: this.sort?.direction || 'asc',
-      // Siempre enviar rol y área para permitir decisiones en el backend
       userRole: this.authService.getCurrentUser()?.roles,
       userArea: this.userArea
     };
@@ -430,20 +426,11 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // console.log('Parámetros de búsqueda completos:', params);
-
     // Llamar al servicio...
     this.inputService.getInputs(params)
       .pipe(
         takeUntil(this.destroy$),
         tap(response => {
-          // console.log('Respuesta del servidor:', response);
-
-          // Agrega esta línea para comparar (ahora correctamente tipada)
-          // console.log('Filtros aplicados vs. filtros devueltos:', {
-          //   enviados: params,
-          //   recibidos: response.data.filters
-          // });
 
           if (response && response.data) {
             // Acceder directamente a los inputs
@@ -693,56 +680,56 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Aplicar cálculos y coloración a los elementos de la tabla
    */
-private procesarDatos(data: any[]): any[] {
-  return data.map(item => {
-    // Calcular días de atraso y color semáforo
-    const { diasAtraso, colorSemaforo } = this.calcularDiasAtraso(item);
+  private procesarDatos(data: any[]): any[] {
+    return data.map(item => {
+      // Calcular días de atraso y color semáforo
+      const { diasAtraso, colorSemaforo } = this.calcularDiasAtraso(item);
 
-    // Verificar si tiene atención otorgada en el seguimiento
-    const tieneAtencion = item.seguimientos &&
-                        item.seguimientos.atencion_otorgada &&
-                        item.seguimientos.atencion_otorgada.trim() !== '';
+      // Verificar si tiene atención otorgada en el seguimiento
+      const tieneAtencion = item.seguimientos &&
+                          item.seguimientos.atencion_otorgada &&
+                          item.seguimientos.atencion_otorgada.trim() !== '';
 
-    // Texto para mostrar en columna de atención otorgada con formato más descriptivo
-    let atencionOtorgada;
+      // Texto para mostrar en columna de atención otorgada con formato más descriptivo
+      let atencionOtorgada;
 
-    if (tieneAtencion) {
-      // Limitar largo del texto para visualización
-      atencionOtorgada = item.seguimientos.atencion_otorgada.length > 100
-        ? item.seguimientos.atencion_otorgada.substring(0, 100) + '...'
-        : item.seguimientos.atencion_otorgada;
-    } else {
-      // Texto más descriptivo para cuando no hay atención registrada
-      atencionOtorgada = {
-        texto: 'Atención otorgada por parte del enlace no registrada',
-        sinRegistrar: true
+      if (tieneAtencion) {
+        // Limitar largo del texto para visualización
+        atencionOtorgada = item.seguimientos.atencion_otorgada.length > 100
+          ? item.seguimientos.atencion_otorgada.substring(0, 100) + '...'
+          : item.seguimientos.atencion_otorgada;
+      } else {
+        // Texto más descriptivo para cuando no hay atención registrada
+        atencionOtorgada = {
+          texto: 'Atención otorgada por parte del enlace no registrada',
+          sinRegistrar: true
+        };
+      }
+
+      // Corregir las fechas para mostrarlas correctamente
+      const formatearFecha = (fecha: string | Date | null | undefined) => {
+        if (!fecha) return null;
+        return this.dateFormatService.formatDateDisplay(fecha);
       };
-    }
 
-    // Corregir las fechas para mostrarlas correctamente
-    const formatearFecha = (fecha: string | Date | null | undefined) => {
-      if (!fecha) return null;
-      return this.dateFormatService.formatDateDisplay(fecha);
-    };
+      return {
+        ...item,
+        // Mantener las fechas originales para operaciones internas
+        fecha_oficio_original: item.fecha_oficio,
+        fecha_recepcion_original: item.fecha_recepcion,
+        fecha_vencimiento_original: item.fecha_vencimiento,
 
-    return {
-      ...item,
-      // Mantener las fechas originales para operaciones internas
-      fecha_oficio_original: item.fecha_oficio,
-      fecha_recepcion_original: item.fecha_recepcion,
-      fecha_vencimiento_original: item.fecha_vencimiento,
+        // Formatear las fechas para visualización
+        fecha_oficio_display: formatearFecha(item.fecha_oficio),
+        fecha_recepcion_display: formatearFecha(item.fecha_recepcion),
+        fecha_vencimiento_display: formatearFecha(item.fecha_vencimiento),
 
-      // Formatear las fechas para visualización
-      fecha_oficio_display: formatearFecha(item.fecha_oficio),
-      fecha_recepcion_display: formatearFecha(item.fecha_recepcion),
-      fecha_vencimiento_display: formatearFecha(item.fecha_vencimiento),
-
-      diasAtraso,
-      colorSemaforo,
-      atencion_otorgada_visual: atencionOtorgada
-    };
-  });
-}
+        diasAtraso,
+        colorSemaforo,
+        atencion_otorgada_visual: atencionOtorgada
+      };
+    });
+  }
 
   /**
    * Devuelve el color del semáforo basado en los días de atraso
@@ -1568,14 +1555,28 @@ private procesarDatos(data: any[]): any[] {
           return false;
         }
 
+        // Función para ajustar la fecha al formato UTC+0 con hora 06:00
+        const ajustarFechaUTC = (fechaStr: string): string => {
+          if (!fechaStr) return '';
+
+          // Crear fecha a partir del string
+          const fecha = new Date(fechaStr);
+
+          // Establecer la hora a las 6:00 AM UTC (corresponde a medianoche en UTC-6)
+          fecha.setUTCHours(6, 0, 0, 0);
+
+          // Retornar en formato ISO
+          return fecha.toISOString();
+        };
+
         // Retornar el objeto con los datos del formulario
         return {
           anio: parseInt(anio, 10),
           folio: parseInt(folio, 10),
           num_oficio: numOficio,
-          fecha_oficio: fechaOficio,
-          fecha_recepcion: fechaRecepcion,
-          fecha_vencimiento: fechaVencimiento,
+          fecha_oficio: ajustarFechaUTC(fechaOficio),
+          fecha_recepcion: ajustarFechaUTC(fechaRecepcion),
+          fecha_vencimiento: ajustarFechaUTC(fechaVencimiento),
           hora_recepcion: horaRecepcion || null,
           instrumento_juridico: instrumentoJuridico,
           remitente: remitente,
@@ -1583,8 +1584,8 @@ private procesarDatos(data: any[]): any[] {
           asignado: area,
           asunto: asunto,
           observacion: observacion || null,
-
-          estatus: 'NO ATENDIDO'  // Valor por defecto
+          archivosPdf: pdfRutas.length > 0 ? pdfRutas : null,
+          estatus: 'NO ATENDIDO'
         };
       }
     }).then((result) => {
@@ -1610,9 +1611,13 @@ private procesarDatos(data: any[]): any[] {
               title: '¡Registro creado!',
               text: `Se ha creado el registro con folio ${result.value.folio} para el año ${result.value.anio}`,
               confirmButtonText: 'Aceptar'
+            }).then(() => {
+              setTimeout(() => {
+                this.loadInputs();
+                this.cdr.detectChanges();
+              }, 300);
             });
 
-            // Recargar datos
             this.loadInputs();
           },
           error: (error) => {

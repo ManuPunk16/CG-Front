@@ -8,7 +8,7 @@ import { Input } from '../../models/input/input.model';
 import { DuplicateResponseData, DuplicateApiResponse } from '../../models/input/duplicate.model';
 import { InputDetailResponse, TiempoRespuestaResponse } from '../../models/input/input-response.model';
 import { AreasStatsResponse } from '../../models';
-import { HttpParams } from '@angular/common/http';
+import { HttpParams, HttpHeaders } from '@angular/common/http';
 
 export interface InputQueryParams {
   year?: number | 'all' | null;
@@ -123,6 +123,17 @@ export class InputService extends BaseApiService {
     });
 
     const url = `${this.endpoint}?${queryParams.toString()}`;
+
+    // Si se solicita refresco forzado, usar directamente http.get con headers
+    if (params["forceRefresh"]) {
+      const headers = new HttpHeaders({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      return this.http.get<ApiResponse<PaginatedResponse<Input>>>(`${this.apiUrl}/${url}`, { headers });
+    }
+
     return this.get<ApiResponse<PaginatedResponse<Input>>>(url);
   }
 

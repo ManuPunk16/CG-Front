@@ -1,7 +1,7 @@
 import { Seguimiento } from './seguimiento.model';
 
 export interface InputQueryParams {
-  year?: number;
+  year?: number | null;
   area?: string;
   page?: number;
   limit?: number;
@@ -11,6 +11,10 @@ export interface InputQueryParams {
   estatus?: string;
   fechaInicio?: string;
   fechaFin?: string;
+  userRole?: string;
+  userArea?: string;
+  forceRefresh?: boolean;
+  timestamp?: number;
 }
 
 export interface InputSaveParams {
