@@ -17,7 +17,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
-import { Subject, catchError, finalize, of, takeUntil, tap } from 'rxjs';
+import { Subject, catchError, finalize, forkJoin, of, takeUntil, tap } from 'rxjs';
 import { map, startWith, debounceTime, switchMap } from 'rxjs/operators';
 
 // Modelos y servicios
@@ -784,14 +784,6 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Navega a la pantalla de creación de nuevo registro
-   */
-  crearNuevoRegistro(): void {
-    if (!this.checkPermission('admin')) return;
-    this.router.navigate(['/nueva-entrada']);
-  }
-
-  /**
    * Valida el formato de fecha al perder foco
    */
   validateDateFormat(event: any): void {
@@ -830,7 +822,713 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // No necesitamos los métodos de paginación personalizados ya que usamos MatPaginator
+  /**
+   * Navega a la pantalla de creación de nuevo registro
+   */
+  crearNuevoRegistro(): void {
+    // Mostrar un loader mientras cargamos los catálogos
+    Swal.fire({
+      title: 'Preparando formulario',
+      text: 'Cargando catálogos...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Primero cargar todos los catálogos necesarios
+    this.catalogService.getRawCatalogItems(CatalogType.INSTITUTION, 1000)
+      .pipe(
+        switchMap(institutionsResponse => {
+          // Guardar los datos de instituciones
+          const institutions = institutionsResponse?.institution || [];
+
+          // Luego cargar instrumentos jurídicos
+          return this.catalogService.getRawCatalogItems(CatalogType.INSTRUMENT, 1000).pipe(
+            map(instrumentsResponse => {
+              // Devolver ambos datos juntos
+              return {
+                instituciones: institutions,
+                instrumentos: instrumentsResponse?.instrument || []
+              };
+            })
+          );
+        }),
+        catchError(error => {
+          console.error('Error cargando catálogos:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron cargar los catálogos necesarios.'
+          });
+          return of({ instituciones: [], instrumentos: [] });
+        })
+      ).subscribe({
+        next: (catalogs) => {
+          // Cerrar el loader
+          Swal.close();
+
+          // Verificar que los catálogos no estén vacíos
+          if (catalogs.instituciones.length === 0 || catalogs.instrumentos.length === 0) {
+            this.alertService.warning('Algunos catálogos están vacíos. Puede que falte información en el formulario.');
+          }
+
+          console.log(`Catálogos cargados: ${catalogs.instituciones.length} instituciones, ${catalogs.instrumentos.length} instrumentos`);
+
+          // Mostrar el formulario de creación con los catálogos completos
+          this.mostrarFormularioCreacion(catalogs.instituciones, catalogs.instrumentos);
+        }
+      });
+  }
+
+  private mostrarFormularioCreacion(instituciones: any[], instrumentosJuridicos: any[]): void {
+    // Estado para el formulario
+    let currentYear = new Date().getFullYear();
+    let ultimoFolio = 0;
+    let folioExiste = false;
+    let isCheckingFolio = false;
+    let filteredInstitutions: any[] = [...instituciones];
+    let filteredInstrumentos: any[] = [...instrumentosJuridicos];
+
+    // Recuperar datos guardados del localStorage
+    const formStorageKey = 'cg_form_data';
+    const savedFormData = localStorage.getItem(formStorageKey);
+    const formData = savedFormData ? JSON.parse(savedFormData) : {};
+
+    // Configurar valores iniciales (usar valores guardados o valores por defecto)
+    const initialValues = {
+      anio: formData.anio || currentYear,
+      folio: formData.folio || '',
+      numOficio: formData.numOficio || '',
+      fechaOficio: formData.fechaOficio || '',
+      fechaRecepcion: formData.fechaRecepcion || '',
+      fechaVencimiento: formData.fechaVencimiento || '',
+      horaRecepcion: formData.horaRecepcion || '',
+      instrumentoJuridico: formData.instrumentoJuridico || '',
+      remitente: formData.remitente || '',
+      institucion: formData.institucion || '',
+      area: formData.area || '',
+      asunto: formData.asunto || '',
+      observacion: formData.observacion || ''
+    };
+
+    // Construir el contenido HTML del formulario
+    const formHtml = `
+      <form id="crear-registro-form" class="text-left">
+        <!-- Año y Folio -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-anio">
+              Año*
+            </label>
+            <input
+              id="swal-input-anio"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="number"
+              value="${initialValues.anio}"
+              min="2000"
+              max="2100"
+              required>
+            <p id="anio-feedback" class="mt-1 text-xs text-gray-500">Ingresa el año del documento</p>
+          </div>
+
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-folio">
+              Folio*
+            </label>
+            <div class="relative">
+              <input
+                id="swal-input-folio"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                type="number"
+                value="${initialValues.folio}"
+                min="1"
+                required>
+              <div id="folio-spinner" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            </div>
+            <p id="folio-feedback" class="mt-1 text-xs text-gray-500">El último folio es: <span id="ultimo-folio">${ultimoFolio}</span></p>
+          </div>
+        </div>
+
+        <!-- Número de oficio y Fecha de oficio -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-num-oficio">
+              Número de Oficio*
+            </label>
+            <input
+              id="swal-input-num-oficio"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              value="${initialValues.numOficio}"
+              required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha-oficio">
+              Fecha de Oficio*
+            </label>
+            <input
+              id="swal-input-fecha-oficio"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="date"
+              value="${initialValues.fechaOficio}"
+              required>
+          </div>
+        </div>
+
+        <!-- Fechas: recepción y vencimiento -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha-recepcion">
+              Fecha de Recepción*
+            </label>
+            <input
+              id="swal-input-fecha-recepcion"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="date"
+              value="${initialValues.fechaRecepcion}"
+              required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha-vencimiento">
+              Fecha de Vencimiento*
+            </label>
+            <input
+              id="swal-input-fecha-vencimiento"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="date"
+              value="${initialValues.fechaVencimiento}"
+              required>
+          </div>
+        </div>
+
+        <!-- Hora de recepción y instrumento jurídico -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-hora-recepcion">
+              Hora de Recepción
+            </label>
+            <input
+              id="swal-input-hora-recepcion"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="time"
+              value="${initialValues.horaRecepcion}">
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-instrumento-juridico-search">
+              Instrumento Jurídico*
+            </label>
+            <div class="relative">
+              <input
+                id="swal-input-instrumento-juridico-search"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pl-10"
+                type="text"
+                placeholder="Buscar instrumento jurídico"
+                value="${initialValues.instrumentoJuridico}"
+                autocomplete="off"
+                required>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-400 sm:text-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path>
+                  </svg>
+                </span>
+              </div>
+              <input type="hidden" id="swal-input-instrumento-juridico" value="${initialValues.instrumentoJuridico}">
+            </div>
+            <div id="instrumentos-dropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 overflow-auto rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm hidden">
+              <ul></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remitente e institución origen -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-remitente">
+              Remitente*
+            </label>
+            <input
+              id="swal-input-remitente"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              type="text"
+              value="${initialValues.remitente}"
+              required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-institucion-search">
+              Institución de Origen*
+            </label>
+            <div class="relative">
+              <input
+                id="swal-input-institucion-search"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pl-10"
+                type="text"
+                placeholder="Buscar institución"
+                value="${initialValues.institucion}"
+                autocomplete="off"
+                required>
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-400 sm:text-sm">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path>
+                  </svg>
+                </span>
+              </div>
+              <input type="hidden" id="swal-input-institucion" value="${initialValues.institucion}">
+            </div>
+            <div id="instituciones-dropdown" class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 overflow-auto rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm hidden">
+              <ul></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Área asignada -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-area">
+            Área Asignada*
+          </label>
+          <select
+            id="swal-input-area"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required>
+            <option value="">Selecciona un área</option>
+            ${this.areas.map(area => `<option value="${area}" ${initialValues.area === area ? 'selected' : ''}>${area}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- Asunto -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-asunto">
+            Asunto*
+          </label>
+          <textarea
+            id="swal-input-asunto"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            rows="3"
+            required>${initialValues.asunto}</textarea>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-observacion">
+            Observación
+          </label>
+          <textarea
+            id="swal-input-observacion"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            rows="2">${initialValues.observacion}</textarea>
+        </div>
+      </form>
+    `;
+
+    Swal.fire({
+      title: 'Crear Nuevo Registro',
+      html: formHtml,
+      width: '1000px',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      focusConfirm: false,
+      customClass: {
+        container: 'swal-wide',
+        popup: 'swal-wide-popup'
+      },
+      didOpen: () => {
+        // Función para guardar los valores del formulario en localStorage
+        const saveFormData = () => {
+          const formData = {
+            anio: (document.getElementById('swal-input-anio') as HTMLInputElement).value,
+            folio: (document.getElementById('swal-input-folio') as HTMLInputElement).value,
+            numOficio: (document.getElementById('swal-input-num-oficio') as HTMLInputElement).value,
+            fechaOficio: (document.getElementById('swal-input-fecha-oficio') as HTMLInputElement).value,
+            fechaRecepcion: (document.getElementById('swal-input-fecha-recepcion') as HTMLInputElement).value,
+            fechaVencimiento: (document.getElementById('swal-input-fecha-vencimiento') as HTMLInputElement).value,
+            horaRecepcion: (document.getElementById('swal-input-hora-recepcion') as HTMLInputElement).value,
+            instrumentoJuridico: (document.getElementById('swal-input-instrumento-juridico') as HTMLInputElement).value ||
+                                (document.getElementById('swal-input-instrumento-juridico-search') as HTMLInputElement).value,
+            remitente: (document.getElementById('swal-input-remitente') as HTMLInputElement).value,
+            institucion: (document.getElementById('swal-input-institucion') as HTMLInputElement).value ||
+                        (document.getElementById('swal-input-institucion-search') as HTMLInputElement).value,
+            area: (document.getElementById('swal-input-area') as HTMLSelectElement).value,
+            asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
+            observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value
+          };
+
+          localStorage.setItem(formStorageKey, JSON.stringify(formData));
+        };
+
+        // Agregar listeners para guardar datos en cambios
+        const formInputs = document.querySelectorAll('#crear-registro-form input, #crear-registro-form textarea, #crear-registro-form select');
+        formInputs.forEach(input => {
+          input.addEventListener('change', saveFormData);
+          input.addEventListener('blur', saveFormData);
+        });
+
+        // Función para actualizar folio al cambiar el año
+        const updateFolioInfo = (year: number) => {
+          // Lógica existente...
+          isCheckingFolio = true;
+
+          // Mostrar spinner
+          document.getElementById('folio-spinner')?.classList.remove('hidden');
+
+          // Actualizar feedback
+          document.getElementById('folio-feedback')!.innerHTML =
+            '<span class="text-blue-500">Consultando último folio...</span>';
+
+          // Obtener el último folio para el año seleccionado
+          this.inputService.getUltimoFolio(year).pipe(
+            finalize(() => {
+              isCheckingFolio = false;
+              document.getElementById('folio-spinner')?.classList.add('hidden');
+            })
+          ).subscribe({
+            next: (folio) => {
+              ultimoFolio = folio;
+              document.getElementById('folio-feedback')!.innerHTML =
+                `El último folio es: <span class="font-medium">${ultimoFolio}</span>`;
+
+              // Sugerir el siguiente folio si no hay uno guardado o seleccionado
+              const folioInput = document.getElementById('swal-input-folio') as HTMLInputElement;
+              if (!folioInput.value) {
+                folioInput.value = (ultimoFolio + 1).toString();
+                // Validar el folio sugerido
+                validarFolio(year, ultimoFolio + 1);
+                // Guardar el folio actualizado
+                saveFormData();
+              }
+            },
+            error: (error) => {
+              console.error('Error al obtener el último folio:', error);
+              document.getElementById('folio-feedback')!.innerHTML =
+                '<span class="text-red-500">Error al consultar el último folio</span>';
+            }
+          });
+        };
+
+        // Función para validar si un folio ya existe
+        const validarFolio = (year: number, folio: number) => {
+          // Lógica existente...
+          if (!year || !folio) return;
+
+          isCheckingFolio = true;
+          document.getElementById('folio-spinner')?.classList.remove('hidden');
+          document.getElementById('folio-feedback')!.innerHTML =
+            '<span class="text-blue-500">Verificando disponibilidad...</span>';
+
+          this.inputService.existeFolio(year, folio).pipe(
+            finalize(() => {
+              isCheckingFolio = false;
+              document.getElementById('folio-spinner')?.classList.add('hidden');
+            })
+          ).subscribe({
+            next: (existe) => {
+              folioExiste = existe;
+              const folioInput = document.getElementById('swal-input-folio') as HTMLInputElement;
+
+              if (existe) {
+                document.getElementById('folio-feedback')!.innerHTML =
+                  `<span class="text-red-500">El folio ${folio} ya existe para el año ${year}</span>`;
+                folioInput.classList.add('border-red-500');
+              } else {
+                document.getElementById('folio-feedback')!.innerHTML =
+                  `<span class="text-green-500">El folio ${folio} está disponible</span>`;
+                folioInput.classList.remove('border-red-500');
+              }
+            },
+            error: (error) => {
+              console.error('Error al verificar el folio:', error);
+              document.getElementById('folio-feedback')!.innerHTML =
+                '<span class="text-red-500">Error al verificar el folio</span>';
+            }
+          });
+        };
+
+        // Configurar autocompletado para instituciones
+        const setupInstitucionesAutocomplete = () => {
+          const inputInstitucion = document.getElementById('swal-input-institucion-search') as HTMLInputElement;
+          const hiddenInputInstitucion = document.getElementById('swal-input-institucion') as HTMLInputElement;
+          const dropdownInstitucion = document.getElementById('instituciones-dropdown') as HTMLDivElement;
+          const dropdownList = dropdownInstitucion.querySelector('ul')!;
+
+          // Función para filtrar instituciones
+          const filterInstituciones = (value: string) => {
+            if (!value) {
+              // Si no hay valor, mostrar las primeras 100 instituciones
+              filteredInstitutions = instituciones.slice(0, 100);
+            } else {
+              // Filtrar por el texto ingresado
+              const searchValue = value.toLowerCase().trim();
+              filteredInstitutions = instituciones.filter(inst =>
+                inst.name.toLowerCase().includes(searchValue)
+              );
+            }
+
+            // Crear elementos de la lista
+            dropdownList.innerHTML = '';
+            if (filteredInstitutions.length === 0) {
+              const li = document.createElement('li');
+              li.className = 'py-2 px-3 text-gray-500 italic';
+              li.textContent = 'No se encontraron coincidencias';
+              dropdownList.appendChild(li);
+            } else {
+              filteredInstitutions.forEach(inst => {
+                const li = document.createElement('li');
+                li.className = 'py-2 px-3 hover:bg-blue-100 cursor-pointer';
+                li.textContent = inst.name;
+                li.onclick = () => {
+                  inputInstitucion.value = inst.name;
+                  hiddenInputInstitucion.value = inst.name;
+                  dropdownInstitucion.classList.add('hidden');
+                };
+                dropdownList.appendChild(li);
+              });
+            }
+          };
+
+          // Evento focus
+          inputInstitucion.onfocus = () => {
+            filterInstituciones(inputInstitucion.value);
+            dropdownInstitucion.classList.remove('hidden');
+          };
+
+          // Evento input
+          inputInstitucion.oninput = () => {
+            filterInstituciones(inputInstitucion.value);
+            dropdownInstitucion.classList.remove('hidden');
+          };
+
+          // Cerrar dropdown al hacer click fuera
+          document.addEventListener('click', (event) => {
+            if (!inputInstitucion.contains(event.target as Node) &&
+                !dropdownInstitucion.contains(event.target as Node)) {
+              dropdownInstitucion.classList.add('hidden');
+            }
+          });
+        };
+
+        // Configurar autocompletado para instrumentos jurídicos
+        const setupInstrumentosAutocomplete = () => {
+          const inputInstrumento = document.getElementById('swal-input-instrumento-juridico-search') as HTMLInputElement;
+          const hiddenInputInstrumento = document.getElementById('swal-input-instrumento-juridico') as HTMLInputElement;
+          const dropdownInstrumento = document.getElementById('instrumentos-dropdown') as HTMLDivElement;
+          const dropdownList = dropdownInstrumento.querySelector('ul')!;
+
+          // Función para filtrar instrumentos
+          const filterInstrumentos = (value: string) => {
+            if (!value) {
+              // Si no hay valor, mostrar todos los instrumentos (suelen ser pocos)
+              filteredInstrumentos = instrumentosJuridicos;
+            } else {
+              // Filtrar por el texto ingresado
+              const searchValue = value.toLowerCase().trim();
+              filteredInstrumentos = instrumentosJuridicos.filter(inst =>
+                inst.name.toLowerCase().includes(searchValue)
+              );
+            }
+
+            // Crear elementos de la lista
+            dropdownList.innerHTML = '';
+            if (filteredInstrumentos.length === 0) {
+              const li = document.createElement('li');
+              li.className = 'py-2 px-3 text-gray-500 italic';
+              li.textContent = 'No se encontraron coincidencias';
+              dropdownList.appendChild(li);
+            } else {
+              filteredInstrumentos.forEach(inst => {
+                const li = document.createElement('li');
+                li.className = 'py-2 px-3 hover:bg-blue-100 cursor-pointer';
+                li.textContent = inst.name;
+                li.onclick = () => {
+                  inputInstrumento.value = inst.name;
+                  hiddenInputInstrumento.value = inst.name;
+                  dropdownInstrumento.classList.add('hidden');
+                };
+                dropdownList.appendChild(li);
+              });
+            }
+          };
+
+          // Evento focus
+          inputInstrumento.onfocus = () => {
+            filterInstrumentos(inputInstrumento.value);
+            dropdownInstrumento.classList.remove('hidden');
+          };
+
+          // Evento input
+          inputInstrumento.oninput = () => {
+            filterInstrumentos(inputInstrumento.value);
+            dropdownInstrumento.classList.remove('hidden');
+          };
+
+          // Cerrar dropdown al hacer click fuera
+          document.addEventListener('click', (event) => {
+            if (!inputInstrumento.contains(event.target as Node) &&
+                !dropdownInstrumento.contains(event.target as Node)) {
+              dropdownInstrumento.classList.add('hidden');
+            }
+          });
+        };
+
+        // Agregar event listeners para año y folio
+        const anioInput = document.getElementById('swal-input-anio') as HTMLInputElement;
+        const folioInput = document.getElementById('swal-input-folio') as HTMLInputElement;
+
+        // Inicialización: obtener el último folio para el año actual o guardado
+        const yearToUse = parseInt(initialValues.anio.toString(), 10) || currentYear;
+        updateFolioInfo(yearToUse);
+
+        // Event listener para cambios en el año
+        anioInput.addEventListener('change', () => {
+          const year = parseInt(anioInput.value, 10);
+          if (year) {
+            updateFolioInfo(year);
+            // Si ya hay un folio ingresado, validarlo
+            if (folioInput.value) {
+              validarFolio(year, parseInt(folioInput.value, 10));
+            }
+          }
+        });
+
+        // Event listener para cambios en el folio
+        folioInput.addEventListener('input', () => {
+          const year = parseInt(anioInput.value, 10);
+          const folio = parseInt(folioInput.value, 10);
+          if (year && folio) {
+            validarFolio(year, folio);
+          }
+        });
+
+        // Inicializar los autocompletados
+        setupInstitucionesAutocomplete();
+        setupInstrumentosAutocomplete();
+
+        // Mostrar un mensaje si no hay catálogos
+        if (instituciones.length === 0 || instrumentosJuridicos.length === 0) {
+          const warningDiv = document.createElement('div');
+          warningDiv.className = 'bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-4';
+          warningDiv.innerHTML = `
+            <p class="text-sm text-yellow-700">
+              <strong>Advertencia:</strong> ${
+                instituciones.length === 0 && instrumentosJuridicos.length === 0
+                  ? 'No se pudieron cargar los catálogos de instituciones e instrumentos jurídicos.'
+                  : instituciones.length === 0
+                    ? 'No se pudieron cargar los catálogos de instituciones.'
+                    : 'No se pudieron cargar los catálogos de instrumentos jurídicos.'
+              } Verifica tu conexión.
+            </p>
+          `;
+          document.querySelector('.swal2-content')?.appendChild(warningDiv);
+        }
+      },
+      preConfirm: () => {
+        // Verificar si hay validación de folio en progreso
+        if (isCheckingFolio) {
+          Swal.showValidationMessage('Por favor espera a que se complete la verificación del folio');
+          return false;
+        }
+
+        // Validar si el folio ya existe
+        if (folioExiste) {
+          Swal.showValidationMessage('El folio ya existe para el año seleccionado');
+          return false;
+        }
+
+        // Obtener todos los valores del formulario, incluyendo los hidden inputs
+        const anio = (document.getElementById('swal-input-anio') as HTMLInputElement).value;
+        const folio = (document.getElementById('swal-input-folio') as HTMLInputElement).value;
+        const numOficio = (document.getElementById('swal-input-num-oficio') as HTMLInputElement).value;
+        const fechaOficio = (document.getElementById('swal-input-fecha-oficio') as HTMLInputElement).value;
+        const fechaRecepcion = (document.getElementById('swal-input-fecha-recepcion') as HTMLInputElement).value;
+        const fechaVencimiento = (document.getElementById('swal-input-fecha-vencimiento') as HTMLInputElement).value;
+        const horaRecepcion = (document.getElementById('swal-input-hora-recepcion') as HTMLInputElement).value;
+        const instrumentoJuridico = (document.getElementById('swal-input-instrumento-juridico') as HTMLInputElement).value ||
+                                   (document.getElementById('swal-input-instrumento-juridico-search') as HTMLInputElement).value;
+        const remitente = (document.getElementById('swal-input-remitente') as HTMLInputElement).value;
+        const institucion = (document.getElementById('swal-input-institucion') as HTMLInputElement).value ||
+                           (document.getElementById('swal-input-institucion-search') as HTMLInputElement).value;
+        const area = (document.getElementById('swal-input-area') as HTMLSelectElement).value;
+        const asunto = (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value;
+        const observacion = (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value;
+
+        // Validar campos obligatorios
+        if (!anio || !folio || !numOficio || !fechaOficio || !fechaRecepcion ||
+            !fechaVencimiento || !instrumentoJuridico || !remitente || !institucion ||
+            !area || !asunto) {
+          Swal.showValidationMessage('Por favor completa todos los campos obligatorios');
+          return false;
+        }
+
+        // Retornar el objeto con los datos del formulario
+        return {
+          anio: parseInt(anio, 10),
+          folio: parseInt(folio, 10),
+          num_oficio: numOficio,
+          fecha_oficio: fechaOficio,
+          fecha_recepcion: fechaRecepcion,
+          fecha_vencimiento: fechaVencimiento,
+          hora_recepcion: horaRecepcion || null,
+          instrumento_juridico: instrumentoJuridico,
+          remitente: remitente,
+          institucion_origen: institucion,
+          asignado: area,
+          asunto: asunto,
+          observacion: observacion || null,
+          estatus: 'NO ATENDIDO'  // Valor por defecto
+        };
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        // Mostrar indicador de carga mientras se guarda
+        Swal.fire({
+          title: 'Guardando...',
+          text: 'Creando nuevo registro',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        // Enviar datos al servicio
+        this.inputService.createInput(result.value).subscribe({
+          next: (response) => {
+            // Limpiar datos guardados al tener éxito
+            localStorage.removeItem(formStorageKey);
+
+            Swal.fire({
+              icon: 'success',
+              title: '¡Registro creado!',
+              text: `Se ha creado el registro con folio ${result.value.folio} para el año ${result.value.anio}`,
+              confirmButtonText: 'Aceptar'
+            });
+
+            // Recargar datos
+            this.loadInputs();
+          },
+          error: (error) => {
+            console.error('Error al crear el registro:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.error?.message || 'Ha ocurrido un error al crear el registro',
+              confirmButtonText: 'Aceptar'
+            });
+          }
+        });
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        // Si el usuario cancela, no eliminamos los datos guardados para permitir retomar después
+        console.log('Formulario cancelado, datos guardados para uso posterior');
+      }
+    });
+  }
 
   /**
    * Verifica si hay filtros activos
@@ -1521,6 +2219,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
           // Generar nombre de archivo
           let nombreArchivo = `Tarjeta_Resumen_${fechaFormateada}`;
 
+          //```typescript
           // Agregar información de área si aplica
           if (params.area) {
             const areaNormalizada = params.area.replace(/\s+/g, '_');

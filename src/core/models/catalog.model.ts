@@ -7,6 +7,5 @@ export interface Catalog {
 
 export enum CatalogType {
   INSTITUTION = 'INSTITUTION',
-  INSTRUMENT = 'INSTRUMENT',
-  OTRAS_CATEGORIAS = 'OTRAS_CATEGORIAS'
+  INSTRUMENT = 'INSTRUMENT'
 }

@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { BaseApiService } from './base-api.service';
+import { AuthService } from './auth.service';
 import { ApiResponse, PaginatedResponse } from '../../models/api-response.model';
 import { Input } from '../../models/input/input.model';
 import { DuplicateResponseData, DuplicateApiResponse } from '../../models/input/duplicate.model';
@@ -104,6 +105,7 @@ export interface DuplicateResponse {
 })
 export class InputService extends BaseApiService {
   private endpoint = 'inputs';
+  private authService = inject(AuthService);
 
   /**
    * Obtiene la lista de inputs con paginación y filtros
@@ -139,10 +141,17 @@ export class InputService extends BaseApiService {
   }
 
   /**
-   * Crea un nuevo input
+   * Crea un nuevo input sin depender del servicio de autenticación
+   * El backend se encargará de obtener los datos del usuario desde el token JWT
    */
   createInput(input: Partial<Input>): Observable<ApiResponse<Input>> {
-    return this.post<ApiResponse<Input>>(this.endpoint, input);
+    return this.post<ApiResponse<Input>>(`${this.endpoint}/create`, input)
+      .pipe(
+        catchError(error => {
+          console.error('Error al crear registro:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   /**

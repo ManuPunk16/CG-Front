@@ -696,8 +696,15 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
    * Muestra el formulario de edición del documento principal
    */
   mostrarFormularioEdicion(): void {
-    // Preparar los valores iniciales del formulario basados en inputDetails
-    this.inputForm.patchValue({
+    // Clave única para localStorage basada en el ID del documento
+    const storageKey = `cg_edit_doc_${this.id}`;
+
+    // Intentar recuperar datos guardados previamente
+    const savedData = localStorage.getItem(storageKey);
+    const formData = savedData ? JSON.parse(savedData) : null;
+
+    // Usar datos guardados si existen, o los datos actuales del documento
+    const initialData = formData || {
       num_oficio: this.inputDetails?.num_oficio || '',
       fecha_oficio: this.formatDateForInput(this.inputDetails?.fecha_oficio),
       fecha_vencimiento: this.formatDateForInput(this.inputDetails?.fecha_vencimiento),
@@ -709,30 +716,34 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
       asunto: this.inputDetails?.asunto || '',
       asignado: this.inputDetails?.asignado || '',
       estatus: this.inputDetails?.estatus || 'NO ATENDIDO',
-      observacion: this.inputDetails?.observacion || ''
-    });
+      observacion: this.inputDetails?.observacion || '',
+      archivosPdf: this.inputDetails?.archivosPdf || []
+    };
+
+    // Actualizar el formulario con los datos iniciales
+    this.inputForm.patchValue(initialData);
 
     // Opciones para los campos select
     const areaOptions = Object.values(AreasEnum)
-      .map(area => `<option value="${area}" ${this.inputForm.get('asignado')?.value === area ? 'selected' : ''}>${area}</option>`)
+      .map(area => `<option value="${area}" ${initialData.asignado === area ? 'selected' : ''}>${area}</option>`)
       .join('');
 
     const estatusOptions = Object.values(EstatusEnum)
-      .map(estatus => `<option value="${estatus}" ${this.inputForm.get('estatus')?.value === estatus ? 'selected' : ''}>${estatus}</option>`)
+      .map(estatus => `<option value="${estatus}" ${initialData.estatus === estatus ? 'selected' : ''}>${estatus}</option>`)
       .join('');
 
     // Preparar rutas de PDFs para mostrar
-    let pdfRutas = this.inputDetails?.archivosPdf || [];
+    let pdfRutas = initialData.archivosPdf || [];
     if (!pdfRutas.length) {
       pdfRutas = [''];  // Al menos un campo vacío si no hay rutas
     }
 
-    const pdfFields = pdfRutas.map((ruta, index) => `
+    const pdfFields = pdfRutas.map((ruta: any, index: number) => `
       <div class="flex items-center mb-2 pdf-input-group" id="pdf-group-${index}">
         <input id="swal-input-pdf-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
         ${index > 0 ? `
-          <button type="button" onclick="document.getElementById('pdf-group-${index}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+          <button type="button" class="remove-pdf-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -751,13 +762,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-num_oficio">Número de Oficio*</label>
               <input id="swal-input-num_oficio" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('num_oficio')?.value}" placeholder="Ej: CJ/DG/123/2023" required>
+                value="${initialData.num_oficio}" placeholder="Ej: CJ/DG/123/2023" required>
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_oficio">Fecha de Oficio*</label>
               <input id="swal-input-fecha_oficio" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('fecha_oficio')?.value}" required>
+                value="${initialData.fecha_oficio}" required>
             </div>
           </div>
 
@@ -766,19 +777,19 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_recepcion">Fecha de Recepción*</label>
               <input id="swal-input-fecha_recepcion" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('fecha_recepcion')?.value}" required>
+                value="${initialData.fecha_recepcion}" required>
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-hora_recepcion">Hora de Recepción</label>
               <input id="swal-input-hora_recepcion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('hora_recepcion')?.value}" placeholder="Ej. 10:30 AM">
+                value="${initialData.hora_recepcion}" placeholder="Ej. 10:30 AM">
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_vencimiento">Fecha de Vencimiento</label>
               <input id="swal-input-fecha_vencimiento" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('fecha_vencimiento')?.value}">
+                value="${initialData.fecha_vencimiento}">
             </div>
           </div>
 
@@ -787,13 +798,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-remitente">Remitente*</label>
               <input id="swal-input-remitente" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('remitente')?.value}" required>
+                value="${initialData.remitente}" required>
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-institucion_origen">Institución de Origen</label>
               <input id="swal-input-institucion_origen" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.inputForm.get('institucion_origen')?.value}">
+                value="${initialData.institucion_origen}">
             </div>
           </div>
 
@@ -801,7 +812,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-instrumento_juridico">Instrumento Jurídico</label>
             <input id="swal-input-instrumento_juridico" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value="${this.inputForm.get('instrumento_juridico')?.value}">
+              value="${initialData.instrumento_juridico}">
           </div>
 
           <!-- Área y estatus -->
@@ -824,7 +835,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <!-- Asunto -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-asunto">Asunto*</label>
-            <textarea id="swal-input-asunto" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="4" required>${this.inputForm.get('asunto')?.value}</textarea>
+            <textarea id="swal-input-asunto" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="4" required>${initialData.asunto}</textarea>
           </div>
 
           <!-- Sección de archivos PDF -->
@@ -845,33 +856,11 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <!-- Observación - ahora aparece después de la sección de PDFs -->
           <div class="mb-3">
             <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-observacion">Observación</label>
-            <textarea id="swal-input-observacion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3">${this.inputForm.get('observacion')?.value}</textarea>
+            <textarea id="swal-input-observacion" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3">${initialData.observacion}</textarea>
           </div>
 
           <div class="text-xs text-gray-500 mb-3">* Campos obligatorios</div>
         </form>
-
-        <script>
-          document.getElementById('add-pdf-btn').addEventListener('click', function() {
-            const container = document.getElementById('pdf-container');
-            const newIndex = container.children.length;
-            const newGroup = document.createElement('div');
-            newGroup.className = 'flex items-center mb-2 pdf-input-group';
-            newGroup.id = 'pdf-group-' + newIndex;
-
-            newGroup.innerHTML = \`
-              <input id="swal-input-pdf-\${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="" placeholder="\\\\\\\\ws\\\\Control_Gestion_pdfs\\\\DIRECCIÓN\\\\AÑO\\\\MES\\\\archivo.pdf">
-              <button type="button" onclick="document.getElementById('pdf-group-\${newIndex}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            \`;
-
-            container.appendChild(newGroup);
-          });
-        </script>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -883,9 +872,38 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         container: 'swal-wide',
         popup: 'swal-wide',
         title: 'text-lg font-medium text-gray-800',
-        htmlContainer: 'text-left max-h-[75vh] overflow-y-auto' // Aumentamos altura máxima también
+        htmlContainer: 'text-left max-h-[75vh] overflow-y-auto'
       },
       didOpen: () => {
+        // Función para guardar los valores del formulario en localStorage
+        const saveFormData = () => {
+          const formData = {
+            num_oficio: (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value,
+            fecha_oficio: (document.getElementById('swal-input-fecha_oficio') as HTMLInputElement).value,
+            fecha_recepcion: (document.getElementById('swal-input-fecha_recepcion') as HTMLInputElement).value,
+            fecha_vencimiento: (document.getElementById('swal-input-fecha_vencimiento') as HTMLInputElement).value,
+            hora_recepcion: (document.getElementById('swal-input-hora_recepcion') as HTMLInputElement).value,
+            instrumento_juridico: (document.getElementById('swal-input-instrumento_juridico') as HTMLInputElement).value,
+            remitente: (document.getElementById('swal-input-remitente') as HTMLInputElement).value,
+            institucion_origen: (document.getElementById('swal-input-institucion_origen') as HTMLInputElement).value,
+            asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
+            asignado: (document.getElementById('swal-input-asignado') as HTMLSelectElement).value,
+            estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+            observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+            archivosPdf: Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]'))
+              .map(input => (input as HTMLInputElement).value)
+              .filter(Boolean)
+          };
+          localStorage.setItem(storageKey, JSON.stringify(formData));
+        };
+
+        // Agregar listeners para guardar datos en cambios
+        const formInputs = document.querySelectorAll('#editDocForm input, #editDocForm textarea, #editDocForm select');
+        formInputs.forEach(input => {
+          input.addEventListener('change', saveFormData);
+          input.addEventListener('blur', saveFormData);
+        });
+
         // Añadir el event listener al botón después de que el modal está abierto
         document.getElementById('add-pdf-btn')?.addEventListener('click', function() {
           const container = document.getElementById('pdf-container');
@@ -912,14 +930,79 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           const removeBtn = newGroup.querySelector('.remove-pdf-btn');
           removeBtn?.addEventListener('click', function() {
             newGroup.remove();
+            // Guardar el estado después de eliminar un campo
+            const saveFormData = () => {
+              const formData = {
+                num_oficio: (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value,
+                fecha_oficio: (document.getElementById('swal-input-fecha_oficio') as HTMLInputElement).value,
+                fecha_recepcion: (document.getElementById('swal-input-fecha_recepcion') as HTMLInputElement).value,
+                fecha_vencimiento: (document.getElementById('swal-input-fecha_vencimiento') as HTMLInputElement).value,
+                hora_recepcion: (document.getElementById('swal-input-hora_recepcion') as HTMLInputElement).value,
+                instrumento_juridico: (document.getElementById('swal-input-instrumento_juridico') as HTMLInputElement).value,
+                remitente: (document.getElementById('swal-input-remitente') as HTMLInputElement).value,
+                institucion_origen: (document.getElementById('swal-input-institucion_origen') as HTMLInputElement).value,
+                asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
+                asignado: (document.getElementById('swal-input-asignado') as HTMLSelectElement).value,
+                estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+                observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+                archivosPdf: Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]')).map(input => (input as HTMLInputElement).value).filter(Boolean)
+              };
+              localStorage.setItem(storageKey, JSON.stringify(formData));
+            };
+            saveFormData();
+          });
+
+          // Agregar evento al nuevo campo para guardar al cambiar
+          const newInput = newGroup.querySelector('[id^="swal-input-pdf-"]');
+          newInput?.addEventListener('change', () => {
+            const saveFormData = () => {
+              const formData = {
+                num_oficio: (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value,
+                fecha_oficio: (document.getElementById('swal-input-fecha_oficio') as HTMLInputElement).value,
+                fecha_recepcion: (document.getElementById('swal-input-fecha_recepcion') as HTMLInputElement).value,
+                fecha_vencimiento: (document.getElementById('swal-input-fecha_vencimiento') as HTMLInputElement).value,
+                hora_recepcion: (document.getElementById('swal-input-hora_recepcion') as HTMLInputElement).value,
+                instrumento_juridico: (document.getElementById('swal-input-instrumento_juridico') as HTMLInputElement).value,
+                remitente: (document.getElementById('swal-input-remitente') as HTMLInputElement).value,
+                institucion_origen: (document.getElementById('swal-input-institucion_origen') as HTMLInputElement).value,
+                asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
+                asignado: (document.getElementById('swal-input-asignado') as HTMLSelectElement).value,
+                estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+                observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+                archivosPdf: Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]')).map(input => (input as HTMLInputElement).value).filter(Boolean)
+              };
+              localStorage.setItem(storageKey, JSON.stringify(formData));
+            };
+            saveFormData();
           });
         });
 
-        // Agregar event listeners a los botones de eliminar iniciales
+        // Configurar event listeners para botones de eliminar PDFs
         document.querySelectorAll('.remove-pdf-btn').forEach(button => {
           button.addEventListener('click', function(this: HTMLElement) {
             const group = this.closest('.pdf-input-group');
             group?.remove();
+
+            // Guardar después de eliminar un campo
+            const saveFormData = () => {
+              const formData = {
+                num_oficio: (document.getElementById('swal-input-num_oficio') as HTMLInputElement).value,
+                fecha_oficio: (document.getElementById('swal-input-fecha_oficio') as HTMLInputElement).value,
+                fecha_recepcion: (document.getElementById('swal-input-fecha_recepcion') as HTMLInputElement).value,
+                fecha_vencimiento: (document.getElementById('swal-input-fecha_vencimiento') as HTMLInputElement).value,
+                hora_recepcion: (document.getElementById('swal-input-hora_recepcion') as HTMLInputElement).value,
+                instrumento_juridico: (document.getElementById('swal-input-instrumento_juridico') as HTMLInputElement).value,
+                remitente: (document.getElementById('swal-input-remitente') as HTMLInputElement).value,
+                institucion_origen: (document.getElementById('swal-input-institucion_origen') as HTMLInputElement).value,
+                asunto: (document.getElementById('swal-input-asunto') as HTMLTextAreaElement).value,
+                asignado: (document.getElementById('swal-input-asignado') as HTMLSelectElement).value,
+                estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+                observacion: (document.getElementById('swal-input-observacion') as HTMLTextAreaElement).value,
+                archivosPdf: Array.from(document.querySelectorAll('[id^="swal-input-pdf-"]')).map(input => (input as HTMLInputElement).value).filter(Boolean)
+              };
+              localStorage.setItem(storageKey, JSON.stringify(formData));
+            };
+            saveFormData();
           });
         });
       },
@@ -961,6 +1044,8 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed && result.value) {
         this.guardarEdicionDocumento(result.value);
+        // Limpiar localStorage después de guardar exitosamente
+        localStorage.removeItem(storageKey);
       }
     });
   }
@@ -969,6 +1054,8 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
    * Guarda los cambios del documento principal
    */
   guardarEdicionDocumento(formData: any): void {
+    const storageKey = `cg_edit_doc_${this.id}`;
+
     // Mostrar indicador de carga
     Swal.fire({
       title: 'Guardando cambios...',
@@ -991,6 +1078,9 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     this.inputService.updateInput(this.id, inputUpdate).subscribe({
       next: (response) => {
         if (response && response.status === 'success') {
+          // Limpiar datos guardados en localStorage
+          localStorage.removeItem(storageKey);
+
           // Actualizar el estado local con los datos actualizados
           if (response.data) {
             this.inputDetails = response.data;
@@ -1087,16 +1177,27 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
    * Muestra el formulario para editar el seguimiento
    */
   mostrarFormularioSeguimiento(): void {
+    // Clave única para localStorage basada en el ID del documento
+    const storageKey = `cg_edit_seg_${this.id}`;
+
+    // Intentar recuperar datos guardados previamente
+    const savedData = localStorage.getItem(storageKey);
+    const formData = savedData ? JSON.parse(savedData) : null;
+
     // Variables para almacenar campos PDF y opciones de estatus
     let pdfFields = '';
     let estatusOptions = '';
 
-    // Cargar datos existentes del seguimiento
-    if (this.inputDetails?.seguimientos) {
-      // Usar el estatus que viene del documento
-      const estatusActual = this.inputDetails.estatus || 'NO ATENDIDO';
+    // Preparar datos iniciales del formulario (guardados o actuales)
+    let initialData: any = {};
 
-      this.seguimientoForm.patchValue({
+    // Determinar qué datos usar: guardados o actuales
+    if (formData) {
+      // Usar datos guardados si existen
+      initialData = formData;
+    } else if (this.inputDetails?.seguimientos) {
+      // Usar datos actuales del seguimiento
+      initialData = {
         num_expediente: this.inputDetails.seguimientos.num_expediente || '',
         oficio_salida: this.inputDetails.seguimientos.oficio_salida || '',
         fecha_oficio_salida: this.formatDateForInput(this.inputDetails.seguimientos.fecha_oficio_salida),
@@ -1105,41 +1206,45 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         cargo: this.inputDetails.seguimientos.cargo || '',
         atencion_otorgada: this.inputDetails.seguimientos.atencion_otorgada || '',
         anexo: this.inputDetails.seguimientos.anexo || '',
-        estatus: estatusActual, // Usamos el estatus del documento
+        estatus: this.inputDetails.estatus || 'NO ATENDIDO',
         firma_visado: this.inputDetails.seguimientos.firma_visado || '',
-        comentarios: this.inputDetails.seguimientos.comentarios || ''
-      });
-
-      // Preparar rutas de PDFs para mostrar
-      let pdfRutas = this.inputDetails?.seguimientos?.archivosPdf_seguimiento || [];
-      if (!pdfRutas.length) {
-        pdfRutas = [''];  // Al menos un campo vacío si no hay rutas
-      }
-
-      // Crear los campos de PDF dinámicos - Asignar a la variable declarada
-      pdfFields = pdfRutas.map((ruta, index) => `
-        <div class="flex items-center mb-2 pdf-seguimiento-group" id="pdf-seg-group-${index}">
-          <input id="swal-input-pdf-seg-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
-          ${index > 0 ? `
-            <button type="button" onclick="document.getElementById('pdf-seg-group-${index}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          ` : ''}
-        </div>
-      `).join('');
-
-      // Opciones para los campos select - Asignar a la variable declarada
-      estatusOptions = Object.values(EstatusEnum)
-        .map(estatus => `<option value="${estatus}" ${this.inputDetails?.estatus === estatus ? 'selected' : ''}>${estatus}</option>`)
-        .join('');
+        comentarios: this.inputDetails.seguimientos.comentarios || '',
+        archivosPdf_seguimiento: this.inputDetails.seguimientos.archivosPdf_seguimiento || []
+      };
     } else {
-      // Si no hay seguimiento, no debería llegar aquí, pero por si acaso reseteamos el formulario
+      // Reset del formulario si no hay datos
       this.seguimientoForm.reset();
       return;
     }
+
+    // Actualizar el formulario con los datos iniciales
+    this.seguimientoForm.patchValue(initialData);
+
+    // Preparar rutas de PDFs para mostrar
+    let pdfRutas = initialData.archivosPdf_seguimiento || [];
+    if (!pdfRutas.length) {
+      pdfRutas = [''];  // Al menos un campo vacío si no hay rutas
+    }
+
+    // Crear los campos de PDF dinámicos
+    pdfFields = pdfRutas.map((ruta: string, index: number) => `
+      <div class="flex items-center mb-2 pdf-seguimiento-group" id="pdf-seg-group-${index}">
+        <input id="swal-input-pdf-seg-${index}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          value="${ruta || ''}" placeholder="\\\\ws\\Control_Gestion_pdfs\\DIRECCIÓN\\AÑO\\MES\\archivo.pdf">
+        ${index > 0 ? `
+          <button type="button" class="remove-pdf-seg-btn ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+
+    // Opciones para el campo select de estatus
+    estatusOptions = Object.values(EstatusEnum)
+      .map(estatus => `<option value="${estatus}" ${initialData.estatus === estatus ? 'selected' : ''}>${estatus}</option>`)
+      .join('');
 
     // Mostrar formulario con clases CSS actualizadas para mayor ancho
     Swal.fire({
@@ -1151,13 +1256,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-num_expediente">Número de Expediente</label>
               <input id="swal-input-num_expediente" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('num_expediente')?.value}">
+                value="${initialData.num_expediente}">
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-oficio_salida">Oficio de Salida*</label>
               <input id="swal-input-oficio_salida" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('oficio_salida')?.value}" required>
+                value="${initialData.oficio_salida}" required>
             </div>
           </div>
 
@@ -1166,13 +1271,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_oficio_salida">Fecha Oficio Salida</label>
               <input id="swal-input-fecha_oficio_salida" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('fecha_oficio_salida')?.value}">
+                value="${initialData.fecha_oficio_salida}">
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-fecha_acuse_recibido">Fecha Acuse*</label>
               <input id="swal-input-fecha_acuse_recibido" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('fecha_acuse_recibido')?.value}" required>
+                value="${initialData.fecha_acuse_recibido}" required>
             </div>
           </div>
 
@@ -1181,13 +1286,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-destinatario">Destinatario*</label>
               <input id="swal-input-destinatario" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('destinatario')?.value}" required>
+                value="${initialData.destinatario}" required>
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-cargo">Cargo*</label>
               <input id="swal-input-cargo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('cargo')?.value}" required>
+                value="${initialData.cargo}" required>
             </div>
           </div>
 
@@ -1202,7 +1307,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <!-- Atención otorgada -->
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-atencion_otorgada">Respuesta / Atención Otorgada*</label>
-            <textarea id="swal-input-atencion_otorgada" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required>${this.seguimientoForm.get('atencion_otorgada')?.value}</textarea>
+            <textarea id="swal-input-atencion_otorgada" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3" required>${initialData.atencion_otorgada}</textarea>
           </div>
 
           <!-- Opciones adicionales como campos de texto libre (no obligatorios) -->
@@ -1210,13 +1315,13 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-anexo">Anexos</label>
               <input id="swal-input-anexo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('anexo')?.value}" placeholder="Ej: SI, NO, Formato PDF, etc.">
+                value="${initialData.anexo}" placeholder="Ej: SI, NO, Formato PDF, etc.">
             </div>
 
             <div class="mb-3">
               <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-firma_visado">Firma</label>
               <input id="swal-input-firma_visado" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="${this.seguimientoForm.get('firma_visado')?.value}" placeholder="Ej: SI, NO, En trámite, etc.">
+                value="${initialData.firma_visado}" placeholder="Ej: SI, NO, En trámite, etc.">
             </div>
           </div>
 
@@ -1224,7 +1329,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-1">Rutas de Archivos PDF (Seguimiento)</label>
             <div id="pdf-seguimiento-container">
-              ${pdfFields} <!-- Usar la variable pdfFields aquí -->
+              ${pdfFields}
             </div>
             <button type="button" id="add-pdf-seg-btn" class="mt-2 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-md flex items-center text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1238,33 +1343,11 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           <!-- Comentarios - ahora aparece después de la sección de PDFs -->
           <div class="mb-3">
             <label class="block text-sm font-medium text-gray-700 mb-1" for="swal-input-comentarios">Observaciones</label>
-            <textarea id="swal-input-comentarios" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="2">${this.seguimientoForm.get('comentarios')?.value || ''}</textarea>
+            <textarea id="swal-input-comentarios" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="2">${initialData.comentarios || ''}</textarea>
           </div>
 
           <div class="text-xs text-gray-500 mb-3">* Campos obligatorios</div>
         </form>
-
-        <script>
-          document.getElementById('add-pdf-seg-btn').addEventListener('click', function() {
-            const container = document.getElementById('pdf-seguimiento-container');
-            const newIndex = container.children.length;
-            const newGroup = document.createElement('div');
-            newGroup.className = 'flex items-center mb-2 pdf-seguimiento-group';
-            newGroup.id = 'pdf-seg-group-' + newIndex;
-
-            newGroup.innerHTML = \`
-              <input id="swal-input-pdf-seg-\${newIndex}" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                value="" placeholder="\\\\\\\\ws\\\\Control_Gestion_pdfs\\\\DIRECCIÓN\\\\AÑO\\\\MES\\\\archivo.pdf">
-              <button type="button" onclick="document.getElementById('pdf-seg-group-\${newIndex}').remove()" class="ml-2 px-2 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-md">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            \`;
-
-            container.appendChild(newGroup);
-          });
-        </script>
       `,
       focusConfirm: false,
       showCancelButton: true,
@@ -1279,6 +1362,34 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
         htmlContainer: 'text-left max-h-[75vh] overflow-y-auto'
       },
       didOpen: () => {
+        // Función para guardar los valores del formulario en localStorage
+        const saveFormData = () => {
+          const formData = {
+            num_expediente: (document.getElementById('swal-input-num_expediente') as HTMLInputElement).value,
+            oficio_salida: (document.getElementById('swal-input-oficio_salida') as HTMLInputElement).value,
+            fecha_oficio_salida: (document.getElementById('swal-input-fecha_oficio_salida') as HTMLInputElement).value,
+            fecha_acuse_recibido: (document.getElementById('swal-input-fecha_acuse_recibido') as HTMLInputElement).value,
+            destinatario: (document.getElementById('swal-input-destinatario') as HTMLInputElement).value,
+            cargo: (document.getElementById('swal-input-cargo') as HTMLInputElement).value,
+            atencion_otorgada: (document.getElementById('swal-input-atencion_otorgada') as HTMLTextAreaElement).value,
+            anexo: (document.getElementById('swal-input-anexo') as HTMLInputElement).value,
+            estatus: (document.getElementById('swal-input-estatus') as HTMLSelectElement).value,
+            firma_visado: (document.getElementById('swal-input-firma_visado') as HTMLInputElement).value,
+            comentarios: (document.getElementById('swal-input-comentarios') as HTMLTextAreaElement).value,
+            archivosPdf_seguimiento: Array.from(document.querySelectorAll('[id^="swal-input-pdf-seg-"]'))
+              .map(input => (input as HTMLInputElement).value)
+              .filter(Boolean)
+          };
+          localStorage.setItem(storageKey, JSON.stringify(formData));
+        };
+
+        // Agregar listeners para guardar datos en cambios
+        const formInputs = document.querySelectorAll('#editSeguimientoForm input, #editSeguimientoForm textarea, #editSeguimientoForm select');
+        formInputs.forEach(input => {
+          input.addEventListener('change', saveFormData);
+          input.addEventListener('blur', saveFormData);
+        });
+
         // Añadir el event listener al botón después de que el modal está abierto
         document.getElementById('add-pdf-seg-btn')?.addEventListener('click', function() {
           const container = document.getElementById('pdf-seguimiento-container');
@@ -1353,6 +1464,8 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed && result.value) {
         this.guardarSeguimiento(result.value);
+        // Limpiar localStorage después de guardar exitosamente
+        localStorage.removeItem(storageKey);
       }
     });
   }
@@ -1395,7 +1508,7 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
           // Mostrar mensaje de éxito
           Swal.fire({
             title: '¡Guardado!',
-            text: 'El seguimiento se actualizó correctamente',
+                       text: 'El seguimiento se actualizó correctamente',
             icon: 'success',
             confirmButtonColor: '#3085d6'
           });
@@ -1454,7 +1567,8 @@ export class FichaTecnicaProfesionalComponent implements OnInit, OnDestroy {
       cargo: ['', Validators.required],
       atencion_otorgada: ['', Validators.required],
       anexo: [''], // No obligatorio
-      estatus: ['', Validators.required], // Obligatorio pero sin valor por defecto
+      estatus: ['', Validators.required], //```typescript
+      // Obligatorio pero sin valor por defecto
       firma_visado: [''], // No obligatorio
       comentarios: ['']
     });
