@@ -307,11 +307,11 @@
         <!-- Solo mostrar para administradores -->
         <li *ngIf="isAdmin"><span class="font-semibold">Crear nuevo registro:</span> Disponible solo para administradores.</li>
         <li><span class="font-semibold">Exportar todos:</span> Exporta todos los registros del año seleccionado.</li>
-        <li><span class="font-semibold">Exportar filtrados:</span> Disponible solo cuando hay filtros aplicados.</li>
+        <li><span class="font-semibold">Exportar filtrados:</span> Disponible solo cuando hay filtro de estatus aplicado, informacion del año seleccionado.</li>
         <li><span class="font-semibold">Exportar por área:</span> Permite seleccionar un área específica para exportar.</li>
         <!-- Solo mostrar para administradores -->
-        <li *ngIf="isAdmin"><span class="font-semibold">Reporte Diario:</span> Disponible solo para administradores. Requiere seleccionar área y fecha.</li>
-        <li><span class="font-semibold">Tarjeta Resumen:</span> Requiere seleccionar fecha. Muestra información según tu rol y permisos.</li>
+        <li *ngIf="isAdmin"><span class="font-semibold">Reporte Diario:</span> Disponible solo para administradores. Requiere seleccionar área y fecha recepcion.</li>
+        <li><span class="font-semibold">Tarjeta Resumen:</span> Requiere seleccionar fecha recepcion.</li>
         <li><span class="font-semibold">Estadísticas por área:</span> Muestra estadísticas del año seleccionado.</li>
       </ul>
       <p class="text-sm text-blue-800 mt-2">Recuerda aplicar los filtros con el botón <span class="font-semibold">"Aplicar filtros"</span> antes de usar estas acciones.</p>
