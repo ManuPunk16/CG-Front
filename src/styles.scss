@@ -133,16 +133,6 @@
   z-index: -1;
 }
 
-/* Aseguramos que el contenido sea legible */
-.content-wrapper {
-  // background-color: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin: 16px;
-  padding: 20px;
-  flex: 1;
-}
-
 /* Estilos para el layout con footer */
 .app-container {
   display: flex;
@@ -165,4 +155,29 @@ mat-sidenav-content {
 .content-wrapper {
   flex: 1;
   padding: 16px;
+}
+
+/* Estilos universales para placeholders más difuminados */
+::placeholder {
+  opacity: 0.5 !important;
+  color: var(--neutral-600) !important;
+  font-style: italic; /* Opcional: texto en cursiva para mayor diferenciación */
+}
+
+:-ms-input-placeholder {
+  opacity: 0.5 !important;
+  color: var(--neutral-600) !important;
+  font-style: italic;
+}
+
+::-ms-input-placeholder {
+  opacity: 0.5 !important;
+  color: var(--neutral-600) !important;
+  font-style: italic;
+}
+
+/* Animación suave al enfocar inputs */
+input:focus::placeholder {
+  opacity: 0.3 !important; /* Se difumina aún más al enfocar */
+  transition: opacity 0.3s;
 }

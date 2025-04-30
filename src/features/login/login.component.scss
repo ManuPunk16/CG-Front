@@ -1,4 +1,9 @@
 /* login.component.scss */
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
 .login-page { // Contenedor principal de la página de login
   display: flex;
   justify-content: center; // Centrado horizontal
@@ -7,22 +12,94 @@
   margin: 0;
 }
 
+// Fondo con imagen de fondo (usa las clases que ya tienes definidas)
+.login-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: flex-start; // Alinea el contenido más arriba
+  justify-content: center;
+  padding-top: 5vh; // Ajusta este valor para mover el recuadro hacia arriba
+  // background-color: var(--tertiary-50); // Color de respaldo mientras carga la imagen
+}
+
+// Card de login con estilos mejorados
 .login-card {
-  max-width: 400px;
-  width: 90%;
-  height: 450px;
-  padding: 24px;
-  box-sizing: border-box;
+  max-width: 420px;
+  width: 100%;
+  padding: 2rem;
+  background-color: rgba(255, 255, 255, 0.9); // Fondo semi-transparente
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px); // Efecto de desenfoque para mejorar legibilidad
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  }
 
   mat-form-field {
     display: block;
   }
 }
 
-.login-card .login-form .mat-form-field { // Selector más específico
-  width: 100%;
+// Estilizar los inputs y botones
+.input-field {
+  transition: var(--transition-fast);
+
+  &:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px rgba(159, 34, 65, 0.2);
+  }
 }
 
+.submit-button {
+  background-color: var(--primary-600);
+  color: white;
+  transition: var(--transition-normal);
+
+  &:hover:not(:disabled) {
+    background-color: var(--primary-700);
+  }
+
+  &:disabled {
+    background-color: var(--neutral-400);
+  }
+}
+
+// Iconos personalizados
+.icon-container {
+  color: var(--primary-500);
+}
+
+// Mensaje de error
+.error-message {
+  background-color: var(--error-100);
+  border-color: var(--error-200);
+  color: var(--error-700);
+}
+
+// Para las etiquetas y textos secundarios
+.text-label {
+  color: var(--text-secondary);
+}
+
+.text-hint {
+  color: var(--text-tertiary);
+}
+
+// Logo y cabecera
+.logo-container {
+  background-color: var(--primary-600);
+  color: white;
+
+  svg {
+    fill: currentColor;
+  }
+}
 
 .vid-container{
   position:relative;
