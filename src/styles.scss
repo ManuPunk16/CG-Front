@@ -157,6 +157,33 @@ mat-sidenav-content {
   padding: 16px;
 }
 
+/* Estilos globales para Angular Material */
+.mat-mdc-menu-panel {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Botones de Material */
+.mat-mdc-menu-item {
+  min-height: 44px !important;
+  padding: 6px 16px !important;
+}
+
+/* Mejora de iconos en toda la aplicación */
+mat-icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Estilo para el botón activo en el sidenav */
+.mat-mdc-list-item.active {
+  background-color: var(--primary-50);
+  color: var(--primary-700);
+  font-weight: 500;
+}
+
 /* Estilos universales para placeholders más difuminados */
 ::placeholder {
   opacity: 0.5 !important;
@@ -180,4 +207,35 @@ mat-sidenav-content {
 input:focus::placeholder {
   opacity: 0.3 !important; /* Se difumina aún más al enfocar */
   transition: opacity 0.3s;
+}
+
+/* Estilos específicos para el sidenav y materiales */
+.mat-mdc-list-item {
+  --mdc-list-list-item-container-shape: 6px;
+  --mdc-list-list-item-label-text-size: 14px;
+  border-radius: var(--mdc-list-list-item-container-shape);
+  margin: 2px 8px !important;
+}
+
+.mat-sidenav {
+  overflow-x: hidden !important;
+  width: 250px !important;
+  background-color: var(--background-primary) !important;
+}
+
+.mdc-list-item__content {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Ajustar altura de items del menú */
+.mat-mdc-list-item.menu-item {
+  height: 48px !important;
+}
+
+/* Optimización para dispositivos táctiles */
+@media (pointer: coarse) {
+  .mat-mdc-list-item.menu-item {
+    height: 54px !important; // Ligeramente más alto en dispositivos táctiles
+  }
 }

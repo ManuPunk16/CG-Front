@@ -29,6 +29,7 @@ import { AlertService } from '../core/services/ui/alert.service';
 import { User } from '../core/models/user/user.model';
 import { RolesEnum } from '../core/models/enums/roles.enum';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-root',
@@ -42,7 +43,8 @@ import { MatMenuModule } from '@angular/material/menu';
     MatButtonModule,
     NgIf,
     // NgClass,
-    MatMenuModule
+    MatMenuModule,
+    MatCardModule
     // LoadingSpinnerComponent
   ],
   templateUrl: './app.component.html',

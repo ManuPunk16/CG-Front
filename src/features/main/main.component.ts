@@ -42,6 +42,7 @@ import { AuthService } from '../../core/services';
 import Swal from 'sweetalert2';
 import { saveAs } from 'file-saver';
 import { AreaStats, AreasStatsResponse } from '../../core/models/input/input-stats.model';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-main',
@@ -68,7 +69,8 @@ import { AreaStats, AreasStatsResponse } from '../../core/models/input/input-sta
     NgFor,
     NgClass,
     DatePipe,
-    MatDividerModule
+    MatDividerModule,
+    MatCardModule
   ],
   providers: [
     DatePipe,

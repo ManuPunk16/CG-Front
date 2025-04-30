@@ -1,33 +1,66 @@
 <div class="app-container bg-app" [class.app-is-mobile]="mobileQuery.matches">
-  <!-- Barra de navegación superior - Solo visible con sesión activa -->
-  <mat-toolbar color="primary" class="app-toolbar" *ngIf="currentUser()">
-    <button mat-icon-button (click)="sidenav.toggle()">
-      <mat-icon>menu</mat-icon>
-    </button>
-    <h1 class="app-name">{{ title }}</h1>
-    <span class="spacer"></span>
-
-    <!-- Sección de usuario -->
-    <div class="user-section">
-      <span class="mr-3 session-timer" [class.session-warning]="sessionTimeLeft() < 300">
-        Sesión: {{ formatSessionTime() }}
-      </span>
-
-      <button mat-button [matMenuTriggerFor]="userMenu" class="user-button">
-        <mat-icon>account_circle</mat-icon>
-        <span class="ml-1">{{ currentUser()?.username }}</span>
-      </button>
-
-      <mat-menu #userMenu="matMenu">
-        <button mat-menu-item routerLink="/Perfil">
-          <mat-icon>person</mat-icon>
-          <span>Mi Perfil</span>
+  <!-- Barra de navegación mejorada -->
+  <mat-toolbar color="primary" class="app-toolbar shadow-md z-50" *ngIf="currentUser()">
+    <div class="container mx-auto flex items-center justify-between px-4 h-full">
+      <!-- Sección izquierda con logo y botón de menú -->
+      <div class="flex items-center space-x-3">
+        <button
+          mat-icon-button
+          (click)="sidenav.toggle()"
+          class="flex-center focus:outline-none hover:bg-primary-700 transition-colors rounded-full text-white h-10 w-10"
+          aria-label="Abrir menú lateral">
+          <mat-icon class="flex-center">menu</mat-icon>
         </button>
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>exit_to_app</mat-icon>
-          <span>Cerrar Sesión</span>
+
+        <div class="flex items-center text-white">
+          <!-- Logo para todas las pantallas -->
+          <h1 class="text-xl font-bold hidden sm:block tracking-tight"> <strong>{{ title }}</strong> </h1>
+          <!-- Logo compacto para móviles -->
+          <h1 class="text-lg font-bold sm:hidden tracking-tight">CG</h1>
+        </div>
+      </div>
+
+      <span class="flex-1"></span>
+
+      <!-- Sección de usuario con timer y menú de perfil -->
+      <div class="flex items-center space-x-2">
+        <!-- Temporizador de sesión con icono -->
+        <div class="hidden md:flex items-center mr-2 px-3 py-1.5 rounded-full bg-primary-700 text-white text-sm"
+             [class.bg-red-600]="sessionTimeLeft() < 300">
+          <mat-icon class="text-base mr-1 flex-center">timer</mat-icon>
+          <span>{{ formatSessionTime() }}</span>
+        </div>
+
+        <!-- Botón de usuario con menú desplegable -->
+        <button
+          mat-button
+          [matMenuTriggerFor]="userMenu"
+          class="user-button flex items-center px-3 py-1.5 rounded-md hover:bg-primary-700 transition-colors h-10">
+          <div class="flex items-center text-white">
+            <mat-icon class="mr-1.5 flex-center">account_circle</mat-icon>
+            <span class="hidden sm:inline">{{ currentUser()?.username }}</span>
+            <mat-icon class="ml-1 text-sm flex-center">arrow_drop_down</mat-icon>
+          </div>
         </button>
-      </mat-menu>
+
+        <!-- Menú de usuario mejorado con botones opacos -->
+        <mat-menu #userMenu="matMenu" class="user-menu-panel">
+          <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 text-gray-800">
+            <p class="text-sm font-medium">{{ currentUser()?.username }}</p>
+            <p class="text-xs text-gray-500 truncate">{{ currentUser()?.email || 'Usuario del sistema' }}</p>
+          </div>
+          <div class="p-2">
+            <button mat-menu-item routerLink="/Perfil" class="mb-1 bg-gray-100 hover:bg-gray-200 rounded-md">
+              <mat-icon class="text-primary-600 flex-center">person</mat-icon>
+              <span>Mi Perfil</span>
+            </button>
+            <button mat-menu-item (click)="logout()" class="bg-red-50 hover:bg-red-100 text-red-600 rounded-md">
+              <mat-icon class="flex-center">exit_to_app</mat-icon>
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+        </mat-menu>
+      </div>
     </div>
   </mat-toolbar>
 
@@ -38,9 +71,11 @@
     <!-- Menú lateral -->
     <mat-sidenav #sidenav
         [mode]="mobileQuery.matches ? 'over' : 'side'"
-        [fixedInViewport]="mobileQuery.matches"
+        [fixedInViewport]="true"
+        [fixedTopGap]="currentUser() && !mobileQuery.matches ? 64 : 56"
         [opened]="!mobileQuery.matches && !!currentUser()"
-        [disableClose]="!mobileQuery.matches && !!currentUser()">
+        [disableClose]="!mobileQuery.matches && !!currentUser()"
+        class="custom-sidenav">
 
       <mat-nav-list *ngIf="currentUser()">
         <a mat-list-item [routerLink]="['/Entradas']" routerLinkActive="active">

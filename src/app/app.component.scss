@@ -1,75 +1,3 @@
-
-// mat-sidenav-content {
-//   display: flex;
-//   flex-direction: column;
-//   height: 100%;
-
-//   div:first-child {
-//     flex: 1; /* El router-outlet ocupará todo el espacio disponible */
-//   }
-
-//   .footer {
-//     /* Estilos para el footer */
-//     background-color: #ff3c3c;
-//     padding: 20px;
-//     text-align: center;
-//   }
-// }
-
-// .spacer {
-//   flex: 1 1 auto;
-// }
-
-// .example-container {
-//   display: flex;
-//   flex-direction: column;
-//   position: absolute;
-//   top: 0;
-//   bottom: 0;
-//   left: 0;
-//   right: 0;
-// }
-
-// .example-is-mobile .example-toolbar {
-//   position: fixed;
-//   /* Make sure the toolbar will stay on top of the content as it scrolls past. */
-//   z-index: 2;
-// }
-
-// h1.example-app-name {
-//   margin-left: 8px;
-// }
-
-// .example-sidenav-container {
-//   /* When the sidenav is not fixed, stretch the sidenav container to fill the available space. This
-//      causes `<mat-sidenav-content>` to act as our scrolling element for desktop layouts. */
-//   flex: 1;
-// }
-
-// mat-sidenav {
-//   width: 150px; /* Ancho del sidenav */
-//   border-radius: 0;
-// }
-
-// mat-nav-list {
-//   padding-top: 0;
-//   padding-bottom: 0;
-// }
-
-// mat-nav-list a{
-//   border-radius: 0;
-// }
-
-// .example-is-mobile .example-sidenav-container {
-//   /* When the sidenav is fixed, don't constrain the height of the sidenav container. This allows the
-//      `<body>` to be our scrolling element for mobile layouts. */
-//   flex: 1 0 auto;
-// }
-
-// section {
-//   display: table;
-// }
-
 /* Optimizaciones responsive para la imagen de fondo */
 @media (max-width: 768px) {
   .bg-app {
@@ -92,4 +20,160 @@
 /* Ajustes para contenido principal cuando no hay sesión activa */
 .app-container:not(:has(mat-toolbar)) .content-wrapper {
   margin-top: 2rem;
+}
+
+// Estilos para el toolbar
+.app-toolbar {
+  background-color: var(--primary-600);
+  height: 64px;
+  position: sticky;
+  top: 0;
+
+  mat-icon {
+    height: 24px;
+    width: 24px;
+    font-size: 24px;
+    line-height: 24px;
+  }
+}
+
+// Utilidad para centrar contenido flex
+.flex-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+// Estilos para el menú de usuario
+::ng-deep {
+  .user-menu-panel {
+    .mat-mdc-menu-content {
+      padding: 0 !important;
+    }
+
+    .mdc-list-item__primary-text {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    // Quitar transparencia de los botones del menú
+    .mat-mdc-menu-item {
+      background-color: white !important;
+
+      &:hover {
+        background-color: var(--neutral-100) !important;
+      }
+    }
+  }
+}
+
+// Mejora de la transición entre estados
+.user-button {
+  transition: background-color 0.2s ease;
+
+  .mat-icon {
+    vertical-align: middle;
+  }
+}
+
+// Utilidades reusables
+.spacer {
+  flex: 1 1 auto;
+}
+
+// Animación para el timer cuando está por expirar
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.session-warning {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+// Ajustes para los iconos del menú
+mat-nav-list {
+  .mat-icon {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+}
+
+// Ajustes responsivos
+@media (max-width: 640px) {
+  .app-toolbar {
+    height: 56px;
+    padding: 0 8px;
+  }
+}
+
+// Mejora para lectores de pantalla
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Estilos para el sidenav
+.mat-drawer-inner-container {
+  width: 100px; // Ancho reducido y fijo
+  border-right: none;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+// Cabecera del sidenav
+.sidenav-header {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Contenedor de los elementos del menú
+.sidenav-items {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+// Estilo para cada elemento del menú
+.menu-item {
+  margin: 4px 8px;
+  border-radius: 6px;
+
+  &:hover {
+    background-color: var(--primary-50) !important;
+  }
+
+  &.active {
+    background-color: var(--primary-100) !important;
+    color: var(--primary-700) !important;
+    font-weight: 500;
+
+    .menu-icon {
+      color: var(--primary-600);
+    }
+  }
+}
+
+// Estilo para los íconos del menú
+.menu-icon {
+  margin-right: 12px;
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  color: inherit;
+}
+
+// Transición suave
+mat-sidenav {
+  transition: width 0.3s ease;
+}
+
+// Estilos para los dividers
+mat-divider {
+  margin: 8px 16px;
 }
