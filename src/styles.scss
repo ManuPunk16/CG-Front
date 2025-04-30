@@ -1,228 +1,168 @@
 @use "tailwindcss";
 
-// // Custom Theming for Angular Material
-// // For more information: https://material.angular.io/guide/theming
-@use 'sass:map';
-@use '@angular/material' as mat;
-
-$_palettes: (
-  primary: (
-    0: #000000,
-    10: #691C32, // Pantone 7421 C (oscuro)
-    20: #691C32,
-    25: #691C32,
-    30: #691C32,
-    35: #691C32,
-    40: #691C32,
-    50: #9F2241, // Pantone 7420 C (principal)
-    60: #9F2241,
-    70: #9F2241,
-    80: #9F2241,
-    90: #9F2241,
-    95: #F2E0E6, // Un tono claro para el fondo
-    98: #FAEBF0,
-    99: #FFF6F9,
-    100: #ffffff,
-  ),
-  secondary: (
-    0: #000000,
-    10: #AB9470, // Pantone P 13-7 C (oscuro)
-    20: #AB9470,
-    25: #AB9470,
-    30: #AB9470,
-    35: #AB9470,
-    40: #AB9470,
-    50: #BCA986, // Pantone P 13-7 C (principal)
-    60: #BCA986,
-    70: #BCA986,
-    80: #BCA986,
-    90: rgb(234, 222, 201),
-    95: #f3efe6, // Un tono claro para el fondo
-    98: #FAF9F6,
-    99: #FFFDFC,
-    100: #ffffff,
-  ),
-  tertiary: (
-    0: #000000,
-    10: #10312B, // Pantone 627 C (oscuro)
-    20: #10312B,
-    25: #10312B,
-    30: #10312B,
-    35: #10312B,
-    40: #10312B,
-    50: #235B4E, // Pantone 626 C (principal)
-    60: #235B4E,
-    70: #235B4E,
-    80: #235B4E,
-    90: #235B4E,
-    95: #E0EBE8, // Un tono claro para el fondo
-    98: #EBF1EF,
-    99: #F6F9F8,
-    100: #ffffff,
-  ),
-  neutral: (
-    0: #000000,
-    4: #0b0b0b,
-    6: #101111,
-    10: #1b1c1c,
-    12: #1f2020,
-    17: #292a2b,
-    20: #2f3031,
-    22: #343435,
-    24: #39393a,
-    25: #3b3b3c,
-    30: #464747,
-    35: #525253,
-    40: #5e5e5e,
-    50: #777777,
-    60: #919191,
-    70: #ababab,
-    80: #c7c6c6,
-    87: #dbdada,
-    90: #e3e2e2,
-    92: #e9e8e8,
-    94: #efeded,
-    95: #f2f0f0,
-    96: #f5f3f3,
-    98: #faf9f9,
-    99: #fdfcfc,
-    100: #ffffff,
-  ),
-  neutral-variant: (
-    0: #000000,
-    10: #131e10,
-    20: #283424,
-    25: #323f2e,
-    30: #3e4a39,
-    35: #495644,
-    40: #556250,
-    50: #6d7b67,
-    60: #879580,
-    70: #a1af9a,
-    80: #bccbb4,
-    90: #d8e7cf,
-    95: #e7f5dd,
-    98: #effee6,
-    99: #f7ffee,
-    100: #ffffff,
-  ),
-  error: (
-    0: #000000,
-    10: #410002,
-    20: #690005,
-    25: #7e0007,
-    30: #93000a,
-    35: #a80710,
-    40: #ba1a1a,
-    50: #de3730,
-    60: #ff5449,
-    70: #ff897d,
-    80: #ffb4ab,
-    90: #ffdad6,
-    95: #ffedea,
-    98: #fff8f7,
-    99: #fffbff,
-    100: #ffffff,
-  ),
-);
-
-$_rest: (
-  secondary: map.get($_palettes, secondary),
-  neutral: map.get($_palettes, neutral),
-  neutral-variant: map.get($_palettes,  neutral-variant),
-  error: map.get($_palettes, error),
-);
-$_primary: map.merge(map.get($_palettes, primary), $_rest);
-$_tertiary: map.merge(map.get($_palettes, tertiary), $_rest);
-
-// Light theme configuration
-$light-theme: mat.define-theme((
-  color: (
-    theme-type: light,
-    primary: $_primary,
-    tertiary: $_tertiary,
-  )
-));
-
-// Dark theme configuration
-$dark-theme: mat.define-theme((
-  color: (
-    theme-type: dark,
-    primary: $_primary,
-    tertiary: $_tertiary,
-  )
-));
-
-@font-face {
-  font-family: 'Quatro Slab';
-  src: url('../src/assets/fonts/QuatroSlab-Regular.woff2') format('woff2'),
-       url('../src/assets/fonts/QuatroSlab-Regular.woff') format('woff'),
-       url('../src/assets/fonts/QuatroSlab-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
 :root {
-  @include mat.all-component-themes($light-theme);
+  /* Colores Primarios - Pantone 7420 C (Burdeos) */
+  --primary-50: #FFF9FB; /* Más claro que 100 */
+  --primary-100: #FFF6F9;
+  --primary-200: #F8E0E8;
+  --primary-300: #E9C0CE;
+  --primary-400: #D2869E;
+  --primary-500: #9F2241;
+  --primary-600: #8A1D38;
+  --primary-700: #7D1A32;
+  --primary-800: #721C31;
+  --primary-900: #691C32;
 
-  // Add backwards compatibility styles for color variants
-  @include mat.color-variants-backwards-compatibility($light-theme);
+  /* Colores Secundarios - Pantone P 13-7 C (Beige/Dorado) */
+  --secondary-50: #FFFFFE; /* Más claro que 100 */
+  --secondary-100: #FFFDFC;
+  --secondary-200: #F9F4ED;
+  --secondary-300: #EFE5D5;
+  --secondary-400: #D4C5AC;
+  --secondary-500: #BCA986;
+  --secondary-600: #B39D7C;
+  --secondary-700: #AF9773;
+  --secondary-800: #AD9471;
+  --secondary-900: #AB9470;
+
+  /* Colores Terciarios - Pantone 626 C (Verde) */
+  --tertiary-50: #FAFFFC; /* Más claro que 100 */
+  --tertiary-100: #F6F9F8;
+  --tertiary-200: #E6F0ED;
+  --tertiary-300: #C8DED8;
+  --tertiary-400: #8AADA3;
+  --tertiary-500: #235B4E;
+  --tertiary-600: #1D4F44;
+  --tertiary-700: #18443A;
+  --tertiary-800: #143A32;
+  --tertiary-900: #10312B;
+
+  /* Grises neutrales - Escala completa */
+  --neutral-50: #FAFAFA;
+  --neutral-100: #F5F5F5;
+  --neutral-200: #EEEEEE;
+  --neutral-300: #E0E0E0;
+  --neutral-400: #BDBDBD;
+  --neutral-500: #9E9E9E;
+  --neutral-600: #757575;
+  --neutral-700: #616161;
+  --neutral-800: #424242;
+  --neutral-900: #212121;
+
+  /* Colores de texto y fondos */
+  --text-primary: #2f3031;
+  --text-secondary: #464747;
+  --text-tertiary: #777777;
+  --text-light: #f5f5f5;
+  --background-primary: #f2f0f0;
+  --background-secondary: #e3e2e2;
+  --background-tertiary: #c7c6c6;
+  --background-contrast: #ffffff;
+
+  /* Colores de error/alerta */
+  --error-50: #FFF8F7;
+  --error-100: #FFEDEA;
+  --error-200: #FFD6D1;
+  --error-300: #FFB4AB;
+  --error-400: #FF897D;
+  --error-500: #DE3730;
+  --error-600: #BA1A1A;
+  --error-700: #93000A;
+  --error-800: #690005;
+  --error-900: #410002;
+
+  /* Colores de éxito */
+  --success-50: #F4FFF4;
+  --success-100: #E8F7E9;
+  --success-200: #C5E9C7;
+  --success-300: #94D097;
+  --success-400: #5CB15F;
+  --success-500: #2E8A32;
+  --success-600: #257728;
+  --success-700: #1E6321;
+  --success-800: #17501A;
+  --success-900: #104014;
+
+  /* Colores de advertencia */
+  --warning-50: #FFFDF4;
+  --warning-100: #FFF8E1;
+  --warning-200: #FFECB3;
+  --warning-300: #FFE082;
+  --warning-400: #FFD54F;
+  --warning-500: #FFC107;
+  --warning-600: #FFB300;
+  --warning-700: #FFA000;
+  --warning-800: #FF8F00;
+  --warning-900: #FF6F00;
+
+  /* Colores de información */
+  --info-50: #F2F9FF;
+  --info-100: #E0F3FD;
+  --info-200: #B3E0FC;
+  --info-300: #81CEF9;
+  --info-400: #42B8F5;
+  --info-500: #0995E3;
+  --info-600: #0277BD;
+  --info-700: #016299;
+  --info-800: #014F7B;
+  --info-900: #01395A;
+
+  /* Transiciones */
+  --transition-normal: background-color 0.3s ease, color 0.3s ease;
+  --transition-fast: all 0.15s ease;
+  --transition-slow: all 0.5s ease;
 }
 
-html {
-  @include mat.theme((
-    color: (
-      theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    )
-  ));
-}
-html, body { height: 100%; }
-body {
-  margin: 0; font-family: "Quatro Slab", Averta, Inter, "Helvetica Neue", sans-serif;
+/* Estilos para el background */
+.bg-app {
+  /* Imagen de fondo con optimización */
+  background-image: url('/assets/images/FONDO-CONTROL-DE-GESTION.webp');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  position: relative;
+  isolation: isolate;
 }
 
-h1, h2, h3, h4, h5, h6, p, span {
-  font-family: "Quatro Slab", Averta, Inter, "Helvetica Neue", sans-serif;
+.bg-app::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.3); /* Overlay semi-transparente */
+  z-index: -1;
 }
 
-mat-sidenav-container {
-  background-color: map.get(map.get($_palettes, secondary), 50) !important;
+/* Aseguramos que el contenido sea legible */
+.content-wrapper {
+  // background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin: 16px;
+  padding: 20px;
+  flex: 1;
 }
 
-mat-toolbar {
-  background-color: map.get(map.get($_palettes, primary), 50) !important;
-  --mat-toolbar-container-text-color: rgb(255, 255, 255) !important;
-
-  span {
-    font-size: 17px !important;
-  }
+/* Estilos para el layout con footer */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-button {
-  font-size: 18px !important;
+.app-container-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-input {
-  font-size: 18px !important;
+mat-sidenav-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
-select {
-  font-size: 18px !important;
-  max-width: 250px;
-}
-
-fieldset {
-  background-color: map.get(map.get($_palettes, secondary), 90) !important;
-}
-
-mat-card {
-  background-color: map.get(map.get($_palettes, secondary), 95) !important;
-}
-
-table {
-  thead {
-    background-color: map.get(map.get($_palettes, secondary), 90) !important;
-  }
+.content-wrapper {
+  flex: 1;
+  padding: 16px;
 }

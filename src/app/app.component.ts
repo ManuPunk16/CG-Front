@@ -67,6 +67,8 @@ export class AppComponent implements OnInit, OnDestroy {
   isDirectorGeneral = signal<boolean>(false);
   isDirector = signal<boolean>(false);
 
+  currentYear: number = new Date().getFullYear();
+
   // Media query para responsive
   mobileQuery: MediaQueryList;
   private readonly mobileQueryListener: () => void;

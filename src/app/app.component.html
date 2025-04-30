@@ -1,14 +1,14 @@
-<div class="app-container" [class.app-is-mobile]="mobileQuery.matches">
-  <!-- Barra de navegación superior -->
-  <mat-toolbar color="primary" class="app-toolbar">
-    <button mat-icon-button (click)="sidenav.toggle()" *ngIf="currentUser()">
+<div class="app-container bg-app" [class.app-is-mobile]="mobileQuery.matches">
+  <!-- Barra de navegación superior - Solo visible con sesión activa -->
+  <mat-toolbar color="primary" class="app-toolbar" *ngIf="currentUser()">
+    <button mat-icon-button (click)="sidenav.toggle()">
       <mat-icon>menu</mat-icon>
     </button>
     <h1 class="app-name">{{ title }}</h1>
     <span class="spacer"></span>
 
     <!-- Sección de usuario -->
-    <div *ngIf="currentUser()" class="user-section">
+    <div class="user-section">
       <span class="mr-3 session-timer" [class.session-warning]="sessionTimeLeft() < 300">
         Sesión: {{ formatSessionTime() }}
       </span>
@@ -33,7 +33,7 @@
 
   <!-- Contenedor principal con sidenav -->
   <mat-sidenav-container class="app-container-inner"
-      [style.marginTop.px]="mobileQuery.matches ? 56 : 0">
+      [style.marginTop.px]="currentUser() && mobileQuery.matches ? 56 : 0">
 
     <!-- Menú lateral -->
     <mat-sidenav #sidenav
@@ -75,6 +75,53 @@
       <div class="content-wrapper">
         <router-outlet></router-outlet>
       </div>
+
+      <!-- Footer -->
+      <footer class="bg-[#235B4E] py-5 text-white">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Logo y descripción -->
+            <div>
+              <div class="flex items-center mb-3">
+                <div class="text-xl font-bold">Control de Gestión</div>
+              </div>
+              <p class="text-gray-200 text-sm">
+                Sistema integral para el registro y seguimiento de oficios y documentos de la Consejería Jurídica.
+              </p>
+            </div>
+
+            <!-- Enlaces rápidos -->
+            <div>
+              <h3 class="text-lg font-semibold mb-3 text-amber-200">Enlaces rápidos</h3>
+              <ul class="text-gray-200 text-sm">
+                <li class="mb-2"><a href="#" class="hover:text-amber-200 transition-colors">Manual de usuario</a></li>
+                <li class="mb-2"><a href="#" class="hover:text-amber-200 transition-colors">Directorio</a></li>
+                <li class="mb-2"><a href="#" class="hover:text-amber-200 transition-colors">Políticas de privacidad</a></li>
+              </ul>
+            </div>
+
+            <!-- Contacto -->
+            <div>
+              <h3 class="text-lg font-semibold mb-3 text-amber-200">Contacto</h3>
+              <p class="text-gray-200 text-sm mb-2">
+                <span class="font-semibold">Soporte técnico:</span> Tecnologias de la Información
+              </p>
+              <p class="text-gray-200 text-sm">
+                <span class="font-semibold">Dirección:</span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Línea divisoria -->
+          <div class="border-t border-green-700 my-4"></div>
+
+          <!-- Copyright -->
+          <div class="text-center text-sm text-gray-300">
+            <p>© {{currentYear}} - Todos los derechos reservados</p>
+            <p class="mt-1">Versión 2.0.0</p>
+          </div>
+        </div>
+      </footer>
     </mat-sidenav-content>
   </mat-sidenav-container>
 </div>
