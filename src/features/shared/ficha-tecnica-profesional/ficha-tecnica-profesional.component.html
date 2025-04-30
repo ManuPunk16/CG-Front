@@ -1,60 +1,68 @@
-<div class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-[var(--neutral-100)] py-6 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
     <!-- Encabezado con acciones -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 bg-[var(--secondary-300)] p-4 rounded-lg shadow-sm">
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
-          <mat-icon class="mr-2">description</mat-icon>
+        <h1 class="text-2xl font-bold text-primary-900 flex items-center">
+          <mat-icon class="mr-2 text-primary-600">description</mat-icon>
           Ficha Técnica
-          <span class="ml-3 text-sm font-medium bg-gray-100 rounded-md px-2 py-1">
+          <span class="ml-3 text-sm font-medium bg-primary-50 text-primary-700 rounded-md px-2 py-1 border border-[var(--primary-100)]">
             ID: {{id}}
           </span>
         </h1>
-        <p class="text-gray-500 text-sm mt-1">Información detallada del documento</p>
+        <p class="text-neutral-500 text-sm mt-1">Información detallada del documento</p>
       </div>
 
-      <div class="mt-4 md:mt-0 space-x-2 flex">
-        <button
-          mat-raised-button
-          color="primary"
-          class="flex items-center"
-          [routerLink]="['/entradas']">
-          <mat-icon class="mr-1">arrow_back</mat-icon>
+      <div class="mt-4 md:mt-0 space-x-3 flex">
+        <!-- Botón Volver -->
+        <a [routerLink]="['/Entradas']"
+           class="flex items-center justify-center px-4 py-2 rounded-md bg-[var(--primary-600)] hover:bg-[var(--primary-700)] text-white font-medium transition-colors shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+          </svg>
           Volver
-        </button>
+        </a>
+
+        <!-- Botón Editar -->
         <button
-          mat-raised-button
-          color="accent"
-          class="flex items-center"
           (click)="irAEditar()"
           [disabled]="!inputDetails || !canEditInput"
-          [matTooltip]="!canEditInput ? 'No tienes permisos para editar este documento' : 'Editar documento'">
-          <mat-icon class="mr-1">edit</mat-icon>
+          [title]="!canEditInput ? 'No tienes permisos para editar este documento' : 'Editar documento'"
+          class="flex items-center justify-center px-4 py-2 rounded-md bg-[var(--tertiary-500)] hover:bg-[var(--tertiary-600)] text-white font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+          </svg>
           Editar
         </button>
+
+        <!-- Botón Editar/Agregar Seguimiento -->
         <button
-          mat-raised-button
-          color="accent"
-          class="flex items-center"
           (click)="irAEditarSeguimiento()"
           [disabled]="!inputDetails || !canEditSeguimiento"
-          [matTooltip]="!canEditSeguimiento ? 'No tienes permisos para editar el seguimiento' : (inputDetails?.seguimientos ? 'Editar seguimiento' : 'Agregar seguimiento')">
-          <mat-icon class="mr-1">{{inputDetails?.seguimientos ? 'edit_note' : 'add_comment'}}</mat-icon>
+          [title]="!canEditSeguimiento ? 'No tienes permisos para editar el seguimiento' : (inputDetails?.seguimientos ? 'Editar seguimiento' : 'Agregar seguimiento')"
+          class="flex items-center justify-center px-4 py-2 rounded-md bg-[var(--secondary-500)] hover:bg-[var(--secondary-600)] text-white font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg *ngIf="!inputDetails?.seguimientos" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+          </svg>
+          <svg *ngIf="inputDetails?.seguimientos" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+            <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
+          </svg>
           {{inputDetails?.seguimientos ? 'Editar Seguimiento' : 'Agregar Seguimiento'}}
         </button>
       </div>
     </div>
 
     <!-- Indicador de carga principal -->
-    <div *ngIf="loadingInput || !inputDetails" class="flex justify-center p-8">
-      <mat-spinner [diameter]="40"></mat-spinner>
+    <div *ngIf="loadingInput || !inputDetails" class="flex justify-center p-8 bg-[var(--secondary-400)] rounded-lg shadow-sm">
+      <mat-spinner [diameter]="40" color="accent"></mat-spinner>
     </div>
 
     <!-- Mostrar un mensaje cuando no hay datos de input ni de tiempo de respuesta -->
-    <div *ngIf="!loadingInput && !inputDetails && !tiempoRespuesta" class="p-6 flex flex-col items-center justify-center">
-      <mat-icon class="text-gray-400 text-6xl mb-4">warning</mat-icon>
-      <h2 class="text-xl font-semibold text-gray-600 mb-2">No se encontró información del documento</h2>
-      <p class="text-gray-500 mb-4">El documento solicitado no existe o no se pudo recuperar la información.</p>
+    <div *ngIf="!loadingInput && !inputDetails && !tiempoRespuesta" class="p-6 flex flex-col items-center justify-center bg-[var(--secondary-400)] rounded-lg shadow-sm">
+      <mat-icon class="text-neutral-400 text-6xl mb-4">warning</mat-icon>
+      <h2 class="text-xl font-semibold text-neutral-700 mb-2">No se encontró información del documento</h2>
+      <p class="text-neutral-500 mb-4">El documento solicitado no existe o no se pudo recuperar la información.</p>
       <button mat-raised-button color="primary" [routerLink]="['/entradas']">
         <mat-icon>arrow_back</mat-icon>
         Volver a entradas
@@ -62,15 +70,18 @@
     </div>
 
     <!-- Contenido principal si hay datos -->
-    <div *ngIf="inputDetails || tiempoRespuesta" class="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+    <div *ngIf="inputDetails || tiempoRespuesta" class="min-h-screen bg-[var(--secondary-300)] py-6 px-4 sm:px-6 lg:px-8">
       <!-- Contenido principal (visible cuando los datos están cargados) -->
       <div *ngIf="inputDetails" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Panel principal (ocupa 2 columnas en escritorio) -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Tarjeta de información general -->
-          <mat-card class="rounded-lg shadow">
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 class="text-xl font-bold text-gray-800">Información General</h2>
+          <mat-card class="rounded-lg shadow-md border">
+            <div class="flex items-center justify-between border-b px-6 py-4 bg-primary-50">
+              <h2 class="text-xl font-bold text-primary-800 flex items-center">
+                <mat-icon class="mr-2 text-primary-600">info</mat-icon>
+                Información General
+              </h2>
               <div
                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                 [ngClass]="getEstatusClass(inputDetails.estatus)">
@@ -81,81 +92,85 @@
             <div class="p-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Sección de datos principales - mejor organizada -->
-                <div>
-                  <h3 class="font-medium text-gray-700 mb-3">Datos principales</h3>
+                <div class="bg-[var(--neutral-50)] p-4 rounded-md border border-neutral-100 shadow-sm">
+                  <h3 class="font-medium text-primary-700 mb-3 border-b border-primary-100 pb-2 flex items-center">
+                    <mat-icon class="mr-1 text-sm text-primary-500">article</mat-icon>
+                    Datos principales
+                  </h3>
                   <div class="space-y-3">
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Folio</span>
-                      <span class="text-right font-medium">{{inputDetails.folio}}</span>
+                      <span class="text-neutral-500">Folio</span>
+                      <span class="text-right font-medium text-primary-800">{{inputDetails.folio}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Núm. Oficio</span>
-                      <span class="text-right font-medium break-all overflow-hidden">{{inputDetails.num_oficio || 'No disponible'}}</span>
+                      <span class="text-neutral-500">Núm. Oficio</span>
+                      <span class="text-right font-medium break-all overflow-hidden text-primary-800">{{inputDetails.num_oficio || 'No disponible'}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Fecha Oficio</span>
-                      <span class="text-right font-medium">{{inputDetails.fecha_oficio_display || (inputDetails.fecha_oficio | date:'dd/MM/yyyy')}}</span>
+                      <span class="text-neutral-500">Fecha Oficio</span>
+                      <span class="text-right font-medium text-primary-800">{{inputDetails.fecha_oficio_display || (inputDetails.fecha_oficio | date:'dd/MM/yyyy')}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Fecha Recepción</span>
-                      <span class="text-right font-medium">{{inputDetails.fecha_recepcion_display || (inputDetails.fecha_recepcion | date:'dd/MM/yyyy')}}</span>
+                      <span class="text-neutral-500">Fecha Recepción</span>
+                      <span class="text-right font-medium text-primary-800">{{inputDetails.fecha_recepcion_display || (inputDetails.fecha_recepcion | date:'dd/MM/yyyy')}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Hora Recepción</span>
-                      <span class="text-right font-medium">{{inputDetails.hora_recepcion || 'No especificada'}}</span>
+                      <span class="text-neutral-500">Hora Recepción</span>
+                      <span class="text-right font-medium text-primary-800">{{inputDetails.hora_recepcion || 'No especificada'}}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 items-center">
-                      <span class="text-gray-500">Fecha Vencimiento</span>
-                      <span class="text-right font-medium">{{inputDetails.fecha_vencimiento_display || (inputDetails.fecha_vencimiento | date:'dd/MM/yyyy')}}</span>
+                      <span class="text-neutral-500">Fecha Vencimiento</span>
+                      <span class="text-right font-medium text-primary-800">{{inputDetails.fecha_vencimiento_display || (inputDetails.fecha_vencimiento | date:'dd/MM/yyyy')}}</span>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 class="font-medium text-gray-700 mb-3">Origen y asignación</h3>
-                  <div class="space-y-3"> <!-- Cambiar de space-y-2 a space-y-3 para más espacio vertical -->
-                    <div class="flex justify-between py-1"> <!-- Agregamos padding vertical para separar elementos -->
-                      <span class="text-gray-500">Remitente</span>
-                      <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.remitente || 'No especificado'}}</span>
+                <div class="bg-[var(--tertiary-50)] p-4 rounded-md border border-neutral-100 shadow-sm">
+                  <h3 class="font-medium text-tertiary-700 mb-3 border-b border-tertiary-100 pb-2 flex items-center">
+                    <mat-icon class="mr-1 text-sm text-tertiary-500">source</mat-icon>
+                    Origen y asignación
+                  </h3>
+                  <div class="space-y-3">
+                    <div class="flex justify-between py-1">
+                      <span class="text-tertiary-600">Remitente</span>
+                      <span class="text-right font-medium break-words max-w-[70%] text-tertiary-800">{{inputDetails.remitente || 'No especificado'}}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-500">Institución</span>
-                      <span class="text-right font-medium">{{inputDetails.institucion_origen || 'No especificada'}}</span>
+                      <span class="text-tertiary-600">Institución</span>
+                      <span class="text-right font-medium text-tertiary-800">{{inputDetails.institucion_origen || 'No especificada'}}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-500">Instrumento Jurídico</span>
-                      <span class="text-right font-medium">{{inputDetails.instrumento_juridico || 'No especificado'}}</span>
+                      <span class="text-tertiary-600">Instrumento Jurídico</span>
+                      <span class="text-right font-medium text-tertiary-800">{{inputDetails.instrumento_juridico || 'No especificado'}}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-500">Área Asignada</span>
-                      <span class="text-right font-medium">{{inputDetails.asignado}}</span>
+                      <span class="text-tertiary-600">Área Asignada</span>
+                      <span class="text-right font-medium text-tertiary-800">{{inputDetails.asignado}}</span>
                     </div>
-                    <!-- <div class="flex justify-between">
-                      <span class="text-gray-500">Fecha Creación</span>
-                      <span class="font-medium">{{formatearFechaHora(inputDetails.createdAt)}}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span class="text-gray-500">Última Modificación</span>
-                      <span class="font-medium">{{formatearFechaHora(inputDetails.updatedAt)}}</span>
-                    </div> -->
                   </div>
                 </div>
               </div>
 
-              <mat-divider class="my-6 p-1"></mat-divider>
+              <mat-divider class="my-6 p-1 border-neutral-100"></mat-divider>
 
               <!-- Sección de asunto mejorada -->
               <div class="space-y-4">
                 <div>
-                  <h3 class="font-medium text-gray-700 mb-2">Asunto</h3>
-                  <p class="bg-gray-50 p-4 rounded-md text-gray-800 border border-gray-100 leading-relaxed">
+                  <h3 class="font-medium text-primary-700 mb-2 flex items-center">
+                    <mat-icon class="mr-1 text-sm text-[var(--primary-500)]">subject</mat-icon>
+                    Asunto
+                  </h3>
+                  <p class="bg-primary-50 p-4 rounded-md text-primary-800 border border-neutral-100 leading-relaxed">
                     {{inputDetails.asunto || 'No especificado'}}
                   </p>
                 </div>
 
                 <div>
-                  <h3 class="font-medium text-gray-700 mb-2">Observación</h3>
-                  <p class="bg-gray-50 p-4 rounded-md text-gray-800 border border-gray-100 italic">
+                  <h3 class="font-medium text-primary-700 mb-2 flex items-center">
+                    <mat-icon class="mr-1 text-sm text-primary-500">comment</mat-icon>
+                    Observación
+                  </h3>
+                  <p class="bg-neutral-50 p-4 rounded-md text-neutral-800 border border-neutral-100 italic">
                     {{inputDetails.observacion || 'No hay observaciones'}}
                   </p>
                 </div>
@@ -163,10 +178,13 @@
             </div>
           </mat-card>
 
-          <!-- Sección de Seguimiento y Respuesta (reemplazar la sección actual) -->
-          <mat-card class="rounded-lg shadow mt-6">
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 class="text-xl font-bold text-gray-800">Seguimiento y Respuesta</h2>
+          <!-- Sección de Seguimiento y Respuesta -->
+          <mat-card class="rounded-lg shadow-md border border-secondary-100 mt-6">
+            <div class="flex items-center justify-between border-b border-secondary-100 px-6 py-4 bg-secondary-50">
+              <h2 class="text-xl font-bold text-secondary-800 flex items-center">
+                <mat-icon class="mr-2 text-secondary-600">history</mat-icon>
+                Seguimiento y Respuesta
+              </h2>
               <div *ngIf="inputDetails.seguimientos?.fecha_acuse_recibido" class="rounded-full px-3 py-1 text-sm font-medium bg-green-100 text-green-800">
                 {{tiempoRespuesta?.diferencia_dias || 0}} días
               </div>
@@ -177,69 +195,74 @@
               <div *ngIf="inputDetails.seguimientos; else noSeguimientos">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <!-- Sección de datos de respuesta - mejor organizada -->
-                  <div>
-                    <h3 class="font-medium text-gray-700 mb-3">Datos de respuesta</h3>
+                  <div class="bg-[var(--secondary-50)] p-4 rounded-md border border-neutral-100 shadow-sm">
+                    <h3 class="font-medium text-secondary-700 mb-3 border-b border-secondary-100 pb-2 flex items-center">
+                      <mat-icon class="mr-1 text-sm text-secondary-500">reply</mat-icon>
+                      Datos de respuesta
+                    </h3>
                     <div class="space-y-3">
                       <div class="grid grid-cols-2 gap-2 items-center">
-                        <span class="text-gray-500">Núm. Expediente</span>
-                        <span class="text-right font-medium">{{inputDetails.seguimientos.num_expediente || 'No disponible'}}</span>
+                        <span class="text-secondary-600">Núm. Expediente</span>
+                        <span class="text-right font-medium text-secondary-800">{{inputDetails.seguimientos.num_expediente || 'No disponible'}}</span>
                       </div>
                       <div class="grid grid-cols-2 gap-2 items-center">
-                        <span class="text-gray-500">Oficio de Salida</span>
-                        <span class="text-right font-medium break-all">{{inputDetails.seguimientos.oficio_salida || 'No disponible'}}</span>
+                        <span class="text-secondary-600">Oficio de Salida</span>
+                        <span class="text-right font-medium break-all text-secondary-800">{{inputDetails.seguimientos.oficio_salida || 'No disponible'}}</span>
                       </div>
                       <div class="grid grid-cols-2 gap-2 items-center">
-                        <span class="text-gray-500">Fecha Oficio Salida</span>
-                        <span class="text-right font-medium">{{inputDetails.seguimientos.fecha_oficio_salida_display || (inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy') || 'No disponible'}}</span>
+                        <span class="text-secondary-600">Fecha Oficio Salida</span>
+                        <span class="text-right font-medium text-secondary-800">{{inputDetails.seguimientos.fecha_oficio_salida_display || (inputDetails.seguimientos.fecha_oficio_salida | date:'dd/MM/yyyy') || 'No disponible'}}</span>
                       </div>
                       <div class="grid grid-cols-2 gap-2 items-center">
-                        <span class="text-gray-500">Fecha Acuse</span>
-                        <span class="text-right font-medium">{{inputDetails.seguimientos.fecha_acuse_recibido_display || (inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy') || 'No disponible'}}</span>
+                        <span class="text-secondary-600">Fecha Acuse</span>
+                        <span class="text-right font-medium text-secondary-800">{{inputDetails.seguimientos.fecha_acuse_recibido_display || (inputDetails.seguimientos.fecha_acuse_recibido | date:'dd/MM/yyyy') || 'No disponible'}}</span>
                       </div>
-                      <!-- <div class="grid grid-cols-2 gap-2 items-center">
-                        <span class="text-gray-500">Registrado</span>
-                        <span class="text-right font-medium">{{formatearFechaHora(inputDetails.seguimientos.fecha_respuesta) || 'No disponible'}}</span>
-                      </div> -->
                     </div>
                   </div>
 
                   <!-- Sección de destinatario con más espacio vertical -->
-                  <div>
-                    <h3 class="font-medium text-gray-700 mb-3">Destinatario</h3>
-                    <div class="space-y-3 p-3 rounded-md">
+                  <div class="bg-[var(--info-50)] p-4 rounded-md border border-neutral-100 shadow-sm">
+                    <h3 class="font-medium text-info-700 mb-3 border-b border-info-100 pb-2 flex items-center">
+                      <mat-icon class="mr-1 text-sm text-info-500">person</mat-icon>
+                      Destinatario
+                    </h3>
+                    <div class="space-y-3">
                       <div class="flex justify-between py-1">
-                        <span class="text-gray-500">Nombre</span>
-                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.destinatario || 'No disponible'}}</span>
+                        <span class="text-info-600">Nombre</span>
+                        <span class="text-right font-medium break-words max-w-[70%] text-info-800">{{inputDetails.seguimientos.destinatario || 'No disponible'}}</span>
                       </div>
                       <div class="flex justify-between py-1">
-                        <span class="text-gray-500">Cargo</span>
-                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.cargo || 'No disponible'}}</span>
+                        <span class="text-info-600">Cargo</span>
+                        <span class="text-right font-medium break-words max-w-[70%] text-info-800">{{inputDetails.seguimientos.cargo || 'No disponible'}}</span>
                       </div>
                       <div class="flex justify-between py-1">
-                        <span class="text-gray-500">Respuesta</span>
-                        <span class="text-right font-medium break-words max-w-[70%]">{{inputDetails.seguimientos.atencion_otorgada || 'No disponible'}}</span>
+                        <span class="text-info-600">Respuesta</span>
+                        <span class="text-right font-medium break-words max-w-[70%] text-info-800">{{inputDetails.seguimientos.atencion_otorgada || 'No disponible'}}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Información adicional -->
-                <div class="mt-4">
-                  <h3 class="font-medium text-gray-700 mb-2 flex justify-center">Información adicional</h3>
-                  <div class="space-y-2">
-                    <div class="flex justify-center">
-                      <span class="text-gray-500">Anexos: </span>
-                      <span class="font-medium">{{inputDetails.seguimientos.anexo || 'No'}}</span>
+                <div class="mt-4 bg-[var(--neutral-50)] p-4 rounded-md border border-neutral-100 shadow-sm">
+                  <h3 class="font-medium text-neutral-700 mb-2 flex justify-center border-b border-neutral-200 pb-2">
+                    <mat-icon class="mr-1 text-sm text-neutral-500">more_horiz</mat-icon>
+                    Información adicional
+                  </h3>
+                  <div class="grid grid-cols-3 gap-4 mt-3">
+                    <div class="flex justify-center items-center bg-neutral-100 p-2 rounded-md">
+                      <span class="text-neutral-600 mr-1">Anexos:</span>
+                      <span class="font-medium text-neutral-800">{{inputDetails.seguimientos.anexo || 'No'}}</span>
                     </div>
-                    <div class="flex justify-center">
-                      <span class="text-gray-500">Firma/Visado: </span>
-                      <span class="font-medium">{{inputDetails.seguimientos.firma_visado || 'No'}}</span>
+                    <div class="flex justify-center items-center bg-neutral-100 p-2 rounded-md">
+                      <span class="text-neutral-600 mr-1">Firma/Visado:</span>
+                      <span class="font-medium text-neutral-800">{{inputDetails.seguimientos.firma_visado || 'No'}}</span>
                     </div>
-                    <div class="flex items-center justify-center">
-                      <span class="text-gray-500">Registrado por: </span>
-                      <span class="font-medium bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full flex items-center shadow-sm">
-                        <mat-icon class="text-sm mr-2">person</mat-icon>
-                        <span class="font-semibold">{{getSeguimientoUsuario()}}</span>
+                    <div class="flex justify-center items-center bg-blue-100 p-2 rounded-md">
+                      <span class="text-blue-700 mr-1">Registrado por:</span>
+                      <span class="font-medium text-blue-900 flex items-center">
+                        <mat-icon class="text-sm mr-1">person</mat-icon>
+                        {{getSeguimientoUsuario()}}
                       </span>
                     </div>
                   </div>
@@ -247,8 +270,11 @@
 
                 <!-- Comentarios de seguimiento -->
                 <div *ngIf="inputDetails.seguimientos.comentarios" class="mt-4">
-                  <h3 class="font-medium text-gray-700 mb-2">Comentarios</h3>
-                  <p class="bg-gray-50 p-3 rounded text-gray-800">
+                  <h3 class="font-medium text-secondary-700 mb-2 flex items-center">
+                    <mat-icon class="mr-1 text-sm text-secondary-500">comment</mat-icon>
+                    Comentarios
+                  </h3>
+                  <p class="bg-secondary-50 p-3 rounded-md text-secondary-800 border border-secondary-100">
                     {{inputDetails.seguimientos.comentarios}}
                   </p>
                 </div>
@@ -256,19 +282,23 @@
 
               <!-- Mensaje cuando no hay seguimientos -->
               <ng-template #noSeguimientos>
-                <p class="text-gray-500 italic text-center py-4">
-                  No se ha registrado información de seguimiento para este documento.
-                </p>
+                <div class="bg-warning-50 border border-warning-200 rounded-md p-6 text-center">
+                  <mat-icon class="text-warning-500 mb-2 text-2xl">warning_amber</mat-icon>
+                  <p class="text-warning-800 italic">
+                    No se ha registrado información de seguimiento para este documento.
+                  </p>
+                </div>
               </ng-template>
             </div>
           </mat-card>
 
           <!-- Tarjeta de Documentos Relacionados -->
-          <mat-card class="rounded-lg shadow">
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 class="text-xl font-bold text-gray-800">
+          <mat-card class="rounded-lg shadow-md border border-[var(--info-100)]">
+            <div class="flex items-center justify-between border-b border-info-100 px-6 py-4 bg-info-50">
+              <h2 class="text-xl font-bold text-info-800 flex items-center">
+                <mat-icon class="mr-2 text-info-600">link</mat-icon>
                 Documentos Relacionados
-                <span *ngIf="duplicados!.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span *ngIf="duplicados!.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--info-200)] text-[var(--info-800)]">
                   {{duplicados!.length}}
                 </span>
               </h2>
@@ -276,36 +306,36 @@
 
             <div class="p-6">
               <div *ngIf="loadingDuplicados" class="flex justify-center p-4">
-                <mat-spinner [diameter]="30"></mat-spinner>
+                <mat-spinner [diameter]="30" color="accent"></mat-spinner>
               </div>
 
-              <div *ngIf="errorDuplicados" class="text-center text-red-500 p-4">
+              <div *ngIf="errorDuplicados" class="text-center text-error-600 p-4 bg-error-50 rounded-md border border-error-100">
                 {{errorDuplicados}}
               </div>
 
-              <div *ngIf="!loadingDuplicados && !duplicados?.length" class="text-center text-gray-500 p-4">
+              <div *ngIf="!loadingDuplicados && !duplicados?.length" class="text-center text-neutral-600 p-4 bg-neutral-50 rounded-md border border-[var(--neutral-200)]">
                 No se encontraron documentos relacionados con el mismo número de oficio.
               </div>
 
               <!-- Lista de documentos relacionados mejorada -->
               <div *ngIf="!loadingDuplicados && duplicados!.length > 0" class="space-y-4">
                 <div *ngFor="let duplicado of duplicados"
-                     class="border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors p-4 shadow-sm">
+                     class="border border-[var(--info-200)] rounded-lg hover:bg-info-50 transition-colors p-4 shadow-sm">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 class="text-lg font-medium text-gray-900 flex items-center">
-                        <mat-icon class="mr-2 text-blue-500 text-base">description</mat-icon>
-                        <a [routerLink]="['/Entradas/Ficha-tecnica', duplicado._id]" class="text-blue-600 hover:underline">
+                      <h3 class="text-lg font-medium text-info-900 flex items-center">
+                        <mat-icon class="mr-2 text-info-600 text-base">description</mat-icon>
+                        <a [routerLink]="['/Entradas/Ficha-tecnica', duplicado._id]" class="text-info-700 hover:underline">
                           Folio {{duplicado.folio}}
                         </a>
                       </h3>
-                      <p class="mt-1 text-sm text-gray-500">
+                      <p class="mt-1 text-sm text-neutral-500">
                         <span class="font-medium">Oficio:</span> {{duplicado.num_oficio}}
                       </p>
                     </div>
 
                     <div class="mt-2 sm:mt-0 flex flex-col sm:items-end">
-                      <span class="text-sm text-gray-500">{{formatearFecha(duplicado.fecha_recepcion)}}</span>
+                      <span class="text-sm text-neutral-500">{{formatearFecha(duplicado.fecha_recepcion)}}</span>
                       <span
                         class="mt-1 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                         [ngClass]="getEstatusClass(duplicado.estatus)">
@@ -313,7 +343,7 @@
                       </span>
                     </div>
                   </div>
-                  <p class="mt-2 text-sm text-gray-500">
+                  <p class="mt-2 text-sm text-neutral-600">
                     <span class="font-medium">Área asignada:</span> {{duplicado.asignado}}
                   </p>
                 </div>
@@ -325,27 +355,31 @@
         <!-- Panel lateral -->
         <div class="space-y-6">
           <!-- Tarjeta de Archivos PDF -->
-          <mat-card class="rounded-lg shadow">
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 class="text-xl font-bold text-gray-800">Archivos Adjuntos</h2>
+          <mat-card class="rounded-lg shadow-md border border-error-100">
+            <div class="flex items-center justify-between border-b border-error-100 px-6 py-4 bg-error-50">
+              <h2 class="text-xl font-bold text-error-800 flex items-center">
+                <mat-icon class="mr-2 text-error-600">attach_file</mat-icon>
+                Archivos Adjuntos
+              </h2>
             </div>
 
             <div class="p-6">
               <div *ngIf="loadingPdfs" class="flex justify-center p-4">
-                <mat-spinner [diameter]="30"></mat-spinner>
+                <mat-spinner [diameter]="30" color="accent"></mat-spinner>
               </div>
 
               <!-- Archivos PDF de entrada - mejorados -->
               <div class="mb-6">
-                <h3 class="font-medium text-gray-700 mb-3 flex items-center">
+                <h3 class="font-medium text-error-700 mb-3 flex items-center border-b border-[var(--error-100)] pb-2">
+                  <mat-icon class="mr-1 text-sm text-error-500">description</mat-icon>
                   Documentos del Oficio
-                  <span *ngIf="pdfUrls.length > 0" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span *ngIf="pdfUrls.length > 0" class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--error-200)] text-[var(--error-800)]">
                     {{pdfUrls.length}}
                   </span>
                 </h3>
 
-                <div *ngIf="!loadingPdfs && pdfUrls.length === 0" class="text-center text-gray-500 p-4 bg-gray-50 rounded-md">
-                  <p *ngIf="errorPdfEntrada">{{errorPdfEntrada}}</p>
+                <div *ngIf="!loadingPdfs && pdfUrls.length === 0" class="text-center text-[var(--neutral-500)] p-4 bg-[var(--neutral-50)] rounded-md">
+                  <p *ngIf="errorPdfEntrada" class="text-error-600">{{errorPdfEntrada}}</p>
                   <p *ngIf="!errorPdfEntrada">No hay archivos asociados al oficio.</p>
                 </div>
 
@@ -353,26 +387,26 @@
                   <a *ngFor="let pdfUrl of pdfUrls; let i = index"
                      [href]="pdfUrl"
                      target="_blank"
-                     class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors shadow-sm">
-                    <mat-icon class="mr-3 text-red-500">picture_as_pdf</mat-icon>
-                    <span class="text-sm text-gray-900 flex-grow font-medium truncate">{{pdfFilenames[i]}}</span>
-                    <mat-icon class="text-blue-500">open_in_new</mat-icon>
+                     class="flex items-center p-3 border border-[var(--error-200)] rounded-md hover:bg-[var(--error-200)] transition-colors shadow-sm">
+                    <mat-icon class="mr-3 text-error-500">picture_as_pdf</mat-icon>
+                    <span class="text-sm text-[var(--error-800)] flex-grow font-medium truncate">{{pdfFilenames[i]}}</span>
+                    <mat-icon class="text-error-500">open_in_new</mat-icon>
                   </a>
                 </div>
               </div>
 
               <!-- Archivos PDF de seguimiento -->
               <div>
-                <h3 class="font-medium text-gray-700 mb-3 flex items-center">
-                  <!-- <mat-icon class="mr-1 text-green-500">picture_as_pdf</mat-icon> -->
+                <h3 class="font-medium text-success-700 mb-3 flex items-center border-b border-[var(--success-100)] pb-2">
+                  <mat-icon class="mr-1 text-sm text-success-500">picture_as_pdf</mat-icon>
                   Documentos de Seguimiento
-                  <span *ngIf="pdfUrlsSeguimiento.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span *ngIf="pdfUrlsSeguimiento.length > 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--success-200)] text-[var(--success-800)]">
                     {{pdfUrlsSeguimiento.length}}
                   </span>
                 </h3>
 
-                <div *ngIf="!loadingPdfs && pdfUrlsSeguimiento.length === 0" class="text-center text-gray-500 p-4">
-                  <p *ngIf="errorPdfSeguimiento">{{errorPdfSeguimiento}}</p>
+                <div *ngIf="!loadingPdfs && pdfUrlsSeguimiento.length === 0" class="text-center text-[var(--neutral-500)] p-4 bg-[var(--neutral-50)] rounded-md">
+                  <p *ngIf="errorPdfSeguimiento" class="text-[var(--error-600)]">{{errorPdfSeguimiento}}</p>
                   <p *ngIf="!errorPdfSeguimiento">No hay archivos asociados al seguimiento.</p>
                 </div>
 
@@ -380,10 +414,10 @@
                   <a *ngFor="let pdfUrl of pdfUrlsSeguimiento; let i = index"
                      [href]="pdfUrl"
                      target="_blank"
-                     class="flex items-center p-2 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
-                    <mat-icon class="mr-3 text-green-500">picture_as_pdf</mat-icon>
-                    <span class="text-sm text-gray-900 flex-grow">{{pdfFilenamesSeguimiento[i]}}</span>
-                    <mat-icon class="text-gray-400">open_in_new</mat-icon>
+                     class="flex items-center p-3 border border-[var(--success-200)] rounded-md hover:bg-[var(--success-50)] transition-colors shadow-sm">
+                    <mat-icon class="mr-3 text-[var(--success-600)]">picture_as_pdf</mat-icon>
+                    <span class="text-sm text-[var(--success-800)] flex-grow truncate">{{pdfFilenamesSeguimiento[i]}}</span>
+                    <mat-icon class="text-[var(--success-600)]">open_in_new</mat-icon>
                   </a>
                 </div>
               </div>
@@ -391,24 +425,30 @@
           </mat-card>
 
           <!-- Tarjeta de Usuarios y Trazabilidad -->
-          <mat-card class="rounded-lg shadow">
-            <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-              <h2 class="text-xl font-bold text-gray-800">Información de Registro</h2>
+          <mat-card class="rounded-lg shadow-md border border-blue-100">
+            <div class="flex items-center justify-between border-b border-blue-100 px-6 py-4 bg-blue-50">
+              <h2 class="text-xl font-bold text-blue-800 flex items-center">
+                <mat-icon class="mr-2 text-blue-600">people</mat-icon>
+                Información de Registro
+              </h2>
             </div>
 
             <div class="p-6">
               <!-- Información de usuario que registró -->
               <div *ngIf="asignador" class="mb-6">
-                <h3 class="font-medium text-gray-700 mb-3">Registrado por</h3>
-                <div class="flex items-center bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500"> <!-- Añadido border-left para destacar -->
+                <h3 class="font-medium text-blue-700 mb-3 flex items-center border-b border-blue-100 pb-2">
+                  <mat-icon class="mr-1 text-sm text-blue-500">how_to_reg</mat-icon>
+                  Registrado por
+                </h3>
+                <div class="flex items-center bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500 shadow-sm">
                   <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                     <span class="text-sm font-medium text-blue-700">{{asignador.username.charAt(0).toUpperCase()}}</span>
                   </div>
                   <div class="flex-grow">
-                    <p class="text-sm font-medium text-gray-900">{{formatUserName(asignador.username)}}</p>
-                    <p class="text-xs text-gray-500">{{asignador.area || 'Sin área asignada'}}</p>
+                    <p class="text-sm font-medium text-blue-900">{{formatUserName(asignador.username)}}</p>
+                    <p class="text-xs text-blue-600">{{asignador.area || 'Sin área asignada'}}</p>
                   </div>
-                  <div class="text-right text-xs text-gray-500">
+                  <div class="text-right text-xs bg-blue-100 px-2 py-1 rounded-md text-blue-700">
                     <p>{{formatearFechaHora(inputDetails.createdAt)}}</p>
                   </div>
                 </div>
@@ -416,16 +456,19 @@
 
               <!-- Información de usuario que editó por última vez -->
               <div *ngIf="ultimoEditor && ultimoEditor.username !== asignador?.username">
-                <h3 class="font-medium text-gray-700 mb-3">Última edición por</h3>
-                <div class="flex items-center bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-500"> <!-- Añadido border-left para destacar -->
+                <h3 class="font-medium text-yellow-700 mb-3 flex items-center border-b border-yellow-100 pb-2">
+                  <mat-icon class="mr-1 text-sm text-yellow-500">edit_note</mat-icon>
+                  Última edición por
+                </h3>
+                <div class="flex items-center bg-yellow-50 p-3 rounded-lg border-l-4 border-yellow-500 shadow-sm">
                   <div class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
                     <span class="text-sm font-medium text-yellow-700">{{ultimoEditor.username.charAt(0).toUpperCase()}}</span>
                   </div>
                   <div class="flex-grow">
-                    <p class="text-sm font-medium text-gray-900">{{formatUserName(ultimoEditor.username)}}</p>
-                    <p class="text-xs text-gray-500">{{ultimoEditor.area || 'Sin área asignada'}}</p>
+                    <p class="text-sm font-medium text-yellow-900">{{formatUserName(ultimoEditor.username)}}</p>
+                    <p class="text-xs text-yellow-600">{{ultimoEditor.area || 'Sin área asignada'}}</p>
                   </div>
-                  <div class="text-right text-xs text-gray-500">
+                  <div class="text-right text-xs bg-yellow-100 px-2 py-1 rounded-md text-yellow-700">
                     <p>{{formatearFechaHora(inputDetails.updatedAt)}}</p>
                   </div>
                 </div>
@@ -433,26 +476,29 @@
 
               <!-- Lista de fechas clave -->
               <div class="mt-6">
-                <h3 class="font-medium text-gray-700 mb-3">Fechas clave</h3>
-                <ul class="space-y-3 pl-0">
+                <h3 class="font-medium text-neutral-700 mb-3 flex items-center border-b border-neutral-100 pb-2">
+                  <mat-icon class="mr-1 text-sm text-neutral-500">event</mat-icon>
+                  Fechas clave
+                </h3>
+                <ul class="space-y-3 pl-0 bg-[var(--neutral-50)] p-4 rounded-md border border-neutral-100">
                   <!-- Creación -->
                   <li class="flex items-start">
                     <div class="relative pt-1">
-                      <div class="h-3 w-3 rounded-full bg-green-500"></div>
-                      <div class="h-full w-0.5 bg-gray-200 absolute top-4 left-1.5 -ml-px"></div>
+                      <div class="h-3 w-3 rounded-full bg-success-500"></div>
+                      <div class="h-full w-0.5 bg-neutral-200 absolute top-4 left-1.5 -ml-px"></div>
                     </div>
                     <div class="ml-3">
-                      <p class="text-sm font-medium text-gray-900">Creado</p>
-                      <p class="text-xs text-gray-500">{{formatearFechaHora(inputDetails.createdAt)}}</p>
+                      <p class="text-sm font-medium text-[var(--success-500)]">Creado</p>
+                      <p class="text-xs text-[var(--success-600)]">{{formatearFechaHora(inputDetails.createdAt)}}</p>
                     </div>
                   </li>
 
                   <!-- Última actualización -->
                   <li class="flex items-start">
-                    <div class="h-3 w-3 rounded-full bg-blue-500"></div>
+                    <div class="h-3 w-3 rounded-full bg-info-500"></div>
                     <div class="ml-3">
-                      <p class="text-sm font-medium text-gray-900">Actualizado</p>
-                      <p class="text-xs text-gray-500">{{formatearFechaHora(inputDetails.updatedAt)}}</p>
+                      <p class="text-sm font-medium text-[var(--info-900)]">Actualizado</p>
+                      <p class="text-xs text-[var(--info-600)]">{{formatearFechaHora(inputDetails.updatedAt)}}</p>
                     </div>
                   </li>
                 </ul>
