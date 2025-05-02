@@ -152,6 +152,9 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   // Agregar propiedades de control para exportaciones
   isExporting = false;
 
+  // Agregar esta propiedad
+  isSorting: boolean = false;
+
   ngOnInit(): void {
     // Primero cargar permisos de usuario - esto configura userAllowedAreas
     this.loadUserPermissions();
@@ -203,6 +206,10 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Configurar los manejadores de eventos para sort y paginación después de que las vistas estén inicializadas
     this.dataSource.sort = this.sort;
+
+    // Establecer ordenamiento inicial como fecha_recepcion descendente
+    this.sort.active = 'fecha_recepcion';
+    this.sort.direction = 'desc';
 
     // No asignamos this.dataSource.paginator porque haremos paginación del lado del servidor
 
@@ -415,7 +422,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
       page: this.paginator?.pageIndex || 0,
       limit: this.paginator?.pageSize || this.pageSize,
       sortBy: this.sort?.active || 'fecha_recepcion',
-      sortOrder: this.sort?.direction || 'asc',
+      sortOrder: this.sort?.direction || 'desc', // Cambiado a 'desc' como valor predeterminado
       userRole: this.authService.getCurrentUser()?.roles,
       userArea: this.userArea
     };
@@ -466,6 +473,7 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
         }),
         finalize(() => {
           this.isLoadingResults = false;
+          this.isSorting = false; // Resetear flag de ordenamiento
           this.cdr.detectChanges();
         })
       )
@@ -570,8 +578,24 @@ export class MainComponent implements OnInit, AfterViewInit, OnDestroy {
    * Anuncia el cambio en la ordenación para lectores de pantalla
    */
   announceSortChange(sortState: Sort): void {
+    // Solo proceder si hay una dirección de ordenamiento
     if (sortState.direction) {
-      this.liveAnnouncer.announce(`Ordenado ${sortState.direction === 'asc' ? 'ascendente' : 'descendente'}`);
+      // Iniciar indicador de ordenamiento
+      this.isSorting = true;
+
+      // Anunciar para lectores de pantalla
+      this.liveAnnouncer.announce(`Ordenando toda la información por ${sortState.active} ${sortState.direction === 'asc' ? 'ascendente' : 'descendente'}`);
+
+      // Notificar visualmente al usuario
+      this.alertService.info(`Ordenando toda la información por ${sortState.active}`);
+
+      // Resetear paginación al ordenar
+      if (this.paginator) {
+        this.paginator.pageIndex = 0;
+      }
+
+      // Recargar datos con el nuevo ordenamiento
+      this.loadInputs();
     } else {
       this.liveAnnouncer.announce('Ordenación eliminada');
     }

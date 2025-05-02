@@ -214,6 +214,23 @@ form {
     background-color: var(--primary-100) !important;
     transition: background-color 0.3s ease;
   }
+
+  // Destacar el orden de la columna de atención otorgada
+  .mat-column-atencion_otorgada.mat-sort-header-sorted {
+    color: var(--primary-800) !important;
+    font-weight: 600;
+    background-color: var(--primary-50);
+
+    // Indicador visual de ordenamiento global
+    &::after {
+      content: '(global)';
+      position: absolute;
+      bottom: 4px;
+      right: 18px;
+      font-size: 10px;
+      color: var(--primary-700);
+    }
+  }
 }
 
 // Estilo para los botones de acción
