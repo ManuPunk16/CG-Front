@@ -379,6 +379,7 @@
           </div>
         </div>
 
+        <!-- Modificar la sección de Distribución por Área -->
         <div class="space-y-4">
           <ng-container *ngFor="let area of allowedAreas.slice(0, 5)">
             <div *ngIf="getTotalRegistrosArea(area) > 0">
@@ -394,9 +395,12 @@
               <div class="w-full bg-[var(--neutral-100)] rounded-full h-3">
                 <div class="rounded-full h-3 flex"
                      [style.width.%]="getTotalRegistrosArea(area) / totalRegistros * 100">
-                  <!-- Parte atendida -->
+                  <!-- Parte atendida (ahora usando respuestas registradas) -->
                   <div class="bg-[var(--success-500)] h-full rounded-l-full"
-                       [style.width.%]="getRegistrosAtendidosArea(area) / getTotalRegistrosArea(area) * 100"></div>
+                       [style.width.%]="getRespuestasRegistradasArea(area) / getTotalRegistrosArea(area) * 100"></div>
+                  <!-- Parte en proceso -->
+                  <div class="bg-[var(--warning-500)] h-full"
+                       [style.width.%]="(getRegistrosAtendidosArea(area) - getRespuestasRegistradasArea(area)) / getTotalRegistrosArea(area) * 100"></div>
                   <!-- Parte sin atender -->
                   <div class="bg-[var(--error-500)] h-full rounded-r-full"
                        [style.width.%]="getRegistrosSinAtenderArea(area) / getTotalRegistrosArea(area) * 100"></div>
@@ -405,7 +409,10 @@
 
               <div class="flex justify-between text-xs mt-1">
                 <span class="text-[var(--success-600)]">
-                  {{getRegistrosAtendidosArea(area)}} atendidos ({{getPorcentajeAtendidosArea(area)}}%)
+                  {{getRespuestasRegistradasArea(area)}} atendidos ({{getPorcentajeRespuestasRegistradasArea(area)}}%)
+                </span>
+                <span class="text-[var(--warning-600)] mx-2">
+                  {{getRegistrosAtendidosArea(area) - getRespuestasRegistradasArea(area)}} en proceso ({{getPorcentajeEnProcesoArea(area)}}%)
                 </span>
                 <span class="text-[var(--error-600)]">
                   {{getRegistrosSinAtenderArea(area)}} sin atender ({{getPorcentajeSinAtenderArea(area)}}%)
@@ -414,11 +421,15 @@
             </div>
           </ng-container>
 
-          <!-- Leyenda -->
+          <!-- Leyenda actualizada -->
           <div class="flex items-center justify-end mt-2 text-xs text-[var(--text-tertiary)]">
-            <div class="flex items-center mr-4">
+            <div class="flex items-center mr-3">
               <div class="w-3 h-3 rounded-full bg-[var(--success-500)] mr-1"></div>
               <span>Atendidos</span>
+            </div>
+            <div class="flex items-center mr-3">
+              <div class="w-3 h-3 rounded-full bg-[var(--warning-500)] mr-1"></div>
+              <span>En Proceso</span>
             </div>
             <div class="flex items-center">
               <div class="w-3 h-3 rounded-full bg-[var(--error-500)] mr-1"></div>
@@ -454,11 +465,13 @@
         </div>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-[var(--neutral-200)]">
+            <!-- Modificar el encabezado de la tabla para incluir "En Proceso" -->
             <thead class="bg-[var(--neutral-50)]">
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Área</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Registros</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Atendidos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">En Proceso</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Sin Atender</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">% Atención</th>
               </tr>
@@ -475,10 +488,20 @@
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <span class="text-sm text-[var(--success-600)] font-medium">
-                      {{getRegistrosAtendidosArea(area) || 0}}
+                      {{getRespuestasRegistradasArea(area) || 0}}
                     </span>
                     <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--success-100)] text-[var(--success-800)]">
-                      {{getPorcentajeAtendidosArea(area) || 0}}%
+                      {{getPorcentajeRespuestasRegistradasArea(area) || 0}}%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <span class="text-sm text-[var(--warning-600)] font-medium">
+                      {{getRegistrosAtendidosArea(area) - getRespuestasRegistradasArea(area) || 0}}
+                    </span>
+                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--warning-100)] text-[var(--warning-800)]">
+                      {{getPorcentajeEnProcesoArea(area) || 0}}%
                     </span>
                   </div>
                 </td>
@@ -496,18 +519,18 @@
                   <div class="w-full bg-[var(--neutral-100)] rounded-full h-2 w-24">
                     <div class="h-2 rounded-full"
                          [ngClass]="{
-                           'bg-[var(--success-500)]': getPorcentajeAtendidosArea(area) > 70,
-                           'bg-[var(--warning-500)]': getPorcentajeAtendidosArea(area) > 30 && getPorcentajeAtendidosArea(area) <= 70,
-                           'bg-[var(--error-500)]': getPorcentajeAtendidosArea(area) <= 30
+                           'bg-[var(--success-500)]': getPorcentajeRespuestasRegistradasArea(area) > 70,
+                           'bg-[var(--warning-500)]': getPorcentajeRespuestasRegistradasArea(area) > 30 && getPorcentajeRespuestasRegistradasArea(area) <= 70,
+                           'bg-[var(--error-500)]': getPorcentajeRespuestasRegistradasArea(area) <= 30
                          }"
-                         [style.width]="getPorcentajeAtendidosArea(area) + '%'"></div>
+                         [style.width]="getPorcentajeRespuestasRegistradasArea(area) + '%'"></div>
                   </div>
                 </td>
               </tr>
 
               <!-- Estado sin datos -->
               <tr *ngIf="allowedAreas.length === 0">
-                <td colspan="5" class="px-6 py-10 text-center">
+                <td colspan="6" class="px-6 py-10 text-center">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-[var(--neutral-400)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
