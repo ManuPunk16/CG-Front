@@ -383,7 +383,7 @@
       <!-- Botón para crear nuevo registro - SOLO ADMINISTRADORES -->
       <button *ngIf="isAdmin" (click)="crearNuevoRegistro()"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 transform hover:scale-105 shadow-md"
-        matTooltip="Crear un nuevo registro en el sistema">
+        title="Crear un nuevo registro en el sistema">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -394,7 +394,7 @@
       <!-- Botones para exportar datos con tooltips informativos -->
       <button (click)="exportarTodos()" [disabled]="isExporting"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-        matTooltip="Exporta todos los registros del año seleccionado">
+        title="Exporta todos los registros del año seleccionado">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -405,7 +405,7 @@
 
       <button (click)="exportarFiltrados()" [disabled]="isExporting || !hasActiveFilters()"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-        matTooltip="Exporta solo los registros que cumplen con los filtros aplicados">
+        title="Exporta solo los registros que cumplen con los filtros aplicados">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -417,7 +417,7 @@
 
       <button (click)="exportarPorArea()" [disabled]="isExporting"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-        matTooltip="Selecciona un área específica para exportar">
+        title="Selecciona un área específica para exportar">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -431,7 +431,7 @@
       <button *ngIf="isAdmin" (click)="generarReporteDiario()"
         [disabled]="!filterValues['asignado'] || !filterValues['fecha_recepcion']"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg hover:from-amber-600 hover:to-amber-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-        matTooltip="Genera un reporte diario para el área y fecha seleccionados (requiere seleccionar ambos campos)">
+        title="Genera un reporte diario para el área y fecha seleccionados (requiere seleccionar ambos campos)">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -444,7 +444,7 @@
       <!-- TARJETA RESUMEN - DISPONIBLE PARA TODOS CON FILTRADO POR PERMISOS -->
       <button (click)="generarTarjetaResumen()" [disabled]="!filterValues['fecha_recepcion']"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
-        matTooltip="Genera una tarjeta resumen para la fecha seleccionada, mostrando información según tu rol y permisos">
+        title="Genera una tarjeta resumen para la fecha seleccionada, mostrando información según tu rol y permisos">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -456,7 +456,7 @@
 
       <button (click)="verEstadisticasAreas()"
         class="flex items-center justify-center px-4 py-3.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200 transform hover:scale-105 shadow-md"
-        matTooltip="Muestra estadísticas de todas las áreas para el año seleccionado">
+        title="Muestra estadísticas de todas las áreas para el año seleccionado">
         <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -508,7 +508,7 @@
               <th mat-header-cell *matHeaderCellDef class="w-20 sm:w-24 bg-primary-50 text-primary-900"> Acciones </th>
               <td mat-cell *matCellDef="let item" class="border-b border-neutral-100">
                 <div class="flex space-x-1">
-                  <button mat-icon-button class="text-primary-600 hover:text-primary-800" (click)="verDetalles(item)" matTooltip="Ver detalles">
+                  <button mat-icon-button class="text-primary-600 hover:text-primary-800" (click)="verDetalles(item)" title="Ver detalles">
                     <mat-icon>visibility</mat-icon>
                   </button>
                 </div>
