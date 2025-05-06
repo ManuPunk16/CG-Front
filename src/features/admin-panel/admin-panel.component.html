@@ -1,58 +1,69 @@
-<div class="w-full min-h-screen bg-gray-50 p-4 md:p-6">
-  <!-- Encabezado -->
+<div class="w-full min-h-screen bg-[var(--neutral-50)] p-4 md:p-6">
+  <!-- Encabezado con diseño mejorado -->
   <div class="mb-6">
-    <h1 class="text-2xl font-bold text-gray-800">Panel de Control</h1>
-    <p class="text-gray-600">Gestiona usuarios, consulta estadísticas y monitorea actividad del sistema</p>
+    <h1 class="text-2xl font-bold text-[var(--text-primary)]">Panel de Control</h1>
+    <p class="text-[var(--text-tertiary)]">Gestiona usuarios, consulta estadísticas y monitorea la actividad del sistema</p>
   </div>
 
-  <!-- Navegación por pestañas - Con scroll horizontal en móviles -->
-  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-    <div class="border-b border-gray-200 overflow-x-auto">
+  <!-- Navegación por pestañas con diseño moderno -->
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6 border border-[var(--neutral-200)]">
+    <div class="border-b border-[var(--neutral-200)] overflow-x-auto">
       <nav class="flex flex-nowrap whitespace-nowrap">
         <!-- Pestaña: Estadísticas por Estatus -->
         <button (click)="setActiveTab(0)"
-                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 0,
-                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 0}"
+                [ngClass]="{'bg-[var(--primary-50)] text-[var(--primary-600)] border-b-2 border-[var(--primary-500)]': activeTab === 0,
+                          'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--neutral-50)]': activeTab !== 0}"
                 class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
-          <mat-icon class="mr-2">pie_chart</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+          </svg>
           Estadísticas por Estatus
         </button>
 
         <!-- Pestaña: Contador de registros -->
         <button (click)="setActiveTab(2)"
-                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 2,
-                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 2}"
+                [ngClass]="{'bg-[var(--primary-50)] text-[var(--primary-600)] border-b-2 border-[var(--primary-500)]': activeTab === 2,
+                          'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--neutral-50)]': activeTab !== 2}"
                 class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
-          <mat-icon class="mr-2">analytics</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
           Contador de Registros
         </button>
 
         <!-- Pestaña: Actividad de Usuarios -->
         <button (click)="setActiveTab(3)"
-                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 3,
-                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 3}"
+                [ngClass]="{'bg-[var(--primary-50)] text-[var(--primary-600)] border-b-2 border-[var(--primary-500)]': activeTab === 3,
+                          'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--neutral-50)]': activeTab !== 3}"
                 class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
-          <mat-icon class="mr-2">history</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           Actividad de Usuarios
         </button>
 
         <!-- Pestaña: Logs de Inicio de Sesión -->
         <button *ngIf="canViewSection('logs')"
                 (click)="setActiveTab(4)"
-                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 4,
-                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 4}"
+                [ngClass]="{'bg-[var(--primary-50)] text-[var(--primary-600)] border-b-2 border-[var(--primary-500)]': activeTab === 4,
+                          'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--neutral-50)]': activeTab !== 4}"
                 class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
-          <mat-icon class="mr-2">login</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          </svg>
           Logs de Acceso
         </button>
 
         <!-- Pestaña: Gestión de Usuarios -->
         <button *ngIf="canViewSection('users')"
                 (click)="setActiveTab(5)"
-                [ngClass]="{'bg-blue-50 text-blue-600 border-b-2 border-blue-500': activeTab === 5,
-                          'text-gray-700 hover:text-gray-900 hover:bg-gray-50': activeTab !== 5}"
+                [ngClass]="{'bg-[var(--primary-50)] text-[var(--primary-600)] border-b-2 border-[var(--primary-500)]': activeTab === 5,
+                          'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--neutral-50)]': activeTab !== 5}"
                 class="px-4 py-4 text-sm font-medium flex items-center transition-colors">
-          <mat-icon class="mr-2">people</mat-icon>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
           Gestión de Usuarios
         </button>
       </nav>
@@ -60,17 +71,17 @@
   </div>
 
   <!-- Contenedor principal para contenidos de pestañas -->
-  <div class="bg-white rounded-lg shadow-md p-4 md:p-6 min-h-[500px]">
+  <div class="bg-white rounded-lg shadow-sm p-4 md:p-6 min-h-[500px] border border-[var(--neutral-200)]">
     <!-- 1. Estadísticas por Estatus -->
     <div *ngIf="activeTab === 0">
-      <h2 class="text-xl font-semibold mb-4">Estadísticas por Estatus</h2>
+      <h2 class="text-xl font-semibold mb-4 text-[var(--text-primary)]">Estadísticas por Estatus</h2>
 
       <!-- Gráficas de estatus - Una encima de la otra -->
       <div class="flex flex-col gap-6">
         <!-- Gráfico de Distribución de Estatus -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="bg-white rounded-lg shadow-sm border border-[var(--neutral-200)]">
           <div class="p-6">
-            <h3 class="text-lg font-semibold mb-4">Distribución de Estatus</h3>
+            <h3 class="text-lg font-semibold mb-4 text-[var(--text-primary)]">Distribución de Estatus</h3>
             <!-- Componente de estadísticas con altura fija para evitar problemas de rendering -->
             <app-system-statistics
               [chartType]="'bar'"
@@ -83,89 +94,430 @@
       </div>
     </div>
 
-    <!-- 3. Contador de Registros -->
+    <!-- 3. Contador de Registros MEJORADO -->
     <div *ngIf="activeTab === 2">
-      <h2 class="text-xl font-semibold mb-4">Contador de Registros</h2>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-2">
+        <h2 class="text-xl font-semibold text-[var(--text-primary)]">Contador de Registros</h2>
 
-      <!-- Dashboard de contadores -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500">
+        <!-- Selector de período o filtro adicional -->
+        <div class="mt-3 md:mt-0 flex space-x-2">
+          <button class="px-3 py-1.5 text-sm rounded-md bg-[var(--primary-50)] text-[var(--primary-600)] hover:bg-[var(--primary-100)] border border-[var(--primary-200)] font-medium transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            Todos los tiempos
+          </button>
+          <button class="px-3 py-1.5 text-sm rounded-md text-[var(--text-secondary)] hover:bg-[var(--neutral-50)] border border-[var(--neutral-200)] transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Nota descriptiva principal sobre el contador de registros -->
+      <div class="bg-[var(--info-50)] border-l-4 border-[var(--info-400)] p-4 mb-6 rounded-r-lg">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--info-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-[var(--info-700)]">
+              <span class="font-medium">Resumen del sistema.</span> Este panel muestra estadísticas acumuladas de oficios basadas en su estatus actual. Los datos se actualizan automáticamente cuando ocurren cambios en el sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjetas informativas en grid con diseño mejorado -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Total Registros -->
+        <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-[var(--info-500)] hover:shadow-md transition-shadow">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-sm text-gray-500">Total Registros</p>
-              <p class="text-2xl font-bold">{{totalRegistros || 0}}</p>
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">Total Registros</p>
+              <div class="flex items-baseline">
+                <p class="text-2xl font-bold text-[var(--text-primary)]">{{totalRegistros || 0}}</p>
+                <span class="ml-2 text-xs bg-[var(--info-100)] text-[var(--info-700)] px-2 py-0.5 rounded-full">
+                  Histórico
+                </span>
+              </div>
             </div>
-            <div class="p-2 bg-blue-100 rounded-lg">
-              <mat-icon class="text-blue-600">description</mat-icon>
+            <div class="p-2.5 bg-[var(--info-100)] rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--info-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
             </div>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Todos los tiempos</p>
+
+          <!-- Nota descriptiva para Total Registros -->
+          <div class="p-2 mt-3 rounded-md bg-[var(--neutral-50)] border border-[var(--neutral-200)]">
+            <p class="text-xs text-[var(--text-tertiary)]">
+              <span class="font-medium text-[var(--info-600)]">Nota:</span> Muestra el número total de oficios registrados en el sistema desde su implementación.
+            </p>
+          </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-green-500">
+        <!-- Registros Atendidos - Modificado con nueva validación -->
+        <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-[var(--success-500)] hover:shadow-md transition-shadow">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-sm text-gray-500">Atendidos</p>
-              <p class="text-2xl font-bold text-green-600">{{registrosAtendidos || 0}}</p>
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">Atendidos</p>
+              <div class="flex items-baseline">
+                <p class="text-2xl font-bold text-[var(--success-600)]">{{totalRespuestasRegistradas || 0}}</p>
+                <span class="ml-2 text-xs bg-[var(--success-100)] text-[var(--success-700)] px-2 py-0.5 rounded-full">
+                  {{porcentajeRespuestasRegistradas || 0}}%
+                </span>
+              </div>
             </div>
-            <div class="p-2 bg-green-100 rounded-lg">
-              <mat-icon class="text-green-600">check_circle</mat-icon>
+            <div class="p-2.5 bg-[var(--success-100)] rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--success-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
-          <p class="text-xs text-gray-500 mt-2">{{porcentajeAtendidos || 0}}% del total</p>
+
+          <!-- Barra de progreso -->
+          <div class="mt-4">
+            <div class="w-full bg-[var(--neutral-100)] rounded-full h-2.5">
+              <div class="bg-[var(--success-500)] h-2.5 rounded-full" [style.width]="porcentajeRespuestasRegistradas + '%'"></div>
+            </div>
+            <p class="text-xs text-[var(--text-tertiary)] mt-2">
+              {{totalRespuestasRegistradas || 0}} oficios completamente atendidos
+            </p>
+
+            <!-- Nota descriptiva para Registros Atendidos -->
+            <div class="p-2 mt-2 rounded-md bg-[var(--success-50)] border border-[var(--success-200)]">
+              <p class="text-xs text-[var(--text-tertiary)]">
+                <span class="font-medium text-[var(--success-600)]">Nota:</span> Oficios con estatus "ATENDIDO" que además tienen registrada la atención otorgada en el seguimiento.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-amber-500">
+        <!-- Registros En Proceso - Modificado con nueva definición -->
+        <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-[var(--warning-500)] hover:shadow-md transition-shadow">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-sm text-gray-500">En Proceso</p>
-              <p class="text-2xl font-bold text-amber-600">{{registrosPendientes || 0}}</p>
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">En Proceso</p>
+              <div class="flex items-baseline">
+                <p class="text-2xl font-bold text-[var(--warning-600)]">{{registrosAtendidos - totalRespuestasRegistradas || 0}}</p>
+                <span class="ml-2 text-xs bg-[var(--warning-100)] text-[var(--warning-700)] px-2 py-0.5 rounded-full">
+                  {{porcentajeEnProceso || 0}}%
+                </span>
+              </div>
             </div>
-            <div class="p-2 bg-amber-100 rounded-lg">
-              <mat-icon class="text-amber-600">pending</mat-icon>
+            <div class="p-2.5 bg-[var(--warning-100)] rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--warning-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
-          <p class="text-xs text-gray-500 mt-2">{{porcentajePendientes || 0}}% del total</p>
+
+          <!-- Barra de progreso -->
+          <div class="mt-4">
+            <div class="w-full bg-[var(--neutral-100)] rounded-full h-2.5">
+              <div class="bg-[var(--warning-500)] h-2.5 rounded-full" [style.width]="porcentajeEnProceso + '%'"></div>
+            </div>
+            <p class="text-xs text-[var(--text-tertiary)] mt-2">
+              {{registrosAtendidos - totalRespuestasRegistradas || 0}} oficios con estatus atendido pero sin atención registrada
+            </p>
+
+            <!-- Nota descriptiva para Registros En Proceso -->
+            <div class="p-2 mt-2 rounded-md bg-[var(--warning-50)] border border-[var(--warning-200)]">
+              <p class="text-xs text-[var(--text-tertiary)]">
+                <span class="font-medium text-[var(--warning-600)]">Nota:</span> Oficios que tienen estatus "ATENDIDO" pero aún no tienen registrada la atención otorgada en el seguimiento.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-4 border-l-4 border-red-500">
+        <!-- Registros Sin Atender -->
+        <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-[var(--error-500)] hover:shadow-md transition-shadow">
           <div class="flex justify-between items-start">
             <div>
-              <p class="text-sm text-gray-500">Sin Atender</p>
-              <p class="text-2xl font-bold text-red-600">{{registrosSinAtender || 0}}</p>
+              <p class="text-sm text-[var(--text-tertiary)] mb-1">Sin Atender</p>
+              <div class="flex items-baseline">
+                <p class="text-2xl font-bold text-[var(--error-600)]">{{registrosSinAtender || 0}}</p>
+                <span class="ml-2 text-xs bg-[var(--error-100)] text-[var(--error-700)] px-2 py-0.5 rounded-full">
+                  {{porcentajeSinAtender || 0}}%
+                </span>
+              </div>
             </div>
-            <div class="p-2 bg-red-100 rounded-lg">
-              <mat-icon class="text-red-600">error_outline</mat-icon>
+            <div class="p-2.5 bg-[var(--error-100)] rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--error-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
           </div>
-          <p class="text-xs text-gray-500 mt-2">{{porcentajeSinAtender || 0}}% del total</p>
+
+          <!-- Barra de progreso -->
+          <div class="mt-4">
+            <div class="w-full bg-[var(--neutral-100)] rounded-full h-2.5">
+              <div class="bg-[var(--error-500)] h-2.5 rounded-full" [style.width]="porcentajeSinAtender + '%'"></div>
+            </div>
+            <p class="text-xs text-[var(--text-tertiary)] mt-2">
+              {{registrosSinAtender || 0}} oficios pendientes de atención
+            </p>
+
+            <!-- Nota descriptiva para Registros Sin Atender -->
+            <div class="p-2 mt-2 rounded-md bg-[var(--error-50)] border border-[var(--error-200)]">
+              <p class="text-xs text-[var(--text-tertiary)]">
+                <span class="font-medium text-[var(--error-600)]">Nota:</span> Oficios con estatus "NO ATENDIDO" que requieren iniciar su procesamiento.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nota descriptiva para gráficos de distribución -->
+      <div class="bg-[var(--primary-50)] border-l-4 border-[var(--primary-400)] p-4 mb-6 rounded-r-lg">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--primary-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-[var(--primary-700)]">
+              <span class="font-medium">Visualización de datos.</span> Los gráficos a continuación muestran la distribución de oficios por estatus y área. Use esta información para identificar áreas con mayor carga de trabajo o que requieren atención prioritaria.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfico resumen con distribución -->
+      <div class="bg-white rounded-lg shadow-sm border border-[var(--neutral-200)] p-5 mb-8">
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">Distribución por Estatus</h3>
+        <div class="h-64">
+          <!-- Aquí iría un gráfico si lo tienes, o esta visualización alternativa: -->
+          <div class="flex items-center h-full">
+            <div class="w-full flex flex-col md:flex-row items-center justify-between gap-4">
+              <!-- Atendidos (completamente) -->
+              <div class="flex-1 h-full flex flex-col items-center">
+                <div class="w-full md:w-36 h-36 rounded-full mx-auto bg-[var(--neutral-100)] relative">
+                  <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span class="text-2xl font-bold text-[var(--success-600)]">{{porcentajeRespuestasRegistradas || 0}}%</span>
+                    <span class="text-sm text-[var(--text-tertiary)]">Atendidos</span>
+                  </div>
+                  <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle" [attr.stroke-dasharray]="porcentajeRespuestasRegistradas + ', 100'" stroke-linecap="round"
+                          fill="none" stroke="var(--success-500)" stroke-width="2.8"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                  </svg>
+                </div>
+                <div class="mt-3 text-center">
+                  <p class="text-sm font-medium text-[var(--text-secondary)]">{{totalRespuestasRegistradas || 0}} registros</p>
+                </div>
+              </div>
+
+              <!-- En Proceso (versión corregida) -->
+              <div class="flex-1 h-full flex flex-col items-center">
+                <div class="w-full md:w-36 h-36 rounded-full mx-auto bg-[var(--neutral-100)] relative">
+                  <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span class="text-2xl font-bold text-[var(--warning-600)]">{{porcentajeEnProceso || 0}}%</span>
+                    <span class="text-sm text-[var(--text-tertiary)]">En Proceso</span>
+                  </div>
+                  <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle" [attr.stroke-dasharray]="porcentajeEnProceso + ', 100'" stroke-linecap="round"
+                          fill="none" stroke="var(--warning-500)" stroke-width="2.8"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                  </svg>
+                </div>
+                <div class="mt-3 text-center">
+                  <p class="text-sm font-medium text-[var(--text-secondary)]">{{registrosAtendidos - totalRespuestasRegistradas || 0}} registros</p>
+                </div>
+              </div>
+
+              <!-- Sin Atender -->
+              <div class="flex-1 h-full flex flex-col items-center">
+                <div class="w-full md:w-36 h-36 rounded-full mx-auto bg-[var(--neutral-100)] relative">
+                  <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span class="text-2xl font-bold text-[var(--error-600)]">{{porcentajeSinAtender || 0}}%</span>
+                    <span class="text-sm text-[var(--text-tertiary)]">Sin Atender</span>
+                  </div>
+                  <svg viewBox="0 0 36 36" class="circular-chart">
+                    <path class="circle" [attr.stroke-dasharray]="porcentajeSinAtender + ', 100'" stroke-linecap="round"
+                          fill="none" stroke="var(--error-500)" stroke-width="2.8"
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
+                  </svg>
+                </div>
+                <div class="mt-3 text-center">
+                  <p class="text-sm font-medium text-[var(--text-secondary)]">{{registrosSinAtender || 0}} registros</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="w-full mt-4 p-3 bg-[var(--neutral-50)] border border-[var(--neutral-200)] rounded-md">
+          <p class="text-xs text-[var(--text-tertiary)]">
+            <span class="font-medium text-[var(--warning-600)]">Nota:</span>
+            Los oficios "En Proceso" tienen estatus "ATENDIDO" pero aún no se ha registrado la atención otorgada en el seguimiento.
+            Representan documentos que están siendo procesados pero no han completado totalmente su ciclo administrativo.
+          </p>
+        </div>
+      </div>
+
+      <!-- Distribución visual de registros por área (TOP 5) -->
+      <div *ngIf="areaStats.size > 0" class="bg-white rounded-lg shadow-sm border border-[var(--neutral-200)] p-5 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Distribución por Área (Top 5)</h3>
+
+          <!-- Ícono de información con tooltip -->
+          <div class="relative group">
+            <div class="p-1 bg-[var(--neutral-100)] rounded-full cursor-help">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--neutral-500)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="absolute right-0 w-64 p-3 mt-2 bg-white border border-[var(--neutral-200)] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-xs text-[var(--text-tertiary)]">
+              Las barras muestran la proporción de oficios atendidos (verde) vs. sin atender (rojo) para cada área. Solo se muestran las 5 áreas con mayor número de oficios.
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <ng-container *ngFor="let area of allowedAreas.slice(0, 5)">
+            <div *ngIf="getTotalRegistrosArea(area) > 0">
+              <div class="flex items-center justify-between mb-1">
+                <div class="text-sm font-medium flex-1 max-w-xs truncate" title="{{area}}">
+                  {{area}}
+                </div>
+                <div class="text-sm font-medium text-[var(--text-secondary)]">
+                  {{getTotalRegistrosArea(area)}} registros
+                </div>
+              </div>
+
+              <div class="w-full bg-[var(--neutral-100)] rounded-full h-3">
+                <div class="rounded-full h-3 flex"
+                     [style.width.%]="getTotalRegistrosArea(area) / totalRegistros * 100">
+                  <!-- Parte atendida -->
+                  <div class="bg-[var(--success-500)] h-full rounded-l-full"
+                       [style.width.%]="getRegistrosAtendidosArea(area) / getTotalRegistrosArea(area) * 100"></div>
+                  <!-- Parte sin atender -->
+                  <div class="bg-[var(--error-500)] h-full rounded-r-full"
+                       [style.width.%]="getRegistrosSinAtenderArea(area) / getTotalRegistrosArea(area) * 100"></div>
+                </div>
+              </div>
+
+              <div class="flex justify-between text-xs mt-1">
+                <span class="text-[var(--success-600)]">
+                  {{getRegistrosAtendidosArea(area)}} atendidos ({{getPorcentajeAtendidosArea(area)}}%)
+                </span>
+                <span class="text-[var(--error-600)]">
+                  {{getRegistrosSinAtenderArea(area)}} sin atender ({{getPorcentajeSinAtenderArea(area)}}%)
+                </span>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Leyenda -->
+          <div class="flex items-center justify-end mt-2 text-xs text-[var(--text-tertiary)]">
+            <div class="flex items-center mr-4">
+              <div class="w-3 h-3 rounded-full bg-[var(--success-500)] mr-1"></div>
+              <span>Atendidos</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-[var(--error-500)] mr-1"></div>
+              <span>Sin atender</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nota descriptiva para tabla de resumen -->
+      <div class="bg-[var(--secondary-50)] border-l-4 border-[var(--secondary-400)] p-4 mb-6 rounded-r-lg">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[var(--secondary-600)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-[var(--secondary-700)]">
+              <span class="font-medium">Detalle por Área.</span> La siguiente tabla muestra el desglose completo por área con indicadores de rendimiento. El código de colores indica el nivel de atención: <span class="text-[var(--success-600)] font-medium">Verde</span> (bueno), <span class="text-[var(--warning-600)] font-medium">Naranja</span> (regular), <span class="text-[var(--error-600)] font-medium">Rojo</span> (bajo).
+            </p>
+          </div>
         </div>
       </div>
 
       <!-- Tabla de resumen por área -->
-      <mat-card class="shadow-md">
-        <mat-card-header>
-          <mat-card-title>Resumen por Área</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registros</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Atendidos</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sin Atender</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Atención</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                <!-- Filas para cada área permitida -->
-              </tbody>
-            </table>
-          </div>
-        </mat-card-content>
-      </mat-card>
+      <div class="bg-white rounded-lg shadow-sm border border-[var(--neutral-200)] overflow-hidden">
+        <div class="px-5 py-4 border-b border-[var(--neutral-200)] flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-[var(--text-primary)]">Resumen por Área</h3>
+          <span class="text-sm bg-[var(--neutral-100)] text-[var(--text-secondary)] px-3 py-1 rounded-full">
+            {{areaStats.size}} áreas con actividad
+          </span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-[var(--neutral-200)]">
+            <thead class="bg-[var(--neutral-50)]">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Área</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Registros</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Atendidos</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Sin Atender</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">% Atención</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-[var(--neutral-200)]">
+              <!-- Filas para cada área permitida -->
+              <tr *ngFor="let area of allowedAreas" class="hover:bg-[var(--neutral-50)] transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-[var(--text-primary)]">{{area}}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">
+                  {{getTotalRegistrosArea(area) || 0}}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <span class="text-sm text-[var(--success-600)] font-medium">
+                      {{getRegistrosAtendidosArea(area) || 0}}
+                    </span>
+                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--success-100)] text-[var(--success-800)]">
+                      {{getPorcentajeAtendidosArea(area) || 0}}%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <span class="text-sm text-[var(--error-600)] font-medium">
+                      {{getRegistrosSinAtenderArea(area) || 0}}
+                    </span>
+                    <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--error-100)] text-[var(--error-800)]">
+                      {{getPorcentajeSinAtenderArea(area) || 0}}%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="w-full bg-[var(--neutral-100)] rounded-full h-2 w-24">
+                    <div class="h-2 rounded-full"
+                         [ngClass]="{
+                           'bg-[var(--success-500)]': getPorcentajeAtendidosArea(area) > 70,
+                           'bg-[var(--warning-500)]': getPorcentajeAtendidosArea(area) > 30 && getPorcentajeAtendidosArea(area) <= 70,
+                           'bg-[var(--error-500)]': getPorcentajeAtendidosArea(area) <= 30
+                         }"
+                         [style.width]="getPorcentajeAtendidosArea(area) + '%'"></div>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Estado sin datos -->
+              <tr *ngIf="allowedAreas.length === 0">
+                <td colspan="5" class="px-6 py-10 text-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-[var(--neutral-400)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p class="text-[var(--text-tertiary)]">No hay áreas disponibles para mostrar</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- 4. Actividad de Usuarios -->

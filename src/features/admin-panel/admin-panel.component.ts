@@ -112,6 +112,9 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   porcentajeAtendidos = 0;
   porcentajePendientes = 0;
   porcentajeSinAtender = 0;
+  totalRespuestasRegistradas = 0;
+  porcentajeRespuestasRegistradas = 0;
+  porcentajeEnProceso = 0;
 
   // Variables para datos de usuarios y actividad
   usuariosActividad: UsuarioEstadisticas[] = [];
@@ -124,6 +127,9 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
   filtroUsuario: string = '';
 
   private destroy$ = new Subject<void>();
+
+  // Estructura para almacenar estadísticas por área
+  areaStats: Map<string, {total: number, atendidos: number, sinAtender: number, respuestasRegistradas: number}> = new Map();
 
   constructor(
     private authService: AuthService,
@@ -165,39 +171,81 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Carga los datos de estadísticas con detalle por área
   loadStatisticsData(): void {
-    // Usar InputService para obtener estadísticas generales
     this.inputService.getEstadisticasRegistros()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response && response.data) {
-            // Procesar los datos de estadísticas para obtener totales
-            let atendidos = 0;
-            let noAtendidos = 0;
-            let respuestasRegistradas = 0;
+            // Limpiar estadísticas anteriores
+            this.areaStats.clear();
 
-            // Sumar los totales de todas las direcciones
+            // Inicializar contadores globales
+            let totalAtendidos = 0;
+            let totalNoAtendidos = 0;
+            let totalDocumentos = 0;
+            let totalRespuestasRegistradas = 0;
+
+            // Procesar los datos por dirección (área)
             response.data.forEach((direccion: any) => {
-              const datosAnio = this.procesarDatosAnio(direccion);
-              atendidos += datosAnio.atendido;
-              noAtendidos += datosAnio.noAtendido;
-              respuestasRegistradas += datosAnio.respuestaRegistrada;
+              const areaNombre = direccion.direccion;
+              let areaAtendidos = 0;
+              let areaNoAtendidos = 0;
+              let areaRespuestasRegistradas = 0;
+
+              // Sumar por año y mes para esta área
+              if (direccion.anios && Array.isArray(direccion.anios)) {
+                direccion.anios.forEach((anio: any) => {
+                  if (anio.meses && Array.isArray(anio.meses)) {
+                    anio.meses.forEach((mes: any) => {
+                      areaAtendidos += mes.atendido || 0;
+                      areaNoAtendidos += mes.noAtendido || 0;
+                      areaRespuestasRegistradas += mes.respuestaRegistrada || 0;
+                    });
+                  }
+                });
+              }
+
+              // Guardar estadísticas de esta área
+              const areaTotal = areaAtendidos + areaNoAtendidos;
+              this.areaStats.set(areaNombre, {
+                total: areaTotal,
+                atendidos: areaAtendidos,
+                sinAtender: areaNoAtendidos,
+                respuestasRegistradas: areaRespuestasRegistradas
+              });
+
+              // Acumular totales globales
+              totalAtendidos += areaAtendidos;
+              totalNoAtendidos += areaNoAtendidos;
+              totalDocumentos += areaTotal;
+              totalRespuestasRegistradas += areaRespuestasRegistradas;
             });
 
-            this.totalRegistros = atendidos + noAtendidos;
-            this.registrosAtendidos = atendidos;
-            this.registrosPendientes = this.totalRegistros - respuestasRegistradas;
-            this.registrosSinAtender = noAtendidos;
+            // Actualizar contadores globales
+            this.totalRegistros = totalDocumentos;
+            this.registrosAtendidos = totalAtendidos;
+            this.registrosSinAtender = totalNoAtendidos;
+            this.totalRespuestasRegistradas = totalRespuestasRegistradas;
 
-            // Calcular porcentajes
+            // Calcular porcentajes globales
             if (this.totalRegistros > 0) {
-              this.porcentajeAtendidos = Math.round((atendidos / this.totalRegistros) * 100);
-              this.porcentajePendientes = Math.round((this.registrosPendientes / this.totalRegistros) * 100);
-              this.porcentajeSinAtender = Math.round((noAtendidos / this.totalRegistros) * 100);
+              this.porcentajeAtendidos = Math.round((totalAtendidos / this.totalRegistros) * 100);
+              this.porcentajeSinAtender = Math.round((totalNoAtendidos / this.totalRegistros) * 100);
+              this.porcentajeRespuestasRegistradas = Math.round((totalRespuestasRegistradas / this.totalRegistros) * 100);
+              this.porcentajeEnProceso = Math.round(((totalAtendidos - totalRespuestasRegistradas) / this.totalRegistros) * 100);
             }
+
+            // Ordenar las áreas por número de registros (de mayor a menor)
+            this.allowedAreas = [...this.areaStats.keys()].sort((a, b) => {
+              const statsA = this.areaStats.get(a);
+              const statsB = this.areaStats.get(b);
+              return (statsB?.total || 0) - (statsA?.total || 0);
+            });
+
+            this.cdr.detectChanges();
           }
-          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error al cargar estadísticas:', error);
@@ -344,25 +392,6 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     }
   }
 
-  procesarDatosAnio(direccion: any): { atendido: number, noAtendido: number, respuestaRegistrada: number } {
-    const resultado = { atendido: 0, noAtendido: 0, respuestaRegistrada: 0 };
-
-    // Procesar datos anuales sumando los valores de todos los meses
-    if (direccion.anios && Array.isArray(direccion.anios)) {
-      direccion.anios.forEach((anio: any) => {
-        if (anio.meses && Array.isArray(anio.meses)) {
-          anio.meses.forEach((mes: any) => {
-            resultado.atendido += mes.atendido || 0;
-            resultado.noAtendido += mes.noAtendido || 0;
-            resultado.respuestaRegistrada += mes.respuestaRegistrada || 0;
-          });
-        }
-      });
-    }
-
-    return resultado;
-  }
-
   canViewSection(section: string): boolean {
     switch (section) {
       case 'users':
@@ -489,5 +518,54 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
       backdrop: true,
       allowOutsideClick: true
     });
+  }
+
+  // Métodos específicos para obtener estadísticas por área
+  getTotalRegistrosArea(area: string): number {
+    return this.areaStats.get(area)?.total || 0;
+  }
+
+  getRegistrosAtendidosArea(area: string): number {
+    return this.areaStats.get(area)?.atendidos || 0;
+  }
+
+  getRegistrosSinAtenderArea(area: string): number {
+    return this.areaStats.get(area)?.sinAtender || 0;
+  }
+
+  getPorcentajeAtendidosArea(area: string): number {
+    const stats = this.areaStats.get(area);
+    if (!stats || stats.total === 0) return 0;
+    return Math.round((stats.atendidos / stats.total) * 100);
+  }
+
+  getPorcentajeSinAtenderArea(area: string): number {
+    const stats = this.areaStats.get(area);
+    if (!stats || stats.total === 0) return 0;
+    return Math.round((stats.sinAtender / stats.total) * 100);
+  }
+
+  getRespuestasRegistradasArea(area: string): number {
+    return this.areaStats.get(area)?.respuestasRegistradas || 0;
+  }
+
+  getPorcentajeRespuestasRegistradasArea(area: string): number {
+    const stats = this.areaStats.get(area);
+    if (!stats || stats.total === 0) return 0;
+    return Math.round((stats.respuestasRegistradas / stats.total) * 100);
+  }
+
+  getPorcentajeEnProcesoArea(area: string): number {
+    const stats = this.areaStats.get(area);
+    if (!stats || stats.total === 0) return 0;
+    const enProceso = stats.atendidos - (stats.respuestasRegistradas || 0);
+    return Math.round((enProceso / stats.total) * 100);
+  }
+
+  // Método para obtener el color de fondo según el porcentaje de atención
+  getColorClaseForPorcentaje(porcentaje: number): string {
+    if (porcentaje > 80) return 'bg-[var(--success-500)]';
+    if (porcentaje > 50) return 'bg-[var(--warning-500)]';
+    return 'bg-[var(--error-500)]';
   }
 }
