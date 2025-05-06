@@ -200,72 +200,97 @@
     </div>
   </div>
 
-  <!-- Tabla de oficios mejorada -->
+  <!-- Sección de tabla de oficios optimizada con Angular Material -->
   <ng-container *ngIf="!isLoading && tiemposRespuestaData?.datos_oficios?.length">
     <div class="mb-3">
       <h3 class="text-lg font-medium text-[var(--text-primary)]">Detalle de Oficios</h3>
       <p class="text-sm text-[var(--text-tertiary)]">Listado de los oficios que conforman la estadística</p>
     </div>
 
-    <!-- Reemplazar la sección de la tabla de oficios por esto -->
-    <div class="overflow-x-auto bg-white shadow-sm rounded-lg border border-[var(--neutral-200)]">
-      <table class="min-w-full divide-y divide-[var(--neutral-200)]">
-        <thead class="bg-[var(--neutral-50)]">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Folio</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Núm. Oficio</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Estatus</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Fecha Recepción</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Fecha Respuesta</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Días</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">Categoría</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-[var(--neutral-200)]">
-          <tr *ngFor="let oficio of tiemposRespuestaData.datos_oficios" class="hover:bg-[var(--neutral-50)] transition-colors">
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">{{ oficio.folio }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">
-              <!-- Enlace al documento con apertura en nueva pestaña -->
+    <div class="bg-white shadow-sm rounded-lg border border-[var(--neutral-200)] overflow-hidden">
+      <div class="overflow-x-auto">
+        <!-- Tabla de Material con soporte para ordenamiento -->
+        <table mat-table
+          [dataSource]="tiemposRespuestaData.datos_oficios"
+          matSort
+          [matSortActive]="sortActive"
+          [matSortDirection]="sortDirection"
+          (matSortChange)="sortData($event)"
+          class="w-full">
+
+          <!-- Columna Folio -->
+          <ng-container matColumnDef="folio">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header disableClear="false" class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase">Folio</th>
+            <td mat-cell *matCellDef="let oficio" class="text-sm font-medium text-[var(--text-primary)]">{{ oficio.folio }}</td>
+          </ng-container>
+
+          <!-- Columna Número de Oficio -->
+          <ng-container matColumnDef="num_oficio">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase w-[180px]">Núm. Oficio</th>
+            <td mat-cell *matCellDef="let oficio" class="text-sm text-[var(--text-secondary)]">
               <a [href]="'/Entradas/Ficha-tecnica/' + oficio._id" target="_blank"
                  class="text-[var(--primary-600)] hover:text-[var(--primary-800)] hover:underline transition-colors flex items-center">
-                {{ oficio.num_oficio }}
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <span class="truncate max-w-[160px] inline-block">{{ oficio.num_oficio }}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
+          </ng-container>
+
+          <!-- Columna Estatus -->
+          <ng-container matColumnDef="estatus">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase">Estatus</th>
+            <td mat-cell *matCellDef="let oficio">
               <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                     [ngClass]="oficio.estatus === 'ATENDIDO' ? 'bg-[var(--success-100)] text-[var(--success-800)]' : 'bg-[var(--error-100)] text-[var(--error-800)]'">
                 {{ oficio.estatus }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-secondary)]">{{ oficio.fecha_recepcion | date:'dd/MM/yyyy' }}</td>
-            <!-- Reemplazar solo la parte de la columna Fecha Respuesta -->
-            <td class="px-6 py-4 whitespace-nowrap text-sm breack-all">
-              <!-- Mostrar mensaje cuando no hay fecha de acuse recibido -->
-              <ng-container *ngIf="oficio.seguimientos?.fecha_acuse_recibido || (oficio.tiempo_respuesta && !isSameDay(oficio.tiempo_respuesta, fechaActual)); else sinAcuse">
+          </ng-container>
+
+          <!-- Columna Fecha Recepción -->
+          <ng-container matColumnDef="fecha_recepcion">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase">F. Recepción</th>
+            <td mat-cell *matCellDef="let oficio" class="text-sm text-[var(--text-secondary)]">{{ oficio.fecha_recepcion | date:'dd/MM/yyyy' }}</td>
+          </ng-container>
+
+          <!-- Columna Fecha Respuesta -->
+          <ng-container matColumnDef="tiempo_respuesta">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase w-[150px]">F. Respuesta</th>
+            <td mat-cell *matCellDef="let oficio" class="text-sm">
+              <ng-container *ngIf="hayFechaAcuseValida(oficio); else sinAcuse">
                 <span class="text-[var(--text-secondary)]">{{ oficio.tiempo_respuesta | date:'dd/MM/yyyy' }}</span>
               </ng-container>
               <ng-template #sinAcuse>
                 <span class="text-xs px-2 py-1 bg-[var(--warning-50)] text-[var(--warning-700)] rounded-md">
-                  Documento no recepcionado
+                  No recepcionado
                 </span>
               </ng-template>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
+          </ng-container>
+
+          <!-- Columna Días -->
+          <ng-container matColumnDef="diferencia_dias">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase">Días</th>
+            <td mat-cell *matCellDef="let oficio" class="text-sm">
               <span [ngClass]="{
                 'text-[var(--success-600)]': oficio.categoria_tiempo === 'rapido',
                 'text-[var(--info-600)]': oficio.categoria_tiempo === 'normal',
                 'text-[var(--warning-600)]': oficio.categoria_tiempo === 'lento',
                 'text-[var(--error-600)]': oficio.categoria_tiempo === 'muy_lento',
-                'text-[var(--neutral-500)]': !oficio.tiempo_respuesta
+                'text-[var(--neutral-500)]': !hayFechaAcuseValida(oficio)
               }">
-                {{ oficio.tiempo_respuesta ? oficio.diferencia_dias.toFixed(1) : 'En progreso' }}
+                {{ hayFechaAcuseValida(oficio) ? oficio.diferencia_dias.toFixed(1) : 'En progreso' }}
               </span>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span *ngIf="oficio.tiempo_respuesta" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+          </ng-container>
+
+          <!-- Columna Categoría -->
+          <ng-container matColumnDef="categoria_tiempo">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header class="bg-[var(--neutral-50)] text-xs font-medium text-[var(--text-tertiary)] uppercase">Categoría</th>
+            <td mat-cell *matCellDef="let oficio">
+              <span *ngIf="hayFechaAcuseValida(oficio)" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
                     [ngClass]="{
                       'bg-[var(--success-100)] text-[var(--success-800)]': oficio.categoria_tiempo === 'rapido',
                       'bg-[var(--info-100)] text-[var(--info-800)]': oficio.categoria_tiempo === 'normal',
@@ -273,16 +298,21 @@
                       'bg-[var(--error-100)] text-[var(--error-800)]': oficio.categoria_tiempo === 'muy_lento'
                     }">
                 {{ oficio.categoria_tiempo === 'rapido' ? 'Rápido' :
-                   oficio.categoria_tiempo === 'normal' ? 'Normal' :
-                   oficio.categoria_tiempo === 'lento' ? 'Lento' : 'Muy Lento' }}
+                  oficio.categoria_tiempo === 'normal' ? 'Normal' :
+                  oficio.categoria_tiempo === 'lento' ? 'Lento' : 'Muy Lento' }}
               </span>
-              <span *ngIf="!oficio.tiempo_respuesta" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--neutral-100)] text-[var(--neutral-700)]">
+              <span *ngIf="!hayFechaAcuseValida(oficio)" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-[var(--neutral-100)] text-[var(--neutral-700)]">
                 Pendiente
               </span>
             </td>
-          </tr>
-        </tbody>
-      </table>
+          </ng-container>
+
+          <!-- Definición de filas -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns" class="border-b border-[var(--neutral-200)]"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+              class="border-b border-[var(--neutral-200)] hover:bg-[var(--neutral-50)] transition-colors"></tr>
+        </table>
+      </div>
     </div>
   </ng-container>
 

@@ -18,6 +18,9 @@ import { forkJoin, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AreasEnum, getAllAreas } from '../../../../core/models/enums/areas.enum';
 import { Router } from '@angular/router';
+import { MatTableModule } from '@angular/material/table';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
 
 // Registrar todos los componentes de Chart.js
 Chart.register(...registerables);
@@ -36,7 +39,9 @@ Chart.register(...registerables);
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatCardModule
+    MatCardModule,
+    MatTableModule,  // Añade este
+    MatSortModule    // Añade este
   ],
   providers: [DatePipe],
   templateUrl: './system-statistics.component.html',
@@ -75,6 +80,17 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
 
   // Agregar esta propiedad a la clase
   fechaActual = new Date();
+
+  // Agregar referencia al componente de ordenamiento
+  @ViewChild(MatSort) sort!: MatSort;
+
+  // Definir columnas a mostrar en la tabla
+  displayedColumns: string[] = ['folio', 'num_oficio', 'estatus', 'fecha_recepcion', 'tiempo_respuesta', 'diferencia_dias', 'categoria_tiempo'];
+
+  // Añadir esta propiedad para manejar los datos en un MatTableDataSource
+  dataSource = new MatTableDataSource<any>([]);
+  sortActive = 'fecha_recepcion';
+  sortDirection: 'asc' | 'desc' = 'desc';
 
   constructor(
     private fb: FormBuilder,
@@ -151,6 +167,48 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
         this.renderEstatusChart();
       }, 100);
     }
+
+    // Después de cargar los datos, asignar el sort
+    if (this.tiemposRespuestaData?.datos_oficios && this.sort) {
+      setTimeout(() => {
+        // Usar setTimeout para evitar errores de ExpressionChangedAfterItHasBeenChecked
+        this.tiemposRespuestaData.datos_oficios.sort = this.sort;
+      });
+    }
+
+    // Configurar el ordenamiento después de que la vista se haya inicializado
+    if (this.sort) {
+      this.dataSource.sort = this.sort;
+
+      // Configurar la función de ordenamiento personalizada
+      this.dataSource.sortingDataAccessor = (item: any, property: string) => {
+        switch (property) {
+          case 'tiempo_respuesta':
+            return this.hayFechaAcuseValida(item) ? new Date(item.tiempo_respuesta).getTime() : 0;
+          case 'diferencia_dias':
+            return this.hayFechaAcuseValida(item) ? item.diferencia_dias : 0;
+          case 'categoria_tiempo':
+            const order: Record<string, number> = {
+              'rapido': 1,
+              'normal': 2,
+              'lento': 3,
+              'muy_lento': 4
+            };
+            return this.hayFechaAcuseValida(item) ?
+              (item.categoria_tiempo && order[item.categoria_tiempo as keyof typeof order]) ?
+              order[item.categoria_tiempo as keyof typeof order] : 5 : 5;
+          default:
+            return item[property];
+        }
+      };
+    }
+
+    // Configurar el sort después de que la vista se inicialice
+    setTimeout(() => {
+      if (this.sort && this.dataSource) {
+        this.dataSource.sort = this.sort;
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -246,6 +304,10 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
         this.isLoading = false;
       }
     });
+
+    // Añadir esto al principio de la función
+    this.sortActive = 'fecha_recepcion';
+    this.sortDirection = 'desc';
   }
 
   renderTiemposRespuestaChart(): void {
@@ -625,6 +687,24 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
     });
   }
 
+  // Modificar el método que recibe los datos para actualizar el dataSource
+  private procesarDatosEstadisticas(data: any): void {
+    // Código existente...
+
+    // Asignar los datos al dataSource en lugar de directamente a tiemposRespuestaData.datos_oficios
+    if (this.tiemposRespuestaData?.datos_oficios) {
+      this.dataSource.data = this.tiemposRespuestaData.datos_oficios;
+
+      // Asignar el sort al dataSource si ya está disponible
+      if (this.sort) {
+        this.dataSource.sort = this.sort;
+      }
+    }
+
+    // Forzar detección de cambios para evitar errores
+    this.cdr.detectChanges();
+  }
+
   // Agregar este método a la clase
   /**
    * Comprueba si dos fechas son el mismo día
@@ -641,5 +721,58 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
     return d1.getDate() === d2.getDate() &&
            d1.getMonth() === d2.getMonth() &&
            d1.getFullYear() === d2.getFullYear();
+  }
+
+  /**
+   * Verifica si el oficio tiene una fecha de acuse válida
+   */
+  hayFechaAcuseValida(oficio: any): boolean {
+    // Verificar directamente si existe la fecha de acuse en seguimientos
+    if (oficio.seguimientos?.fecha_acuse_recibido) {
+      return true;
+    }
+
+    // Verificar si tiempo_respuesta existe y no es la fecha actual
+    if (oficio.tiempo_respuesta && !this.isSameDay(oficio.tiempo_respuesta)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Maneja el evento de ordenación
+   */
+  sortData(sort: Sort) {
+    // La ordenación ahora la maneja el dataSource, pero podemos añadir lógica adicional aquí
+    if (!sort.active || sort.direction === '') {
+      // Si no hay columna activa o dirección, reiniciar a valores por defecto
+      sort.active = 'fecha_recepcion';
+      sort.direction = 'desc';
+    }
+
+    this.sortActive = sort.active;
+    this.sortDirection = sort.direction as 'asc' | 'desc';
+
+    // Si no hay dirección activa, establecer valores predeterminados
+    if (!sort.direction) {
+      this.sortActive = 'fecha_recepcion';
+      this.sortDirection = 'desc';
+
+      // Actualizar el sort en el dataSource
+      setTimeout(() => {
+        if (this.sort) {
+          this.sort.active = this.sortActive;
+          this.sort.direction = this.sortDirection;
+          this.sort._stateChanges.next();
+        }
+      });
+    }
+
+    // La ordenación será manejada automáticamente por el dataSource
+    // cuando cambia el sort, si está correctamente configurado
+
+    // Detectar cambios
+    this.cdr.detectChanges();
   }
 }
