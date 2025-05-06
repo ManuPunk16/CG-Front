@@ -1,14 +1,14 @@
 import { ChangeDetectorRef, Component, Input, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -80,6 +80,13 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
   // Variable para controlar si los gráficos ya fueron inicializados
   private chartsInitialized = false;
 
+  // Para Math.min en el HTML
+  Math = Math;
+
+  // Propiedad para controlar ordenamiento
+  sortActive: string = 'timestamp';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
   constructor(
     private logService: LogService,
     private alertService: AlertService,
@@ -130,6 +137,49 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
         this.renderCharts();
       }, 100);
     }
+
+    // Configurar el dataSource para ordenación y paginación
+    if (this.dataSource) {
+      this.dataSource.sort = this.sort;
+      this.dataSource.paginator = this.paginator;
+
+      // Personalizar la función de ordenación si es necesario
+      this.dataSource.sortingDataAccessor = (item: any, property: string) => {
+        switch(property) {
+          case 'timestamp':
+            return new Date(item.timestamp).getTime();
+          case 'area':
+            return item.userId?.area?.toLowerCase() || '';
+          case 'userName':
+            return item.userName?.toLowerCase() || '';
+          default:
+            return item[property];
+        }
+      };
+    }
+
+    // Configurar el evento de cambio del ordenamiento
+    if (this.sort) {
+      this.sort.sortChange.subscribe((sortState: Sort) => {
+        // Al cambiar el ordenamiento, volver a la primera página
+        if (this.paginator) {
+          this.paginator.pageIndex = 0;
+        }
+        this.currentPage = 0;
+        this.sortActive = sortState.active;
+        this.sortDirection = sortState.direction as 'asc' | 'desc';
+        this.loadLoginLogs();
+      });
+    }
+
+    // Configurar el evento de cambio de página
+    if (this.paginator) {
+      this.paginator.page.subscribe((event: PageEvent) => {
+        this.currentPage = event.pageIndex;
+        this.pageSize = event.pageSize;
+        this.loadLoginLogs();
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -145,7 +195,7 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
   setupComponent(): void {
     // Configurar la visualización según permisos
     if (this.userPermissions?.isAdmin || this.userPermissions?.isDirectorGeneral) {
-      this.displayedColumns = ['userName', 'username', 'area', 'timestamp', 'ipAddress', 'userAgent'];
+      this.displayedColumns = ['userName', 'area', 'timestamp', 'ipAddress', 'userAgent'];
     } else {
       this.displayedColumns = ['timestamp', 'ipAddress', 'userAgent'];
       this.showCharts = false;
@@ -163,6 +213,12 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const filters = this.prepareFilters();
+
+    // Agregar parámetros de ordenación
+    if (this.sortActive && this.sortDirection) {
+      filters.sortBy = this.sortActive;
+      filters.sortOrder = this.sortDirection;
+    }
 
     if (this.userPermissions?.isAdmin || this.userPermissions?.isDirectorGeneral) {
       this.logService.getAllLoginLogs({
@@ -197,6 +253,32 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.loadUserLogs();
     }
+
+    // Asegurar que se aplica ordenación y paginación después de cargar datos
+    setTimeout(() => {
+      if (this.dataSource) {
+        this.dataSource.sort = this.sort;
+        this.dataSource.paginator = this.paginator;
+      }
+    });
+  }
+
+  // Agregar este método en la clase LoginLogsComponent
+  sortData(sort: Sort): void {
+    this.sortActive = sort.active;
+    this.sortDirection = sort.direction as 'asc' | 'desc';
+
+    // Restablecer a la primera página cuando cambia la ordenación
+    this.currentPage = 0;
+    if (this.paginator) {
+      this.paginator.pageIndex = 0;
+    }
+
+    // Cargar datos ordenados del servidor
+    this.loadLoginLogs();
+
+    // Notificar a Angular que detecte cambios
+    this.cdr.detectChanges();
   }
 
   // Método auxiliar para cargar logs del usuario actual
@@ -431,7 +513,7 @@ export class LoginLogsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onPageChange(event: any): void {
+  onPageChange(event: PageEvent): void {
     this.currentPage = event.pageIndex;
     this.pageSize = event.pageSize;
     this.loadLoginLogs();

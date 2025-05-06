@@ -32,7 +32,9 @@ export class LogService {
     limit?: number;
     page?: number;
     area?: string;
-  }): Observable<ApiResponse<LoginLog[]>> {
+    sortBy?: string;
+    sortOrder?: string;
+}): Observable<ApiResponse<LoginLog[]>> {
     return this.http.get<ApiResponse<LoginLog[]>>(`${this.apiUrl}/login/all`, { params });
   }
 
