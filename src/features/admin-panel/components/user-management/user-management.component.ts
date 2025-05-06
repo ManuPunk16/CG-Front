@@ -419,6 +419,11 @@ export class UserManagementComponent implements OnInit, OnDestroy {
     });
   }
 
+  clearFilter(inputElement: HTMLInputElement): void {
+    inputElement.value = '';
+    this.applyFilter({ target: inputElement } as unknown as Event);
+  }
+
   toggleUserStatus(id: string, active: boolean): void {
     this.isLoading = true;
 
