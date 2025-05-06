@@ -369,6 +369,11 @@ export class AdminPanelComponent implements OnInit, OnDestroy {
     );
   }
 
+  resetFiltroUsuario(): void {
+    this.filtroUsuario = '';
+    this.filtrarUsuariosPorPermisos();
+  }
+
   tienePermisoParaVerUsuario(areaUsuario: string): boolean {
     if (this.isAdmin) return true;
     if (this.isDirectorGeneral) return this.allowedAreas.includes(areaUsuario);
