@@ -128,3 +128,46 @@ span.rounded-full {
   line-height: 1.25rem;
   padding: 0.125rem 0.75rem;
 }
+
+// Estilos para mejorar la tabla de oficios
+:host {
+  .documento-no-recepcionado {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--warning-50);
+    color: var(--warning-700);
+    border-radius: 0.25rem;
+    border: 1px solid var(--warning-200);
+  }
+
+  // Mejorar estilos de enlaces
+  a.documento-link {
+    color: var(--primary-600);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--primary-800);
+      text-decoration: underline;
+    }
+
+    svg {
+      margin-left: 0.25rem;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  // Mejorar la experiencia hover en filas
+  tr:hover td {
+    background-color: var(--neutral-50);
+  }
+
+  // Asegurar que las celdas con fechas tienen ancho adecuado
+  td.fecha-cell {
+    min-width: 120px;
+  }
+}

@@ -17,6 +17,7 @@ import { DatePipe } from '@angular/common';
 import { forkJoin, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AreasEnum, getAllAreas } from '../../../../core/models/enums/areas.enum';
+import { Router } from '@angular/router';
 
 // Registrar todos los componentes de Chart.js
 Chart.register(...registerables);
@@ -72,12 +73,16 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
   // Exponer AreasEnum al template
   areasEnum = AreasEnum;
 
+  // Agregar esta propiedad a la clase
+  fechaActual = new Date();
+
   constructor(
     private fb: FormBuilder,
     private inputService: InputService,
     private permissionsService: PermissionsService,
     private alertService: AlertService,
     private datePipe: DatePipe,
+    private router: Router,  // Añadir Router para navegación
     private cdr: ChangeDetectorRef // Importante: agregar esta referencia
   ) {
     // Inicializar formulario
@@ -596,5 +601,45 @@ export class SystemStatisticsComponent implements OnInit, OnDestroy, AfterViewIn
         });
       }
     }
+  }
+
+  /**
+   * Navega a la ficha técnica del documento
+   * @param id ID del documento
+   */
+  verFichaTecnica(id: string): void {
+    // Esta función podría usarse como alternativa al enlace directo en el HTML
+    this.router.navigate(['/Entradas/Ficha-tecnica', id]);
+  }
+
+  // Ajustar el método que procesa los datos para garantizar que tenemos el _id en cada oficio
+  private procesarDatosOficios(data: any[]): any[] {
+    return data.map(oficio => {
+      // Asegurar que tenemos acceso al ID para navegación
+      if (!oficio._id && oficio.id) {
+        oficio._id = oficio.id; // Asignar ID si está en formato diferente
+      }
+
+      // Resto del procesamiento
+      return oficio;
+    });
+  }
+
+  // Agregar este método a la clase
+  /**
+   * Comprueba si dos fechas son el mismo día
+   * @param date1 Primera fecha a comparar
+   * @param date2 Segunda fecha a comparar (opcional, por defecto es la fecha actual)
+   * @returns true si son el mismo día, false en caso contrario
+   */
+  isSameDay(date1: any, date2: Date = this.fechaActual): boolean {
+    if (!date1) return false;
+
+    const d1 = new Date(date1);
+    const d2 = date2;
+
+    return d1.getDate() === d2.getDate() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getFullYear() === d2.getFullYear();
   }
 }
