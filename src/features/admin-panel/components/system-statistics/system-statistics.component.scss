@@ -41,3 +41,90 @@
     height: 300px;
   }
 }
+
+/* Estilos para spinner personalizado */
+.spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-border {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.25rem solid rgba(var(--primary-200), 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-500);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estilos para los inputs de fecha nativos */
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5rem;
+}
+
+/* Mejoras para la visualización en dispositivos móviles */
+@media (max-width: 640px) {
+  .grid {
+    row-gap: 1rem;
+  }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Transiciones fluidas para todos los elementos interactivos */
+button,
+select,
+input,
+.rounded-lg,
+.rounded-full {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Estilos para el contenedor de gráficos */
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 400px;
+}
+
+/* Sombreado suave para tarjetas */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.hover\:shadow-md:hover {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+/* Estilos para los botones disabled */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilo para badges/chips */
+span.rounded-full {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  line-height: 1.25rem;
+  padding: 0.125rem 0.75rem;
+}
