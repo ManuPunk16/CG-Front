@@ -1,0 +1,126 @@
+/* Estilos para mat-table y mat-paginator (mantenerlos pero con variables personalizadas) */
+::ng-deep {
+  /* Colores para mat-table */
+  .mat-mdc-table {
+    background-color: white !important;
+  }
+
+  .mat-mdc-header-cell {
+    background-color: var(--neutral-50) !important;
+    color: var(--text-secondary) !important;
+    font-weight: 600 !important;
+  }
+
+  .mat-mdc-row:hover {
+    background-color: var(--neutral-50) !important;
+  }
+
+  .mat-mdc-cell {
+    color: var(--text-primary) !important;
+  }
+
+  /* Spinner personalizado */
+  .mat-mdc-progress-spinner circle {
+    stroke: var(--primary-500) !important;
+  }
+
+  /* Estilos para el paginador */
+  .mat-mdc-paginator {
+    background-color: var(--neutral-50) !important;
+  }
+
+  .mat-mdc-paginator-range-label {
+    color: var(--text-secondary) !important;
+  }
+
+  .mat-mdc-paginator-page-size-label {
+    color: var(--text-secondary) !important;
+  }
+
+  .mat-mdc-select-value {
+    color: var(--text-primary) !important;
+  }
+
+  .mat-mdc-paginator-icon {
+    fill: var(--primary-600) !important;
+  }
+
+  /* Ajustes para el panel del selector */
+  .mat-mdc-select-panel {
+    background-color: white !important;
+    border: 1px solid var(--neutral-200) !important;
+    border-radius: 8px !important;
+  }
+
+  .mat-mdc-option.mdc-list-item--selected {
+    background-color: var(--primary-50) !important;
+    color: var(--primary-800) !important;
+  }
+
+  .mat-mdc-option:hover:not(.mdc-list-item--selected) {
+    background-color: var(--neutral-100) !important;
+  }
+}
+
+/* Spinner personalizado para sustitur al de Angular Material */
+.spinner {
+  border: 3px solid var(--neutral-200);
+  border-radius: 50%;
+  border-top: 3px solid var(--primary-500);
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Estilos para campos de entrada personalizados */
+.custom-input {
+  background-color: white;
+  border: 1px solid var(--neutral-300);
+  border-radius: 0.375rem;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 2px var(--primary-200);
+  }
+
+  &::placeholder {
+    color: var(--neutral-500);
+  }
+
+  &.error {
+    border-color: var(--error-400);
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--error-200);
+    }
+  }
+}
+
+/* Estilos para iconos SVG */
+.icon-wrapper {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--neutral-500);
+  pointer-events: none;
+}
+
+/* Mensajes de error */
+.error-message {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--error-600);
+}

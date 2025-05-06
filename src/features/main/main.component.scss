@@ -233,6 +233,72 @@ form {
   }
 }
 
+// Estilo para el panel del selector de página del paginador
+::ng-deep {
+  // Panel de selección de tamaño de página
+  .mat-mdc-select-panel {
+    background-color: var(--neutral-50) !important;
+    border: 1px solid var(--neutral-200) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  // Opciones dentro del panel
+  .mat-mdc-option {
+    color: var(--text-primary) !important;
+
+    &.mdc-list-item--selected {
+      background-color: var(--primary-50) !important;
+      color: var(--primary-800) !important;
+    }
+
+    &:hover:not(.mdc-list-item--selected) {
+      background-color: var(--neutral-100) !important;
+    }
+  }
+
+  // Contenedor del paginador
+  .mat-mdc-paginator {
+    background-color: var(--neutral-50);
+    border-top: 1px solid var(--neutral-200);
+
+    // Textos del paginador
+    .mat-mdc-paginator-range-label,
+    .mat-mdc-paginator-page-size-label {
+      color: var(--text-secondary);
+    }
+
+    // Selector de tamaño de página
+    .mat-mdc-select-value {
+      color: var(--text-primary);
+    }
+
+    // Botones de navegación
+    .mat-mdc-icon-button {
+      color: var(--primary-700) !important;
+
+      &.mat-mdc-button-disabled {
+        color: var(--neutral-300) !important;
+      }
+    }
+  }
+
+  // Overlay del CDK
+  .cdk-overlay-pane {
+    // Esto evita que se vea el borde negro
+    box-shadow: none !important;
+  }
+
+  // Panel específico del mat-select
+  .mat-mdc-select-panel.mdc-menu-surface {
+    background-color: white !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    border: none !important;
+    padding: 8px 0 !important;
+  }
+}
+
 // Estilo para los botones de acción
 button.mat-icon-button.text-primary-600 {
   color: var(--primary-600);

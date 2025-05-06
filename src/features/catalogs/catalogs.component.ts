@@ -108,6 +108,8 @@ export class CatalogsComponent implements OnInit, AfterViewInit, OnDestroy {
   currentInstitutionFilter = '';
   currentInstrumentFilter = '';
 
+  activeTab = 'institutions';
+
   ngOnInit(): void {
     // No cargar los catálogos aquí
   }
