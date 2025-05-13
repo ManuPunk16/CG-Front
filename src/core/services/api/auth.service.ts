@@ -78,6 +78,28 @@ export class AuthService extends BaseApiService {
   }
 
   /**
+   * Refrescar token automáticamente
+   */
+  refreshToken(): Observable<any> {
+    return this.post<any>(`${this.endpoint}/refresh-token`, {})
+      .pipe(
+        tap(response => {
+          if (response && response.accessToken) {
+            // Actualizar solo el token, mantener el usuario
+            localStorage.setItem('token', response.accessToken);
+            this.authStateService.setAuthenticated(true);
+            console.log('Token refrescado automáticamente');
+          }
+        }),
+        catchError(error => {
+          console.error('Error al refrescar token:', error);
+          // Si falla el refresh, no cerrar sesión inmediatamente
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
    * Verificar si el usuario está autenticado
    */
   isAuthenticated(): boolean {

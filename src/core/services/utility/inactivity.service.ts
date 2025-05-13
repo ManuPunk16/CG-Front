@@ -1,14 +1,28 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject, fromEvent, merge } from 'rxjs';
+import { Observable, Subject, fromEvent, merge, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class InactivityService {
-  private readonly activityEvents = ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'];
   private activitySubject = new Subject<void>();
-  private eventSubscriptions: any[] = [];
+  private eventSubscriptions: Subscription[] = [];
+
+  // Ampliar la lista de eventos monitoreados
+  private activityEvents = [
+    'mousedown', 'mousemove', 'keydown',
+    'wheel', 'DOMMouseScroll', 'mousewheel',
+    'touchstart', 'touchmove', 'touchend',
+    'click', 'scroll', 'resize'
+  ];
+
+  /**
+   * Devuelve un Observable que emite cuando hay actividad del usuario
+   */
+  onActivity(): Observable<void> {
+    return this.activitySubject.asObservable();
+  }
 
   /**
    * Inicia la monitorización de actividad del usuario
@@ -28,9 +42,15 @@ export class InactivityService {
     );
 
     // Suscribirse al evento combinado y notificar actividad
-    activityObservable.subscribe(() => {
+    const subscription = activityObservable.subscribe(() => {
+      console.log('Actividad detectada'); // Agregar log para depuración
       this.activitySubject.next();
     });
+
+    this.eventSubscriptions.push(subscription);
+
+    // Log para verificar que el monitoreo está activo
+    console.log('Monitoreo de inactividad iniciado');
   }
 
   /**
@@ -43,12 +63,6 @@ export class InactivityService {
       }
     });
     this.eventSubscriptions = [];
-  }
-
-  /**
-   * Retorna un Observable que emite cuando hay actividad del usuario
-   */
-  onActivity(): Observable<void> {
-    return this.activitySubject.asObservable();
+    console.log('Monitoreo de inactividad detenido');
   }
 }

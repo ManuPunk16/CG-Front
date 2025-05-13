@@ -16,8 +16,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { NgIf, NgClass } from '@angular/common';
-import { Subscription, interval } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Subject, Subscription, interval } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
 
 // Nuevos servicios
 import { AuthService } from '../core/services/api/auth.service';
@@ -80,6 +80,7 @@ export class AppComponent implements OnInit, OnDestroy {
   sessionTimeLeft = signal<number>(this.sessionTimeoutSeconds);
   private sessionTimerSubscription?: Subscription;
   private authSubscription?: Subscription;
+  private destroy$ = new Subject<void>();
 
   constructor() {
     // Configuración del media query para diseño responsive
@@ -99,18 +100,32 @@ export class AppComponent implements OnInit, OnDestroy {
         this.isDirectorGeneral.set(user.roles === RolesEnum.DIRECTOR_GENERAL);
         this.isDirector.set(user.roles === RolesEnum.DIRECTOR);
 
-        // Iniciar timer de sesión
-        this.startSessionTimer();
-      } else {
+        // Detener cualquier temporizador activo
         this.stopSessionTimer();
+
+        // Iniciar un nuevo temporizador
+        this.startSessionTimer();
+
+        // Configurar monitoreo de inactividad si no está configurado
+        this.configureInactivityMonitoring();
+
+        console.log('Usuario autenticado, temporizador de sesión iniciado');
+      } else {
+        // Detener temporizadores cuando no hay usuario
+        this.stopSessionTimer();
+        this.inactivityService.stopWatching();
         this.resetUserState();
       }
 
       this.changeDetectorRef.detectChanges();
     });
 
-    // Iniciar monitoreo de inactividad
-    this.configureInactivityMonitoring();
+    // Actualizar la configuración de media queries para diseño responsivo
+    this.mobileQuery = this.media.matchMedia('(max-width: 768px)');
+    this.mobileQuery.addEventListener('change', this.mobileQueryListener);
+
+    // Verificar si hay una sesión guardada y recargarla
+    this.authService.reloadAuthState();
   }
 
   ngOnDestroy(): void {
@@ -119,6 +134,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authSubscription?.unsubscribe();
     this.stopSessionTimer();
     this.inactivityService.stopWatching();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
@@ -127,9 +144,11 @@ export class AppComponent implements OnInit, OnDestroy {
   private startSessionTimer(): void {
     this.stopSessionTimer(); // Asegurar que no haya timers activos
 
+    console.log('Iniciando temporizador de sesión por', this.sessionTimeoutSeconds, 'segundos');
+
     this.sessionTimeLeft.set(this.sessionTimeoutSeconds);
     this.sessionTimerSubscription = interval(1000)
-      .pipe(take(this.sessionTimeoutSeconds))
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
           const currentValue = this.sessionTimeLeft();
@@ -176,11 +195,16 @@ export class AppComponent implements OnInit, OnDestroy {
    */
   private configureInactivityMonitoring(): void {
     // Reiniciar el temporizador cuando hay actividad del usuario
-    this.inactivityService.onActivity().subscribe(() => {
-      if (this.authService.isAuthenticated()) {
-        this.startSessionTimer();
-      }
-    });
+    this.inactivityService.onActivity()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.authService.isAuthenticated()) {
+          console.log('Actividad detectada, reiniciando temporizador de sesión');
+          this.stopSessionTimer(); // Detener el temporizador actual
+          this.startSessionTimer(); // Iniciar uno nuevo
+          this.changeDetectorRef.detectChanges();
+        }
+      });
 
     // Iniciar monitoreo de inactividad
     this.inactivityService.startWatching();
